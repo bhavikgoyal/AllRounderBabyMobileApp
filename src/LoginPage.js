@@ -1,0 +1,415 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+    View, Text, StyleSheet, TouchableOpacity, TextInput, Animated, ScrollView,
+    StatusBar, Platform, KeyboardAvoidingView, useColorScheme, Alert, ActivityIndicator, useWindowDimensions, BackHandler, ToastAndroid, Linking
+} from 'react-native';
+import SmartImage from './components/SmartImage';
+import { exitApp } from './utils/exitApp';
+import CheckBox from 'react-native-check-box';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
+import NetInfo from '@react-native-community/netinfo';
+import { useIsFocused, CommonActions } from '@react-navigation/native';
+import { BASE_URL } from './config/api';
+
+const NEW_LAUNCH_IMAGE = require('../img/newlaunchscreen.png');
+const ADMIN_CONTACT_URL = 'https://allrounderbaby.com/UserQuestion';
+const _keychainModuleName = 'react-native-keychain';
+let Keychain = null;
+try { Keychain = require(_keychainModuleName); } catch (e) { Keychain = null; }
+
+const keychainAvailable = Keychain && (
+    typeof Keychain.getGenericPasswordForOptions === 'function' ||
+    typeof Keychain.setGenericPasswordForOptions === 'function' ||
+    (typeof Keychain.getGenericPassword === 'function' && typeof Keychain.setGenericPassword === 'function')
+);
+
+const LoginPage = ({ navigation }) => {
+    const isFocused = useIsFocused();
+    const isDarkMode = useColorScheme() === 'dark';
+    const lastBackPressed = useRef(0);
+    const loginInProgressRef = useRef(false);
+    const [showLoginForm, setShowLoginForm] = useState(false);
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [usernameError, setUsernameError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [termsAccepted, setTermsAccepted] = useState(false);
+    const [rememberMe, setRememberMe] = useState(true);
+    const [adminMessage, setAdminMessage] = useState(null);
+    const [isLoadingCredentials, setIsLoadingCredentials] = useState(true);
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
+    const welcomeOpacity = useRef(new Animated.Value(1)).current;
+    const loginOpacity = useRef(new Animated.Value(0)).current;
+    const imageOpacity = useRef(new Animated.Value(0)).current;
+    const emailTextPosition = useRef(new Animated.Value(0)).current;
+    const usernamePosition = useRef(new Animated.Value(0)).current;
+    const passwordPosition = useRef(new Animated.Value(0)).current;
+    const checkboxPosition = useRef(new Animated.Value(0)).current;
+    const rememberMePosition = useRef(new Animated.Value(0)).current;
+
+    const backgroundStyle = { backgroundColor: isDarkMode ? '#2a3144' : Colors.white };
+
+    const { width } = useWindowDimensions();
+    const isTabletLocal = width >= 600;
+    const contentMaxWidthLocal = isTabletLocal ? 500 : width * 0.9;
+    const dynamicStyles = {
+        welcomeImage: { height: isTabletLocal ? '55%' : '60%', borderBottomRightRadius: isTabletLocal ? 200 : 150 },
+        startAppText: { fontSize: isTabletLocal ? 28 : 24 },
+        customButtonInnerStart: { width: contentMaxWidthLocal },
+        image: { height: isTabletLocal ? 160 : 130, width: isTabletLocal ? contentMaxWidthLocal : '90%', marginTop: 10, marginBottom: 20 },
+        fieldset: { width: isTabletLocal ? contentMaxWidthLocal : '90%' },
+        legend: { width: isTabletLocal ? contentMaxWidthLocal : '90%', fontSize: isTabletLocal ? 16 : 14 },
+        input: { height: isTabletLocal ? 52 : 45, fontSize: isTabletLocal ? 16 : 14 },
+        customButton: { width: isTabletLocal ? contentMaxWidthLocal : '90%', height: isTabletLocal ? 56 : 50 },
+        checkboxesContainer: { width: isTabletLocal ? contentMaxWidthLocal : '90%' },
+        buttonText: { fontSize: isTabletLocal ? 18 : 16 },
+    };
+
+    useEffect(() => {
+        const loadCredentials = async () => {
+            try {
+                const rememberPref = await AsyncStorage.getItem('rememberMePreference');
+                if (rememberPref === 'true') {
+                    let creds = null;
+                    if (keychainAvailable) creds = await Keychain.getGenericPassword({ service: 'loginCredentials' });
+                    if (creds) {
+                        setUsername(creds.username);
+                        setPassword(creds.password);
+                    }
+                    setRememberMe(true);
+                }
+            } catch (e) { console.error(e); }
+            finally { setIsLoadingCredentials(false); }
+        };
+        loadCredentials();
+    }, []);
+
+    useEffect(() => {
+        try {
+            if (isFocused) {
+                navigation.setParams && navigation.setParams({ hideFooter: true });
+            } else {
+                navigation.setParams && navigation.setParams({ hideFooter: true });
+            }
+        } catch (e) {
+        }
+        return () => {
+            try { navigation.setParams && navigation.setParams({ hideFooter: false }); } catch (e) { }
+        };
+    }, [isFocused]);
+
+    useEffect(() => {
+        const onBackPress = async () => {
+            if (!isFocused) return false;
+            if (showLoginForm) {
+                setShowLoginForm(false);
+                return true;
+            }
+            const now = Date.now();
+            if (lastBackPressed.current && now - lastBackPressed.current < 2000) {
+                exitApp();
+                return true;
+            }
+            lastBackPressed.current = now;
+            if (Platform.OS === 'android') ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+            return true;
+        };
+        const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+        return () => sub.remove();
+    }, [isFocused, showLoginForm]);
+
+    const handleStartPress = () => {
+        setShowLoginForm(true);
+        Animated.parallel([
+            Animated.timing(welcomeOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+            Animated.timing(loginOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+            Animated.timing(imageOpacity, { toValue: 1, duration: 800, useNativeDriver: true })
+        ]).start();
+    };
+
+    useEffect(() => {
+        if (showLoginForm) {
+            Animated.parallel([
+                Animated.timing(imageOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+                Animated.timing(loginOpacity, { toValue: 1, duration: 500, useNativeDriver: true })
+            ]).start();
+        } else {
+            Animated.parallel([
+                Animated.timing(imageOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+                Animated.timing(loginOpacity, { toValue: 0, duration: 300, useNativeDriver: true })
+            ]).start();
+        }
+    }, [showLoginForm]);
+
+    const getDeviceKey = async () => {
+        try {
+            let devicekey = await AsyncStorage.getItem('devicekey');
+            if (!devicekey) {
+                devicekey = Date.now().toString(36) + Math.random().toString(36).substring(2);
+                await AsyncStorage.setItem('devicekey', devicekey);
+                // console.log('Generated new devicekey:', devicekey);
+            } else {
+                console.log('Using existing devicekey:', devicekey);
+            }
+            return devicekey;
+        } catch (e) {
+            console.error('getDeviceKey error', e);
+            return Date.now().toString(36) + Math.random().toString(36).substring(2);
+        }
+    };
+
+    const handleLogin = async () => {
+        if (loginInProgressRef.current) return;
+        loginInProgressRef.current = true;
+        setIsLoggingIn(true);
+        setUsernameError('');
+        setPasswordError('');
+        setAdminMessage(null);
+
+        try {
+            const netInfo = await NetInfo.fetch();
+            if (!netInfo.isInternetReachable) {
+                Alert.alert("No Connection", "Please check your internet.");
+                return;
+            }
+
+            const trimmedU = username?.trim();
+            const trimmedP = password?.trim();
+
+            if (!trimmedU) { setUsernameError('❗Please enter username.'); return; }
+            if (!trimmedP) { setPasswordError('❗Please enter password.'); return; }
+            if (!termsAccepted) { Alert.alert("Wait!", "Please accept terms."); return; }
+
+            let devicekey = await getDeviceKey();
+            const API_URL = `${BASE_URL}Login/LoginMobileUser?username=${encodeURIComponent(trimmedU)}&password=${encodeURIComponent(trimmedP)}&deviceId=${encodeURIComponent(devicekey)}`;
+
+            const response = await fetch(API_URL);
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (parseErr) {
+                console.warn('Failed to parse login response JSON', parseErr);
+            }
+
+            if (!response.ok) {
+                const msg = data?.message || `Request failed with status ${response.status}`;
+                if (response.status === 400 || data?.code === 400) {
+                    setAdminMessage(msg);
+                    setPasswordError(msg);
+                    return;
+                }
+                if (response.status === 401 || data?.code === 401) {
+                    setPasswordError(data?.message || '❗Invalid credentials.');
+                    return;
+                }
+                Alert.alert('Error', msg);
+                setPasswordError(msg);
+                return;
+            }
+
+            if (data?.code === 200) {
+                const { firstName, lastName, emailAddress, phoneNumber, deviceKey: serverDeviceKey } = data.data || {};
+                const finalDeviceKey = serverDeviceKey || devicekey;
+
+                const sessionId = Math.random().toString(36).substring(2, 15);
+
+                const items = [
+                    ['token', data.data.token],
+                    ['userId', data.data.userID.toString()],
+                    ['deviceKey', finalDeviceKey],
+                    ['sessionId', sessionId]
+                ];
+
+                if (firstName && lastName) items.push(['Name', `${firstName} ${lastName}`]);
+                if (emailAddress) items.push(['userEmail', emailAddress]);
+                if (phoneNumber) items.push(['phoneNumber', phoneNumber]);
+
+                await AsyncStorage.multiSet(items);
+
+                //   console.log('Session created:', sessionId);
+                //  console.log('Login API call completed successfully');
+
+                if (rememberMe) {
+                    if (keychainAvailable) await Keychain.setGenericPassword(trimmedU, trimmedP, { service: 'loginCredentials' });
+                    await AsyncStorage.setItem('rememberMePreference', 'true');
+                }
+
+                navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Home' }] }));
+            } else {
+                setPasswordError(data.message || '❗Invalid credentials.');
+            }
+        } catch (e) {
+            Alert.alert("Error", "Login failed.");
+        } finally {
+            loginInProgressRef.current = false;
+            setIsLoggingIn(false);
+        }
+    };
+
+    if (isLoadingCredentials) {
+        return (
+            <View style={[styles.outermostContainer, backgroundStyle, styles.loadingContainer]}>
+                <ActivityIndicator size="large" color="#1434A4" />
+            </View>
+        );
+    }
+
+    return (
+        <View style={[styles.outermostContainer, backgroundStyle]}>
+            <StatusBar barStyle="light-content" backgroundColor="#1434A4" />
+
+            {!showLoginForm ? (
+                <Animated.View style={[styles.container, { opacity: welcomeOpacity }]}>
+                    <SmartImage style={[styles.welcomeImage, dynamicStyles.welcomeImage]} source={require('../img/babyone.jpg')} />
+                    <View style={styles.fullDiv}>
+                        <Text style={[styles.startAppText, dynamicStyles.startAppText, { color: isDarkMode ? Colors.white : Colors.black }]}>
+                            Start Early, <Text style={styles.highlightText}>Shine Always!</Text>
+                        </Text>
+                        <Text style={[styles.excitedLink, { color: isDarkMode ? Colors.white : Colors.black }]}>
+                            Excited to begin?
+                        </Text>
+                        <TouchableOpacity style={[styles.customButtonInnerStart, dynamicStyles.customButtonInnerStart]} onPress={handleStartPress}>
+                            <Text style={[styles.buttonText, dynamicStyles.buttonText]}>Let's Get Started</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Animated.View>
+            ) : (
+                <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+                    <ScrollView style={backgroundStyle} contentContainerStyle={styles.loginContainer} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                        <Animated.Image style={[styles.image, dynamicStyles.image, { opacity: imageOpacity }]} source={NEW_LAUNCH_IMAGE} resizeMode="contain" />
+                        <Animated.Text style={[styles.loginInstructionText, { transform: [{ translateX: emailTextPosition }], color: isDarkMode ? Colors.white : Colors.black }]}>
+                            Please enter login details below
+                        </Animated.Text>
+
+                        <Animated.Text style={[{ marginTop: 5 }, styles.legend, dynamicStyles.legend, usernameError ? styles.errorLegend : null, { transform: [{ translateX: usernamePosition }], color: isDarkMode ? Colors.white : Colors.black }]}>
+                            Login ID
+                        </Animated.Text>
+                        <Animated.View style={[styles.fieldset, dynamicStyles.fieldset, usernameError ? styles.errorFieldset : null, { transform: [{ translateX: usernamePosition }] }]}>
+                            <TextInput
+                                style={[styles.input, dynamicStyles.input, usernameError ? styles.errorTextInput : null, { color: isDarkMode ? Colors.white : Colors.black }]}
+                                placeholder="Enter your username"
+                                placeholderTextColor="#a6a6a6"
+                                value={username}
+                                onChangeText={(t) => { setUsername(t); setUsernameError(''); }}
+                                autoCapitalize="none"
+                            />
+                        </Animated.View>
+                        {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
+
+                        <Animated.Text style={[{ marginTop: 9 }, styles.legend, dynamicStyles.legend, passwordError ? styles.errorLegend : null, { transform: [{ translateX: passwordPosition }], color: isDarkMode ? Colors.white : Colors.black }]}>
+                            Password
+                        </Animated.Text>
+                        <Animated.View style={[styles.fieldset, dynamicStyles.fieldset, passwordError ? styles.errorFieldset : null, { transform: [{ translateX: passwordPosition }] }]}>
+                            <TextInput
+                                style={[styles.input, dynamicStyles.input, passwordError ? styles.errorTextInput : null, { color: isDarkMode ? Colors.white : Colors.black }]}
+                                secureTextEntry
+                                placeholder="Enter your password"
+                                placeholderTextColor="#a6a6a6"
+                                value={password}
+                                onChangeText={(t) => { setPassword(t); setPasswordError(''); }}
+                            />
+                        </Animated.View>
+                        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+
+                        {adminMessage ? (
+                            <View style={styles.adminContactRowContainer}>
+                                <TouchableOpacity onPress={() => Linking.openURL(ADMIN_CONTACT_URL)} hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}>
+                                    <Text style={styles.adminContactLink}>Contact Admin</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : null}
+
+                        <View style={[styles.checkboxesContainer, dynamicStyles.checkboxesContainer]}>
+                            <Animated.View style={[styles.checkboxContainer, { transform: [{ translateX: checkboxPosition }] }]}>
+                                <CheckBox isChecked={termsAccepted} onClick={() => setTermsAccepted(!termsAccepted)} checkBoxColor="#1434A4" />
+                                <View style={styles.checkboxTextContainer}>
+                                    <Text style={[styles.checkboxLabel, { color: isDarkMode ? Colors.white : Colors.black }]}>By logging in, you agree to company’s </Text>
+
+                                    <TouchableOpacity
+                                        onPress={() => navigation.navigate('TermsofServicewithoutLog')}
+                                        hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+                                        activeOpacity={0.7}
+                                        style={styles.linkTouchable}
+                                    >
+                                        <Text style={styles.linkUnderline}>Terms and Conditions</Text>
+                                    </TouchableOpacity>
+
+                                    <Text style={[styles.checkboxLabel, { color: isDarkMode ? Colors.white : Colors.black }]}> and </Text>
+
+                                    <TouchableOpacity
+                                        onPress={() => navigation.navigate('PrivacyPolicywithoutLog')}
+                                        hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+                                        activeOpacity={0.7}
+                                        style={styles.linkTouchable}
+                                    >
+                                        <Text style={styles.linkUnderline}>Privacy Policy</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </Animated.View>
+
+                            <Animated.View style={[styles.checkboxContainerSecond, { transform: [{ translateX: rememberMePosition }] }]}>
+                                <CheckBox isChecked={rememberMe} onClick={() => setRememberMe(!rememberMe)} checkBoxColor="#1434A4" />
+                                <Text style={[styles.checkboxLabel, { color: isDarkMode ? Colors.white : Colors.black }]}>Remember me</Text>
+                            </Animated.View>
+                        </View>
+
+                        <Animated.View style={styles.shakeContainer}>
+                            <TouchableOpacity style={[styles.customButton, dynamicStyles.customButton, isLoggingIn && styles.buttonDisabled]} onPress={handleLogin} disabled={isLoggingIn}>
+                                {isLoggingIn ? <ActivityIndicator color="#FFFFFF" /> : <Text style={[styles.buttonText, dynamicStyles.buttonText]}>Login</Text>}
+                            </TouchableOpacity>
+                        </Animated.View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10 }}>
+                            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+                                <Text style={[styles.otpLink, { color: isDarkMode ? '#2754f7ff' : '#1434A4', marginRight: 15 }]}>Forgot Password</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={() => navigation.navigate('LoginOTP')}>
+                                <Text style={[styles.otpLink, { color: isDarkMode ? '#2754f7ff' : '#1434A4' }]}>Login Through OTP</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            )}
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    outermostContainer: { flex: 1 },
+    loadingContainer: { justifyContent: 'center', alignItems: 'center' },
+    container: { flex: 1, justifyContent: 'space-between', alignItems: 'center' },
+    welcomeImage: { height: '55%', width: '100%', borderBottomRightRadius: 150 },
+    fullDiv: { width: '100%', alignItems: 'center', paddingBottom: 40 },
+    startAppText: { fontSize: 24, fontStyle: 'italic', fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 20 },
+    highlightText: { color: '#1434A4' },
+    excitedLink: { marginTop: 10, fontSize: 16, marginBottom: 20 },
+    customButtonInnerStart: { backgroundColor: '#1434A4', width: '90%', height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: 5, elevation: 5 },
+    loginContainer: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 30 },
+    image: { height: 130, width: '90%', marginTop: 10, marginBottom: 20 },
+    loginInstructionText: { marginTop: 15, marginBottom: 15, fontSize: 16 },
+    fieldset: { width: '90%', maxWidth: 500, alignSelf: 'center', borderColor: '#ced4da', borderWidth: 1, paddingHorizontal: 10, marginTop: 5, borderRadius: 5, backgroundColor: '#fff', elevation: 3 },
+    legend: { width: '90%', maxWidth: 500, alignSelf: 'center', fontSize: 14, marginBottom: 2, paddingHorizontal: 10 },
+    input: { height: 45, paddingHorizontal: 10, fontSize: 14 },
+    customButton: { marginTop: 25, width: '90%', maxWidth: 500, height: 50, borderRadius: 5, backgroundColor: '#1434A4', justifyContent: 'center', alignItems: 'center', elevation: 5 },
+    buttonDisabled: { backgroundColor: '#a9a9a9', elevation: 0, },
+    buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
+    checkboxesContainer: { width: '90%', maxWidth: 500, alignSelf: 'center', marginTop: 25 },
+    checkboxContainer: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 15 },
+    checkboxContainerSecond: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+    checkboxLabel: { fontSize: 14, flexShrink: 1, flexBasis: 'auto', marginRight: 4 },
+    checkboxTextContainer: { marginLeft: 10, flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start' },
+    linkTouchable: { paddingHorizontal: 4 },
+    linkUnderline: { textDecorationLine: 'underline', fontWeight: 'bold', color: '#1434A4' },
+    otpLink: { marginTop: 20, fontSize: 16, textDecorationLine: 'underline' },
+    shakeContainer: { width: '100%', alignItems: 'center' },
+    errorFieldset: { borderColor: '#DC143C', borderWidth: 1.5 },
+    errorLegend: { color: '#DC143C', fontWeight: 'bold' },
+    errorTextInput: { color: '#DC143C' },
+    errorText: { color: '#DC143C', fontWeight: 'bold', marginTop: 5, fontSize: 14, width: '90%', alignSelf: 'center' },
+    adminContactRowContainer: { width: '90%', maxWidth: 500, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
+    adminContactText: { fontSize: 14, flex: 1, marginRight: 8 },
+    adminContactLink: { color: '#DC143C', textDecorationLine: 'underline', fontWeight: '700' },
+});
+
+export default LoginPage;

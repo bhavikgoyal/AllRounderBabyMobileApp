@@ -1,0 +1,41 @@
+buildscript {
+    ext {
+        buildToolsVersion = "35.0.0"
+        minSdkVersion = 24
+        compileSdkVersion = 35
+        targetSdkVersion = 35
+        ndkVersion = "26.1.10909125"
+        kotlinVersion = "1.9.24"
+    }
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.4.2")
+        classpath("com.facebook.react:react-native-gradle-plugin")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+    }
+}
+
+apply plugin: "com.facebook.react.rootproject"
+
+allprojects {
+    repositories {
+        mavenLocal()
+        maven { url "https://github.com/VdoCipher/maven-repo/raw/master/repo" }
+        google()
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+    }
+}
+
+subprojects {
+    plugins.withType(org.jetbrains.kotlin.gradle.plugin.KotlinBasePluginWrapper) {
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach { compileTask ->
+            compileTask.kotlinOptions.freeCompilerArgs = (compileTask.kotlinOptions.freeCompilerArgs ?: []) + ['-nowarn']
+        }
+    }
+}
