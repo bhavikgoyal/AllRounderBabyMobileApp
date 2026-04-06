@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { StatusBar, useWindowDimensions } from 'react-native';
-import { StyleSheet, ScrollView, View,FlatList, Image, Animated, Text, TouchableOpacity, Alert, ActivityIndicator, Pressable, useColorScheme, Platform, ToastAndroid, BackHandler, findNodeHandle } from 'react-native';
+import { StyleSheet, ScrollView, View, FlatList, Image, Animated, Text, TouchableOpacity, Alert, ActivityIndicator, Pressable, useColorScheme, Platform, ToastAndroid, BackHandler, findNodeHandle } from 'react-native';
 import { CommonActions, useIsFocused } from '@react-navigation/native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -69,7 +69,7 @@ const VideoStepList = ({ groups, completedSteps, onStepPress, isDarkMode, stepRe
     if (!groups || groups.length === 0) return null;
     return (
         <View style={styles.dropdownContent}>
-            
+
             {groups.map((group, index) => {
                 const isFirstStep = index === 0;
                 const previousStep = isFirstStep ? null : groups[index - 1];
@@ -119,15 +119,15 @@ const LevelModal = ({ levelName, children, onClose, isDarkMode, scrollRef, isLan
                             <Text style={styles.closeButtonText}>✕</Text>
                         </TouchableOpacity>
                     </View>
-                    <ScrollView 
-                    ref={scrollRef} 
-                    style={styles.modalScrollView} 
-                    contentContainerStyle={styles.modalScrollViewContent} 
-                    nestedScrollEnabled={true}
-                    removeClippedSubviews={true}
-                     scrollEventThrottle={16}
-                      decelerationRate="fast"
-                      keyboardShouldPersistTaps="handled" >
+                    <ScrollView
+                        ref={scrollRef}
+                        style={styles.modalScrollView}
+                        contentContainerStyle={styles.modalScrollViewContent}
+                        nestedScrollEnabled={true}
+                        removeClippedSubviews={true}
+                        scrollEventThrottle={16}
+                        decelerationRate="fast"
+                        keyboardShouldPersistTaps="handled" >
                         <View style={{ flex: 1 }}>
                             {children}
                         </View>
@@ -158,18 +158,18 @@ const CategoryButton = ({ image, title, onPress, isOpen, isComplete, imagenested
                         const marginLeft = -Math.round((imgWidth - wrapperWidth) / 3.5);
                         return (
                             <View style={{ width: wrapperWidth, height: imgHeight, overflow: 'hidden' }}>
-                                <Image source={image} 
-                                style={{ width: imgWidth, height: imgHeightScaled, marginLeft }} 
-                                resizeMode="cover" 
-                                fadeDuration={0}/>
+                                <Image source={image}
+                                    style={{ width: imgWidth, height: imgHeightScaled, marginLeft }}
+                                    resizeMode="cover"
+                                    fadeDuration={0} />
                             </View>
                         );
                     }
-                    return <Image source={image} 
-                    style={[{ width: '100%', height: imgHeight }]} resizeMode="cover" />;
+                    return <Image source={image}
+                        style={[{ width: '100%', height: imgHeight }]} resizeMode="cover" />;
                 }
-                return <Image source={image} 
-                style={[imagenestedStyle || styles.imagenested]} resizeMode="cover" />;
+                return <Image source={image}
+                    style={[imagenestedStyle || styles.imagenested]} resizeMode="cover" />;
             })()}
             <View style={[styles.textOverlay, isComplete ? styles.completedCategoryOverlay : null]}>
                 <Text style={styles.text}>{title}</Text>
@@ -942,11 +942,11 @@ const Dashboard = ({ navigation }) => {
                             let lockDurationHours = 0;
                             if (foundationKeys.includes(config.prerequisiteCategory)) lockDurationHours = 24;
                             else if (middleKeys.includes(config.prerequisiteCategory) || advancedKeys.includes(config.prerequisiteCategory)) lockDurationHours = 48;
-
+                            console.log(`Prerequisite completion date: ${completionDate}, lock duration (hours): ${lockDurationHours}`);
                             if (lockDurationHours > 0) {
                                 const hoursSinceCompletion = (new Date() - completionDate) / (1000 * 60 * 60);
                                 if (hoursSinceCompletion < lockDurationHours) {
-
+                                    console.log(`Topic is still locked. Hours since completion: ${lockDurationHours.toFixed(2)}`);
                                     Alert.alert("Topic Locked", `Great progress! Your next topic will unlock in ${lockDurationHours} hours. Use this time to practice what you’ve learned so far.`);
                                     return false;
                                 } else {
@@ -1458,34 +1458,34 @@ const Dashboard = ({ navigation }) => {
         const levelName = `${activeLevel.charAt(0).toUpperCase() + activeLevel.slice(1)} Level`;
 
         const contentWidth = Math.max(280, Math.round(windowWidth * 0.9));
-        return <LevelModal levelName={levelName} onClose={handleCloseModal} 
-        isDarkMode={isDarkMode} scrollRef={levelModalScrollRef} 
-        isLandscape={isLandscape} contentWidth={contentWidth}>
+        return <LevelModal levelName={levelName} onClose={handleCloseModal}
+            isDarkMode={isDarkMode} scrollRef={levelModalScrollRef}
+            isLandscape={isLandscape} contentWidth={contentWidth}>
             {levelKeys.map((key, index) => {
-            const config = masterConfig[key];
-            if (!config) return null;
-            const allSteps = config.finalGroupedData?.map(g => `step${g.stepNumber}`) || [];
-            const isComplete = allSteps.length > 0 && allSteps.every(stepKey => completedSteps[stepKey]);
-            const scrollPadding = 5;
-            const innerPadding = scrollPadding * 2;
-            const modalImageFullWidth = Math.max(240, contentWidth - innerPadding);
-            const modalImagenestedStyle = isLandscape
-                ? imagenestedStyle
-                : { ...(imagenestedStyle || {}), width: modalImageFullWidth, height: Math.max(150, Math.round(modalImageFullWidth * 0.65)), alignSelf: 'center' };
-            const modalWidthForItem = !isLandscape && index === 0 ? modalImageFullWidth : modalImageFullWidth;
+                const config = masterConfig[key];
+                if (!config) return null;
+                const allSteps = config.finalGroupedData?.map(g => `step${g.stepNumber}`) || [];
+                const isComplete = allSteps.length > 0 && allSteps.every(stepKey => completedSteps[stepKey]);
+                const scrollPadding = 5;
+                const innerPadding = scrollPadding * 2;
+                const modalImageFullWidth = Math.max(240, contentWidth - innerPadding);
+                const modalImagenestedStyle = isLandscape
+                    ? imagenestedStyle
+                    : { ...(imagenestedStyle || {}), width: modalImageFullWidth, height: Math.max(150, Math.round(modalImageFullWidth * 0.65)), alignSelf: 'center' };
+                const modalWidthForItem = !isLandscape && index === 0 ? modalImageFullWidth : modalImageFullWidth;
 
-            return (
-                <View key={key} ref={(el) => (categoryRefs.current[key] = el)} collapsable={false}>
-                    <CategoryButton image={config.image} title={config.name} onPress={() => handleCategoryPress(key)} isOpen={openCategory === key} isComplete={isComplete} imagenestedStyle={modalImagenestedStyle} modalMode={!isLandscape} modalWidth={modalWidthForItem} />
-                    {openCategory === key && <VideoStepList
-                        groups={config.finalGroupedData}
-                        completedSteps={completedSteps}
-                        onStepPress={handleDropdownItemClick}
-                        isDarkMode={isDarkMode}
-                        stepRefs={stepRefs} />}
-                </View>
-            );
-        })}
+                return (
+                    <View key={key} ref={(el) => (categoryRefs.current[key] = el)} collapsable={false}>
+                        <CategoryButton image={config.image} title={config.name} onPress={() => handleCategoryPress(key)} isOpen={openCategory === key} isComplete={isComplete} imagenestedStyle={modalImagenestedStyle} modalMode={!isLandscape} modalWidth={modalWidthForItem} />
+                        {openCategory === key && <VideoStepList
+                            groups={config.finalGroupedData}
+                            completedSteps={completedSteps}
+                            onStepPress={handleDropdownItemClick}
+                            isDarkMode={isDarkMode}
+                            stepRefs={stepRefs} />}
+                    </View>
+                );
+            })}
         </LevelModal>
     }
     useEffect(() => {
@@ -1533,10 +1533,10 @@ const Dashboard = ({ navigation }) => {
     return (
         <View style={[styles.container, backgroundStyle]}>
             <View style={styles.imageContainer}>
-                <ScrollView showsVerticalScrollIndicator={false} 
-                 scrollEventThrottle={16}
-                 decelerationRate="fast"
-                 removeClippedSubviews={false}
+                <ScrollView showsVerticalScrollIndicator={false}
+                    scrollEventThrottle={16}
+                    decelerationRate="fast"
+                    removeClippedSubviews={false}
                 >
                     <TouchableOpacity activeOpacity={1} onPress={() => handleIntroductionPress(1)}>
                         <Animated.View style={[styles.button, { transform: [{ scale: scale2 }], marginTop: 5 }]}>

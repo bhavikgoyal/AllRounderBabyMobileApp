@@ -14,6 +14,16 @@ import {
     Keyboard,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import sendOtpEmail from './utils/emailSend';
+import sendWhatsAppOtp from './utils/whatsappSend';
+import verifyOtp from './utils/Verify';
+import loginByOtp from './utils/loginByOtp';
+import getDeviceKey from './utils/deviceKey';
+import { CommonActions } from '@react-navigation/native';
+import { Linking } from 'react-native';
+
+const ADMIN_CONTACT_URL = 'https://allrounderbaby.com/UserQuestion';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginOTP = ({ navigation }) => {
     const isDarkMode = useColorScheme() === 'dark';
@@ -21,6 +31,7 @@ const LoginOTP = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [otpVisible, setOtpVisible] = useState(false);
     const [otp, setOtp] = useState('');
+    const [adminMessage, setAdminMessage] = useState(null);
     const [verifyLoading, setVerifyLoading] = useState(false);
     const otpLength = 6;
     const otpInputsRef = useRef([]);
@@ -77,35 +88,138 @@ const LoginOTP = ({ navigation }) => {
         }
     };
 
-    const handleSendOTP = () => {
-        if (!identifier.trim()) {
+    const isValidEmail = (str) => {
+        if (!str) return false;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str.trim());
+    };
+
+    const isValidWhatsAppNumber = (str) => {
+        if (!str) return false;
+        const s = str.replace(/[\s\-()]/g, '');
+        return /^\+?\d{8,15}$/.test(s);
+    };
+
+    const isValidIdentifier = (str) => {
+        if (!str) return false;
+        const t = str.trim();
+        return isValidEmail(t) || isValidWhatsAppNumber(t);
+    };
+
+    const handleSendOTP = async () => {
+        const id = identifier?.trim();
+        if (!id) {
             showToast('Please enter registered email/WhatsApp number.');
+            return;
+        }
+        if (!isValidIdentifier(id)) {
+            showToast('Please enter a valid email or WhatsApp number.');
             return;
         }
         Keyboard.dismiss();
         setLoading(true);
-        // TODO: wire actual API call to request OTP
-        setTimeout(() => {
+        try {
+            if (isValidEmail(id)) {
+                const resp = await sendOtpEmail(id);
+                console.log('sendOtpEmail response', resp);
+                const ok = resp && (resp.ok || resp.status === 200 || (resp.result && (resp.result.IsSuccess || resp.result.isSuccess || resp.result.code === 200)));
+                if (ok) {
+                    setOtpVisible(true);
+                    showToast((resp && resp.result && resp.result.message) || 'OTP sent to your email.');
+                } else {
+                    console.log('sendOtpEmail failed', resp);
+                    const msg = (resp && resp.result && resp.result.message) || resp?.error || 'Failed to send OTP to email.';
+                    if (resp && (resp.status === 400 || (resp.result && (resp.result.code === 400 || resp.result.Code === 400)))) {
+                        setAdminMessage(msg);
+                    }
+                    showToast(msg);
+                }
+            } else if (isValidWhatsAppNumber(id)) {
+                const normalized = id.replace(/[\s\-()]/g, '');
+                const resp = await sendWhatsAppOtp(normalized);
+                console.log('sendWhatsAppOtp response', resp);
+                const ok = resp && (resp.ok || resp.status === 200 || (resp.data && (resp.data.IsSuccess || resp.data.isSuccess || resp.data.code === 200)));
+                if (ok) {
+                    setOtpVisible(true);
+                    showToast((resp && resp.data && resp.data.message) || 'OTP sent to your WhatsApp.');
+                } else {
+                    console.log('sendWhatsAppOtp failed', resp);
+                    const msg = (resp && resp.data && resp.data.message) || resp?.error || 'Failed to send OTP to WhatsApp.';
+                    if (resp && (resp.status === 400 || (resp.data && (resp.data.code === 400 || resp.data.Code === 400)))) {
+                        setAdminMessage(msg);
+                    }
+                    showToast(msg);
+                }
+            }
+        } catch (e) {
+            showToast('Failed to send OTP.');
+        } finally {
             setLoading(false);
-            setOtpVisible(true);
-            showToast('OTP sent to the provided contact.');
-        }, 900);
+        }
     };
 
-    const handleVerifyOTP = () => {
+    const handleVerifyOTP = async () => {
         const digitsOnly = (otp || '').replace(/\D/g, '');
         if (digitsOnly.length !== otpLength) {
             showToast(`Please enter the ${otpLength}-digit OTP.`);
             return;
         }
+        const id = identifier?.trim();
+        if (!id) { showToast('Missing identifier.'); return; }
         Keyboard.dismiss();
         setVerifyLoading(true);
-        // TODO: call verify OTP API
-        setTimeout(() => {
+        try {
+            const resp = await verifyOtp(null, id, digitsOnly);
+            const ok = resp && (resp.ok || resp.status === 200 || (resp.data && (resp.data.IsSuccess || resp.data.isSuccess || resp.data.code === 200)));
+            if (ok) {
+                showToast((resp && resp.data && resp.data.message) || 'OTP verified.');
+                try {
+                    // proceed to login via LoginByOtp API
+                    const devicekey = await getDeviceKey();
+                    console.log('Calling loginByOtp with', id, devicekey);
+                    const loginResp = await loginByOtp(id, devicekey);
+                    console.log('loginByOtp response', loginResp);
+                    const payload = loginResp && (loginResp.data || loginResp.data);
+                    if (loginResp && loginResp.ok && payload && (payload.code === 200 || payload.code === '200') && (payload.Data || payload.data)) {
+                        const user = payload.Data || payload.data;
+                        const token = user.Token || user.token || (user.TokenString || user.tokenString) || null;
+                        const userId = (user.UserID || user.userID || user.userId || user.userID) || (user.userId ? String(user.userId) : null);
+                        const firstName = user.FirstName || user.firstName || '';
+                        const lastName = user.LastName || user.lastName || '';
+                        const emailAddress = user.EmailAddress || user.emailAddress || '';
+                        const phoneNumber = user.PhoneNumber || user.phoneNumber || '';
+
+                        const sessionId = Math.random().toString(36).substring(2, 15);
+                        const items = [];
+                        if (token) items.push(['token', token]);
+                        if (userId) items.push(['userId', String(userId)]);
+                        if (devicekey) items.push(['deviceKey', devicekey]);
+                        items.push(['sessionId', sessionId]);
+                        if (firstName && lastName) items.push(['Name', `${firstName} ${lastName}`]);
+                        if (emailAddress) items.push(['userEmail', emailAddress]);
+                        if (phoneNumber) items.push(['phoneNumber', phoneNumber]);
+                        if (items.length > 0) await AsyncStorage.multiSet(items);
+                        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Home' }] }));
+                    } else {
+                        const msg = (loginResp && loginResp.data && (loginResp.data.message || loginResp.data.Message)) || loginResp?.error || 'Login by OTP failed.';
+                        console.log('loginByOtp failure', loginResp);
+                        if (loginResp && (loginResp.status === 400 || (loginResp.data && (loginResp.data.code === 400 || loginResp.data.Code === 400)))) {
+                            setAdminMessage(msg);
+                        }
+                        showToast(msg);
+                    }
+                } catch (e) {
+                    console.error('loginByOtp flow error', e);
+                    showToast('Login failed after OTP verification.');
+                }
+            } else {
+                const msg = (resp && resp.data && resp.data.message) || resp?.error || 'OTP verification failed.';
+                showToast(msg);
+            }
+        } catch (e) {
+            showToast('Failed to verify OTP.');
+        } finally {
             setVerifyLoading(false);
-            showToast('OTP verified.');
-            // proceed to next step after verification
-        }, 800);
+        }
     };
 
     return (
@@ -132,6 +246,9 @@ const LoginOTP = ({ navigation }) => {
                     keyboardType="default"
                     autoCapitalize="none"
                 />
+                {identifier.trim().length > 0 && !isValidIdentifier(identifier) && (
+                    <Text style={styles.errorText}>Enter valid email or WhatsApp number</Text>
+                )}
 
                 {otpVisible ? (
                     <>
@@ -146,7 +263,7 @@ const LoginOTP = ({ navigation }) => {
                                         onChangeText={(t) => handleOtpChange(t, i)}
                                         onKeyPress={(e) => handleOtpKeyPress(e, i)}
                                         keyboardType="number-pad"
-                                        maxLength={otpLength}
+                                        maxLength={1}
                                         style={styles.otpBox}
                                         placeholder="-"
                                         placeholderTextColor="#a6a6a6"
@@ -154,7 +271,6 @@ const LoginOTP = ({ navigation }) => {
                                         returnKeyType="done"
                                         autoFocus={false}
                                         blurOnSubmit={true}
-                                    // KeyboardAwareScrollView handles scrolling
                                     />
                                 ))}
                             </View>
@@ -177,6 +293,13 @@ const LoginOTP = ({ navigation }) => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 12 }}>
                     <Text style={styles.backLink}>Close</Text>
                 </TouchableOpacity>
+                {adminMessage ? (
+                    <View style={styles.adminContactRowContainer}>
+                        <TouchableOpacity onPress={() => Linking.openURL(ADMIN_CONTACT_URL)} hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}>
+                            <Text style={styles.adminContactLink}>Contact Admin</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
             </View>
         </KeyboardAwareScrollView>
     );
@@ -195,6 +318,7 @@ const styles = StyleSheet.create({
     backLink: { color: '#1434A4', textDecorationLine: 'underline', fontWeight: '700' },
     otpRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 6 },
     otpBox: { width: 44, height: 52, borderRadius: 8, borderWidth: 1, borderColor: '#e6e9ee', backgroundColor: '#fff', textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#000' },
+    errorText: { color: '#dc3545', marginTop: 6, fontSize: 13, fontWeight: '600', alignSelf: 'flex-start', marginLeft: '5%' },
 });
 
 export default LoginOTP;

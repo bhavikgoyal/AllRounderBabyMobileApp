@@ -18,6 +18,10 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import { BASE_URL } from './config/api';
+import resetPasswordRequest from './utils/resetPasswordRequest';
+import sendOtpEmail from './utils/emailSend';
+import sendWhatsAppOtp from './utils/whatsappSend';
+import verifyOtp from './utils/Verify';
 
 const NEW_LAUNCH_IMAGE = require('../img/newlaunchscreen.png');
 
@@ -58,19 +62,71 @@ const ForgotPassword = ({ navigation }) => {
     };
 
     const handleSendOtp = async () => {
-        if (!email?.trim()) {
+        const identifier = email?.trim();
+        if (!identifier) {
             showToast('Please enter your registered email/WhatsApp number.');
             return;
         }
+        if (!isValidIdentifier(identifier)) {
+            showToast('Please enter a valid email or WhatsApp number.');
+            return;
+        }
+
         Keyboard.dismiss();
         setSendingOtp(true);
-        setTimeout(() => {
+        try {
+            if (isValidEmail(identifier)) {
+                const resp = await sendOtpEmail(identifier);
+                console.log('sendOtpEmail response', resp);
+                const ok = resp && (resp.ok || resp.status === 200 || (resp.result && (resp.result.IsSuccess || resp.result.isSuccess || resp.result.code === 200)));
+                if (ok) {
+                    setOtpSent(true);
+                    setOtpVerified(false);
+                    setOtpCode('');
+                    showToast((resp && (resp.result && resp.result.message)) || 'OTP sent to your email.');
+                } else {
+                    console.log('sendOtpEmail failed', resp);
+                    const msg = (resp && (resp.result && resp.result.message)) || resp?.error || 'Failed to send OTP to email.';
+                    showToast(msg);
+                }
+            } else if (isValidWhatsAppNumber(identifier)) {
+                const normalized = identifier.replace(/[\s\-()]/g, '');
+                const resp = await sendWhatsAppOtp(normalized);
+                console.log('sendWhatsAppOtp response', resp);
+                const ok = resp && (resp.ok || resp.status === 200 || (resp.data && (resp.data.IsSuccess || resp.data.isSuccess || resp.data.code === 200)));
+                if (ok) {
+                    setOtpSent(true);
+                    setOtpVerified(false);
+                    setOtpCode('');
+                    showToast((resp && (resp.data && resp.data.message)) || 'OTP sent to your WhatsApp.');
+                } else {
+                    console.log('sendWhatsAppOtp failed', resp);
+                    const msg = (resp && (resp.data && resp.data.message)) || resp?.error || 'Failed to send OTP to WhatsApp.';
+                    showToast(msg);
+                }
+            }
+        } catch (e) {
+            showToast('Failed to send OTP.');
+        } finally {
             setSendingOtp(false);
-            setOtpSent(true);
-            setOtpVerified(false);
-            setOtpCode('');
-            showToast('OTP sent to your registered contact. Please enter it below to verify.');
-        }, 900);
+        }
+    };
+
+    const isValidEmail = (str) => {
+        if (!str) return false;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str.trim());
+    };
+
+    const isValidWhatsAppNumber = (str) => {
+        if (!str) return false;
+        const s = str.replace(/[\s\-()]/g, '');
+        return /^\+?\d{8,15}$/.test(s);
+    };
+
+    const isValidIdentifier = (str) => {
+        if (!str) return false;
+        const t = str.trim();
+        return isValidEmail(t) || isValidWhatsAppNumber(t);
     };
 
     const [verifyingOtp, setVerifyingOtp] = useState(false);
@@ -121,13 +177,25 @@ const ForgotPassword = ({ navigation }) => {
     const handleVerifyOtp = async () => {
         const digitsOnly = (otpCode || '').replace(/\D/g, '');
         if (digitsOnly.length !== otpLength) { Alert.alert('Validation', `Please enter the ${otpLength}-digit OTP.`); return; }
+        const identifier = email?.trim();
+        if (!identifier) { showToast('Missing identifier.'); return; }
         Keyboard.dismiss();
         setVerifyingOtp(true);
-        setTimeout(() => {
+        try {
+            const resp = await verifyOtp(null, identifier, digitsOnly);
+            const ok = resp && (resp.ok || resp.status === 200 || (resp.data && (resp.data.IsSuccess || resp.data.isSuccess || resp.data.code === 200)));
+            if (ok) {
+                setOtpVerified(true);
+                showToast((resp && resp.data && resp.data.message) || 'OTP verified. You can now set a new password.');
+            } else {
+                const msg = (resp && resp.data && resp.data.message) || resp?.error || 'OTP verification failed.';
+                showToast(msg);
+            }
+        } catch (e) {
+            showToast('Failed to verify OTP.');
+        } finally {
             setVerifyingOtp(false);
-            setOtpVerified(true);
-            showToast('OTP verified. You can now set a new password.');
-        }, 900);
+        }
     };
 
     const handleReset = async () => {
@@ -138,33 +206,16 @@ const ForgotPassword = ({ navigation }) => {
             if (!otpVerified) { showToast('Please send and verify OTP before resetting password.'); setLoading(false); return; }
             if (!newPassword) { showToast('Please enter new password.'); setLoading(false); return; }
             if (newPassword !== confirmPassword) { showToast('Passwords do not match.'); setLoading(false); return; }
-
-            // Call backend ResetPassword API
-            const API_URL = `${BASE_URL}Login/ResetPassword`;
-            const payload = { Identifier: trimmedEmail, NewPassword: newPassword };
-
-            const resp = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            let data = null;
-            try { data = await resp.json(); } catch (err) { /* ignore parse errors */ }
-
-            if (!resp.ok) {
-                const msg = data?.message || `Request failed with status ${resp.status}`;
+            const resp = await resetPasswordRequest(trimmedEmail, newPassword);
+            const ok = resp && (resp.ok || resp.status === 200 || (resp.result && (resp.result.IsSuccess || resp.result.isSuccess || resp.result.code === 200)));
+            if (ok) {
+                const msg = (resp && (resp.result && (resp.result.message || resp.result.Message))) || 'Password has been reset.';
                 showToast(msg);
-                setLoading(false);
-                return;
-            }
-
-            if (data?.code === 200 || data?.IsSuccess || data?.isSuccess) {
-                showToast(data?.message || 'Password has been reset.');
                 setLoading(false);
                 setTimeout(() => navigation.navigate('LoginPage'), 900);
             } else {
-                showToast(data?.message || 'Failed to reset password.');
+                const msg = (resp && (resp.result && resp.result.message)) || resp?.message || 'Failed to reset password.';
+                showToast(msg);
                 setLoading(false);
             }
         } catch (e) {
@@ -179,7 +230,7 @@ const ForgotPassword = ({ navigation }) => {
             style={{ flex: 1, backgroundColor: isDarkMode ? '#2a3144' : Colors.white }}
             contentContainerStyle={{ flexGrow: 1, alignItems: 'center', paddingTop: 12, paddingBottom: 40 }}
             enableOnAndroid={true}
-            extraScrollHeight={220} // Increased scroll height to fix keyboard overlap
+            extraScrollHeight={220}
             enableAutomaticScroll={true}
             keyboardOpeningTime={0}
             keyboardShouldPersistTaps="handled"
@@ -196,28 +247,29 @@ const ForgotPassword = ({ navigation }) => {
                         placeholder="Enter registered email/WhatsApp number"
                         placeholderTextColor="#a6a6a6"
                         value={email}
-                        onChangeText={(t) => { setEmail(t); if (!t.trim()) setOtpSent(false); }}
+                        onChangeText={(t) => { setEmail(t); if (!t.trim() || !isValidIdentifier(t)) setOtpSent(false); }}
                         keyboardType="email-address"
                         autoCapitalize="none"
                     />
                 </View>
+                {email.trim().length > 0 && !isValidIdentifier(email) && (
+                    <Text style={styles.errorText}>Enter valid email or WhatsApp number</Text>
+                )}
 
-                {/* Send OTP Button - always visible until OTP is sent (disabled when no Login ID) */}
                 {!otpSent && (
                     <TouchableOpacity
                         style={[
                             styles.otpButton,
                             styles.fullWidthButton,
-                            (!email?.trim() || sendingOtp) ? styles.otpButtonDisabled : null,
+                            (!isValidIdentifier(email) || sendingOtp) ? styles.otpButtonDisabled : null,
                         ]}
                         onPress={handleSendOtp}
-                        disabled={sendingOtp || !email?.trim()}
+                        disabled={sendingOtp || !isValidIdentifier(email)}
                     >
                         {sendingOtp ? <ActivityIndicator color="#fff" /> : <Text style={styles.otpButtonText}>Send OTP</Text>}
                     </TouchableOpacity>
                 )}
 
-                {/* OTP Inputs */}
                 {otpSent && !otpVerified && (
                     <>
                         <Text style={[styles.label, dynamicStyles.legend]}>Enter OTP</Text>
@@ -251,7 +303,6 @@ const ForgotPassword = ({ navigation }) => {
                     <>
                         <Text style={styles.otpInfo}>OTP verified — set your new password below.</Text>
 
-                        {/* New Password */}
                         <Text style={[styles.label, dynamicStyles.legend]}>New Password</Text>
                         <View style={[styles.fieldset, dynamicStyles.fieldset, { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f2f2' }]}>
                             <TextInput
@@ -269,7 +320,6 @@ const ForgotPassword = ({ navigation }) => {
                             </TouchableOpacity>
                         </View>
 
-                        {/* Confirm Password */}
                         <Text style={[styles.label, dynamicStyles.legend]}>Confirm Password</Text>
                         <View style={[styles.fieldset, dynamicStyles.fieldset, { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f2f2' }, passwordsMismatch ? { borderColor: '#dc3545' } : null]}>
                             <TextInput
