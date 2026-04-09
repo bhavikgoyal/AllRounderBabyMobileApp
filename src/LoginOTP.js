@@ -1,17 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-    useColorScheme,
-    Image,
-    TextInput,
-    Platform,
-    Alert,
-    ToastAndroid,
-    useWindowDimensions,
-    Keyboard,
+    View, Text, StyleSheet, TouchableOpacity, useColorScheme, Image, TextInput, Platform, Alert, ToastAndroid, useWindowDimensions, Keyboard,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import sendOtpEmail from './utils/emailSend';
@@ -19,12 +8,12 @@ import sendWhatsAppOtp from './utils/whatsappSend';
 import verifyOtp from './utils/Verify';
 import loginByOtp from './utils/loginByOtp';
 import getDeviceKey from './utils/deviceKey';
+import getMessage from './utils/getMessage';
 import { CommonActions } from '@react-navigation/native';
 import { Linking } from 'react-native';
-
-const ADMIN_CONTACT_URL = 'https://allrounderbaby.com/UserQuestion';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const ADMIN_CONTACT_URL = 'https://allrounderbaby.com/UserQuestion';
 const LoginOTP = ({ navigation }) => {
     const isDarkMode = useColorScheme() === 'dark';
     const [identifier, setIdentifier] = useState('');
@@ -33,6 +22,13 @@ const LoginOTP = ({ navigation }) => {
     const [otp, setOtp] = useState('');
     const [adminMessage, setAdminMessage] = useState(null);
     const [verifyLoading, setVerifyLoading] = useState(false);
+    const [otpTimer, setOtpTimer] = useState(0);
+    const [canResend, setCanResend] = useState(true);
+    const otpTimerRef = useRef(null);
+    const [otpStatusMessage, setOtpStatusMessage] = useState('');
+    const [otpStatusIsError, setOtpStatusIsError] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
+    const [otpVerifiedMessage, setOtpVerifiedMessage] = useState('');
     const otpLength = 6;
     const otpInputsRef = useRef([]);
 
@@ -42,6 +38,29 @@ const LoginOTP = ({ navigation }) => {
             otpInputsRef.current = otpInputsRef.current.slice(0, otpLength);
         }
     }, [otpVisible]);
+
+    useEffect(() => {
+        return () => {
+            if (otpTimerRef.current) clearInterval(otpTimerRef.current);
+        };
+    }, []);
+
+    const startOtpTimer = (seconds = 60) => {
+        if (otpTimerRef.current) clearInterval(otpTimerRef.current);
+        setOtpTimer(seconds);
+        setCanResend(false);
+        otpTimerRef.current = setInterval(() => {
+            setOtpTimer((s) => {
+                if (s <= 1) {
+                    clearInterval(otpTimerRef.current);
+                    otpTimerRef.current = null;
+                    setCanResend(true);
+                    return 0;
+                }
+                return s - 1;
+            });
+        }, 1000);
+    };
 
     const handleOtpChange = (text, idx) => {
         const digits = text.replace(/\D/g, '').split('');
@@ -64,7 +83,6 @@ const LoginOTP = ({ navigation }) => {
             if (next) next.focus();
         }
     };
-
     const handleOtpKeyPress = ({ nativeEvent }, idx) => {
         if (nativeEvent.key === 'Backspace') {
             const chars = Array.from({ length: otpLength }, (_, i) => (otp[i] ? otp[i] : ''));
@@ -79,7 +97,6 @@ const LoginOTP = ({ navigation }) => {
     };
     const { width } = useWindowDimensions();
     const isTabletLocal = width >= 600;
-
     const showToast = (msg) => {
         if (Platform.OS === 'android' && ToastAndroid && typeof ToastAndroid.show === 'function') {
             ToastAndroid.show(msg, ToastAndroid.SHORT);
@@ -87,7 +104,6 @@ const LoginOTP = ({ navigation }) => {
             Alert.alert('', msg);
         }
     };
-
     const isValidEmail = (str) => {
         if (!str) return false;
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str.trim());
@@ -103,6 +119,19 @@ const LoginOTP = ({ navigation }) => {
         if (!str) return false;
         const t = str.trim();
         return isValidEmail(t) || isValidWhatsAppNumber(t);
+    };
+
+    const responseIsSuccess = (resp) => {
+        if (!resp) return false;
+        const body = resp.data ?? resp.result ?? resp;
+        if (typeof body.success !== 'undefined') return Boolean(body.success);
+        if (typeof body.IsSuccess !== 'undefined') return Boolean(body.IsSuccess);
+        if (typeof body.isSuccess !== 'undefined') return Boolean(body.isSuccess);
+        if (typeof body.code !== 'undefined') return String(body.code) === '200';
+        if (typeof body.Code !== 'undefined') return String(body.Code) === '200';
+        if (typeof resp.ok !== 'undefined') return Boolean(resp.ok);
+        if (typeof resp.status !== 'undefined') return Number(resp.status) === 200;
+        return false;
     };
 
     const handleSendOTP = async () => {
@@ -121,13 +150,14 @@ const LoginOTP = ({ navigation }) => {
             if (isValidEmail(id)) {
                 const resp = await sendOtpEmail(id);
                 console.log('sendOtpEmail response', resp);
-                const ok = resp && (resp.ok || resp.status === 200 || (resp.result && (resp.result.IsSuccess || resp.result.isSuccess || resp.result.code === 200)));
+                const ok = responseIsSuccess(resp);
                 if (ok) {
                     setOtpVisible(true);
-                    showToast((resp && resp.result && resp.result.message) || 'OTP sent to your email.');
+                    startOtpTimer(60);
+                    showToast(getMessage(resp) || 'OTP sent to your email.');
                 } else {
                     console.log('sendOtpEmail failed', resp);
-                    const msg = (resp && resp.result && resp.result.message) || resp?.error || 'Failed to send OTP to email.';
+                    const msg = getMessage(resp) || 'Failed to send OTP to email.';
                     if (resp && (resp.status === 400 || (resp.result && (resp.result.code === 400 || resp.result.Code === 400)))) {
                         setAdminMessage(msg);
                     }
@@ -137,13 +167,14 @@ const LoginOTP = ({ navigation }) => {
                 const normalized = id.replace(/[\s\-()]/g, '');
                 const resp = await sendWhatsAppOtp(normalized);
                 console.log('sendWhatsAppOtp response', resp);
-                const ok = resp && (resp.ok || resp.status === 200 || (resp.data && (resp.data.IsSuccess || resp.data.isSuccess || resp.data.code === 200)));
+                const ok = responseIsSuccess(resp);
                 if (ok) {
                     setOtpVisible(true);
-                    showToast((resp && resp.data && resp.data.message) || 'OTP sent to your WhatsApp.');
+                    startOtpTimer(60);
+                    showToast(getMessage(resp) || 'OTP sent to your WhatsApp.');
                 } else {
                     console.log('sendWhatsAppOtp failed', resp);
-                    const msg = (resp && resp.data && resp.data.message) || resp?.error || 'Failed to send OTP to WhatsApp.';
+                    const msg = getMessage(resp) || 'Failed to send OTP to WhatsApp.';
                     if (resp && (resp.status === 400 || (resp.data && (resp.data.code === 400 || resp.data.Code === 400)))) {
                         setAdminMessage(msg);
                     }
@@ -159,64 +190,126 @@ const LoginOTP = ({ navigation }) => {
 
     const handleVerifyOTP = async () => {
         const digitsOnly = (otp || '').replace(/\D/g, '');
+        const id = identifier?.trim();
         if (digitsOnly.length !== otpLength) {
             showToast(`Please enter the ${otpLength}-digit OTP.`);
             return;
         }
-        const id = identifier?.trim();
-        if (!id) { showToast('Missing identifier.'); return; }
+        if (!id) {
+            showToast('Please enter registered email/WhatsApp number.');
+            return;
+        }
         Keyboard.dismiss();
         setVerifyLoading(true);
         try {
             const resp = await verifyOtp(null, id, digitsOnly);
-            const ok = resp && (resp.ok || resp.status === 200 || (resp.data && (resp.data.IsSuccess || resp.data.isSuccess || resp.data.code === 200)));
+            console.log('verifyOtp response', resp);
+            const ok = responseIsSuccess(resp);
+            const message = getMessage(resp);
             if (ok) {
-                showToast((resp && resp.data && resp.data.message) || 'OTP verified.');
+                setOtpVerified(true);
+                setOtpVerifiedMessage(message || 'OTP verified.');
+                setOtpStatusMessage(message || 'OTP verified.');
+                setOtpStatusIsError(false);
+                showToast(message || 'OTP verified.');
                 try {
-                    // proceed to login via LoginByOtp API
-                    const devicekey = await getDeviceKey();
-                    console.log('Calling loginByOtp with', id, devicekey);
-                    const loginResp = await loginByOtp(id, devicekey);
-                    console.log('loginByOtp response', loginResp);
-                    const payload = loginResp && (loginResp.data || loginResp.data);
-                    if (loginResp && loginResp.ok && payload && (payload.code === 200 || payload.code === '200') && (payload.Data || payload.data)) {
-                        const user = payload.Data || payload.data;
-                        const token = user.Token || user.token || (user.TokenString || user.tokenString) || null;
-                        const userId = (user.UserID || user.userID || user.userId || user.userID) || (user.userId ? String(user.userId) : null);
-                        const firstName = user.FirstName || user.firstName || '';
-                        const lastName = user.LastName || user.lastName || '';
-                        const emailAddress = user.EmailAddress || user.emailAddress || '';
-                        const phoneNumber = user.PhoneNumber || user.phoneNumber || '';
 
-                        const sessionId = Math.random().toString(36).substring(2, 15);
-                        const items = [];
-                        if (token) items.push(['token', token]);
-                        if (userId) items.push(['userId', String(userId)]);
-                        if (devicekey) items.push(['deviceKey', devicekey]);
-                        items.push(['sessionId', sessionId]);
-                        if (firstName && lastName) items.push(['Name', `${firstName} ${lastName}`]);
-                        if (emailAddress) items.push(['userEmail', emailAddress]);
-                        if (phoneNumber) items.push(['phoneNumber', phoneNumber]);
-                        if (items.length > 0) await AsyncStorage.multiSet(items);
-                        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Home' }] }));
-                    } else {
-                        const msg = (loginResp && loginResp.data && (loginResp.data.message || loginResp.data.Message)) || loginResp?.error || 'Login by OTP failed.';
-                        console.log('loginByOtp failure', loginResp);
-                        if (loginResp && (loginResp.status === 400 || (loginResp.data && (loginResp.data.code === 400 || loginResp.data.Code === 400)))) {
+                    // 🔹 Get device key
+                    let localDeviceKey = await getDeviceKey();
+
+                    // 🔹 Login API call
+                    const API_URL = `${base}/Login/LoginByOtp?username=${encodeURIComponent(id)}&deviceId=${encodeURIComponent(deviceId)}`;
+
+                    const response = await fetch(API_URL);
+
+                    let data = {};
+                    try {
+                        data = await response.json();
+                    } catch (err) {
+                        console.warn('Failed to parse login response JSON', err);
+                    }
+                    if (!response.ok) {
+                        const msg = data?.message || `Request failed with status ${response.status}`;
+                        if (response.status === 400 || data?.code === 400) {
                             setAdminMessage(msg);
+                            setPasswordError(msg);
+                            showToast(msg);
+                            return;
                         }
+                        if (response.status === 401 || data?.code === 401) {
+                            const errMsg = data?.message || '❗Invalid credentials.';
+                            setPasswordError(errMsg);
+                            showToast(errMsg);
+                            return;
+                        }
+                        Alert.alert('Error', msg);
+                        setPasswordError(msg);
+                        showToast(msg);
+                        return;
+                    }
+                    if (data?.code === 200) {
+                        const {
+                            firstName,
+                            lastName,
+                            emailAddress,
+                            phoneNumber,
+                            deviceKey: serverDeviceKey,
+                            token,
+                            userID
+                        } = data.data || {};
+                        const finalDeviceKey = serverDeviceKey || localDeviceKey;
+                        const sessionId = Math.random().toString(36).substring(2, 15);
+                        const items = [
+                            ['token', token || ''],
+                            ['userId', String(userID || '')],
+                            ['deviceKey', finalDeviceKey || ''],
+                            ['sessionId', sessionId]
+                        ];
+                        if (firstName && lastName) {
+                            items.push(['Name', `${firstName} ${lastName}`]);
+                        }
+                        if (emailAddress) {
+                            items.push(['userEmail', emailAddress]);
+                        }
+                        if (phoneNumber) {
+                            items.push(['phoneNumber', phoneNumber]);
+                        }
+                        await AsyncStorage.multiSet(items);
+                        if (rememberMe) {
+                            if (keychainAvailable) {
+                                await Keychain.setGenericPassword(trimmedU, trimmedP, {
+                                    service: 'loginCredentials'
+                                });
+                            }
+                            await AsyncStorage.setItem('rememberMePreference', 'true');
+                        }
+                        navigation.dispatch(
+                            CommonActions.reset({
+                                index: 0,
+                                routes: [{ name: 'Home' }]
+                            })
+                        );
+                    } else {
+                        const msg = getMessage(loginResp) || 'Login failed after OTP verification.';
                         showToast(msg);
                     }
-                } catch (e) {
-                    console.error('loginByOtp flow error', e);
+                } catch (le) {
+                    console.error('loginByOtp error', le);
                     showToast('Login failed after OTP verification.');
                 }
             } else {
-                const msg = (resp && resp.data && resp.data.message) || resp?.error || 'OTP verification failed.';
-                showToast(msg);
+                setOtpVerified(false);
+                setOtpVerifiedMessage('');
+                setOtpStatusMessage(message || 'Invalid OTP.');
+                setOtpStatusIsError(true);
+                showToast(message || 'Invalid OTP.');
             }
-        } catch (e) {
-            showToast('Failed to verify OTP.');
+        } catch (err) {
+            setOtpVerified(false);
+            setOtpVerifiedMessage('');
+            setOtpStatusMessage('Failed to verify OTP.');
+            setOtpStatusIsError(true);
+            showToast('Failed to verify OTP. Please try again.');
         } finally {
             setVerifyLoading(false);
         }
@@ -234,7 +327,6 @@ const LoginOTP = ({ navigation }) => {
             showsVerticalScrollIndicator={true}
         >
             <Image source={require('../img/newlaunchscreen.png')} style={styles.logo} resizeMode="contain" />
-
             <View style={[styles.form, { paddingHorizontal: isTabletLocal ? 40 : 20 }]}>
                 <Text style={[styles.label, { color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Login ID</Text>
                 <TextInput
@@ -249,7 +341,6 @@ const LoginOTP = ({ navigation }) => {
                 {identifier.trim().length > 0 && !isValidIdentifier(identifier) && (
                     <Text style={styles.errorText}>Enter valid email or WhatsApp number</Text>
                 )}
-
                 {otpVisible ? (
                     <>
                         <Text style={[styles.label, { marginTop: 18, color: isDarkMode ? '#FFFFFF' : '#000000' }]}>Enter OTP</Text>
@@ -275,10 +366,19 @@ const LoginOTP = ({ navigation }) => {
                                 ))}
                             </View>
                         </View>
-
+                        <TouchableOpacity
+                            style={[styles.button, (!canResend || loading) && styles.buttonDisabled]}
+                            onPress={handleSendOTP}
+                            disabled={!canResend || loading}
+                        >
+                            <Text style={[styles.buttonText, (!canResend || loading) && styles.buttonTextDisabled]}>{loading ? 'Sending...' : (canResend ? 'Resend OTP' : `Resend in ${otpTimer}s`)}</Text>
+                        </TouchableOpacity>
                         <TouchableOpacity style={styles.button} onPress={handleVerifyOTP} disabled={verifyLoading}>
                             <Text style={[styles.buttonText, verifyLoading && styles.buttonTextDisabled]}>{verifyLoading ? 'Verifying...' : 'Verify OTP'}</Text>
                         </TouchableOpacity>
+                        {otpStatusMessage ? (
+                            <Text style={otpStatusIsError ? styles.errorText : styles.otpInfo}>{otpStatusMessage}</Text>
+                        ) : null}
                     </>
                 ) : (
                     <TouchableOpacity
@@ -289,7 +389,6 @@ const LoginOTP = ({ navigation }) => {
                         <Text style={[styles.buttonText, (loading || !identifier.trim()) && styles.buttonTextDisabled]}>{loading ? 'Sending...' : 'Send OTP'}</Text>
                     </TouchableOpacity>
                 )}
-
                 <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 12 }}>
                     <Text style={styles.backLink}>Close</Text>
                 </TouchableOpacity>
@@ -304,7 +403,6 @@ const LoginOTP = ({ navigation }) => {
         </KeyboardAwareScrollView>
     );
 };
-
 const styles = StyleSheet.create({
     container: { flexGrow: 1, alignItems: 'center', paddingTop: 36 },
     logo: { width: 180, height: 90, marginBottom: 18 },
@@ -319,6 +417,7 @@ const styles = StyleSheet.create({
     otpRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 6 },
     otpBox: { width: 44, height: 52, borderRadius: 8, borderWidth: 1, borderColor: '#e6e9ee', backgroundColor: '#fff', textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#000' },
     errorText: { color: '#dc3545', marginTop: 6, fontSize: 13, fontWeight: '600', alignSelf: 'flex-start', marginLeft: '5%' },
+    otpInfo: { color: '#28a745', marginTop: 6, fontSize: 13, fontWeight: '600', alignSelf: 'flex-start', marginLeft: '5%' },
 });
 
 export default LoginOTP;

@@ -10,16 +10,13 @@ export async function loginByOtp(username, deviceId = '') {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
         });
-
         const text = await resp.text();
         let data = null;
         try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-
         return { ok: resp.ok, status: resp.status, data };
     } catch (err) {
         console.error('loginByOtp error', err);
         return { ok: false, status: 0, data: null, error: String(err) };
     }
 }
-
 export default loginByOtp;

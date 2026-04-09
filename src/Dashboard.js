@@ -1061,14 +1061,13 @@ const Dashboard = ({ navigation }) => {
             //  Alert.alert('Error', 'No video selected. Please select a video first.');
             return;
         }
-
         if (step !== 1001 && step !== 1002) {
             const stepGroup = selectedStepGroup;
             const hindiVideoId = stepGroup?.hindiVideo?.id;
             const englishVideoId = stepGroup?.englishVideo?.id;
             let totalWatchCount = 0;
-
             try {
+                debugger;
                 const videoIdsForStep = [hindiVideoId, englishVideoId].filter(Boolean);
                 for (const id of videoIdsForStep) {
                     const endpoint = `${url}User/User_Watch_Data?id=${userId}&video_id=${id}&DeviceKey=${deviceKey}`;
@@ -1082,9 +1081,11 @@ const Dashboard = ({ navigation }) => {
                         }
                     }
                 }
-
                 if (totalWatchCount >= 4) {
-                    Alert.alert(' You’ve reached the maximum limit for now. If any new update comes, we’ll notify you instantly.');
+                    Alert.alert("Limit Reached",
+                        `You’ve reached the maximum limit for now. If any new update comes, we’ll notify you instantly.`);
+
+                    //  Alert.alert(' You’ve reached the maximum limit for now. If any new update comes, we’ll notify you instantly.');
                     return;
                 }
                 const specificVideoEndpoint = `${url}User/User_Watch_Data?id=${userId}&video_id=${videoId}&DeviceKey=${deviceKey}`;
