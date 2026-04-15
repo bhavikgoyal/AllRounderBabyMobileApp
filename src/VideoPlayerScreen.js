@@ -15,8 +15,6 @@ const VideoPlayerScreen = () => {
   const progressSentRef = useRef(false);
   const finishedSentRef = useRef(false);
   const maxWatchedTimeRef = useRef(0);
-  /* ================= GET PARAMS ================= */
-
   const {
     VideoId,
     annotate,
@@ -27,12 +25,10 @@ const VideoPlayerScreen = () => {
     stage_name,
     displayStep,
   } = route.params || {};
-
   const videoId = VideoId;
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
   const playerHeight = isLandscape ? screenHeight : Math.round((screenWidth * 9) / 16);
-
   const [credentials, setCredentials] = useState({
     otp: null,
     playbackInfo: null,
@@ -43,9 +39,6 @@ const VideoPlayerScreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [videoCompleted, setVideoCompleted] = useState(false);
   const currentTimeRef = useRef(0);
-
-
-  /* ================= FETCH OTP ================= */
 
   const fetchVideoCredentials = useCallback(async () => {
     if (!videoId) return;
@@ -105,8 +98,6 @@ const VideoPlayerScreen = () => {
     return n < 0 ? 0 : Math.floor(n);
   }, []);
 
-  /* ================= REFRESH WHEN VIDEO CHANGES ================= */
-
   useEffect(() => {
     if (videoId) {
       progressSentRef.current = false;
@@ -117,19 +108,15 @@ const VideoPlayerScreen = () => {
     }
   }, [videoId, fetchVideoCredentials]);
 
-  /* ================= CLEANUP ================= */
-
   useEffect(() => {
     return () => {
       try {
-        // Simply stop and release the player immediately on unmount
         if (playerRef.current) {
           playerRef.current.stop?.();
           playerRef.current.release?.();
           playerRef.current = null;
         }
       } catch (e) {
-        // silently ignore errors
       }
     };
   }, []);
@@ -147,17 +134,6 @@ const VideoPlayerScreen = () => {
       }
     };
   }, []);
-
-  // hide header and status bar when device rotated to landscape or when player enters fullscreen
-  // useEffect(() => {
-  //   try {
-  //     navigation.setOptions({ headerShown: !isLandscape });
-  //   } catch (e) { }
-
-  //   try {
-  //     StatusBar.setHidden(isLandscape || isFullscreen);
-  //   } catch (e) { }
-  // }, [isLandscape, navigation]);
   useEffect(() => {
     navigation.setOptions({ headerShown: !isLandscape });
     StatusBar.setHidden(isLandscape || isFullscreen);
@@ -189,28 +165,21 @@ const VideoPlayerScreen = () => {
       };
     }, [videoId, fetchVideoCredentials, handleBack])
   );
-  /* ================= UPDATE PROGRESS ================= */
 
   const updateProgress = useCallback(
     async (isFinished = false, overrideSeconds = null) => {
       if (!videoId) return;
-
       try {
         const [userId, token, deviceKey] = await Promise.all([
           AsyncStorage.getItem("userId"),
           AsyncStorage.getItem("token"),
           AsyncStorage.getItem("deviceKey"),
         ]);
-
         const userIdInt = userId ? parseInt(userId, 10) : null;
 
-        // ✅ Use exact currentTime from player if overrideSeconds is not passed
         const sendSecs = overrideSeconds != null
           ? Math.floor(overrideSeconds)
           : Math.floor(currentTimeRef.current);
-
-        //console.log("Sending watched time (exact currentTime):", sendSecs);
-
         const finishedThreshold = total_time ? Math.ceil(toSeconds(total_time) * 0.8) : sendSecs;
         const finished = sendSecs >= finishedThreshold ? 1 : 0;
 
@@ -247,28 +216,22 @@ const VideoPlayerScreen = () => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const data = await response.json();
-        //  console.log("Progress update response:", data);
+        console.log("Progress update response:", data);
 
       } catch (error) {
-        // console.log("Failed to update progress", error?.message || error);
       }
     },
     [videoId, currentTime, language, step, stage_name, displayStep, total_time]
   );
-  /* ================= BACK HANDLER ================= */
-
 
   const handleBack = useCallback(() => {
-    // 1️⃣ Stop video immediately to release native player resources
     if (playerRef.current) {
       playerRef.current.stop?.();
       playerRef.current.release?.();
     }
 
-    // 2️⃣ Fire progress update asynchronously (non-blocking)
     updateProgress().catch(() => { });
 
-    // 3️⃣ Navigate immediately
     if (cameFrom === "Dashboard") {
       navigation.navigate("Home");
     } else if (cameFrom) {
@@ -279,8 +242,6 @@ const VideoPlayerScreen = () => {
 
     return true;
   }, [navigation, cameFrom, updateProgress]);
-
-  /* ================= LOADING ================= */
 
   if (isLoading || !credentials?.otp) {
     return (
@@ -299,9 +260,6 @@ const VideoPlayerScreen = () => {
       </View>
     );
   }
-
-  /* ================= RENDER ================= */
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" hidden={isLandscape} />
@@ -321,9 +279,8 @@ const VideoPlayerScreen = () => {
         onProgress={(p) => {
           if (p && typeof p.currentTime === "number") {
             const secs = Math.floor(p.currentTime > 1000 ? p.currentTime / 1000 : p.currentTime);
-            setCurrentTime(secs);         // state update for UI
-            currentTimeRef.current = secs; // ref for real-time usage
-            //  console.log("Current Time (s):", secs);
+            setCurrentTime(secs);
+            currentTimeRef.current = secs;
           }
         }}
         onMediaEnded={async () => {
@@ -331,11 +288,24 @@ const VideoPlayerScreen = () => {
           try {
             await updateProgress(true);
           } catch (e) {
-            // console.log('updateProgress onMediaEnded failed', e);
           }
           if (isFullscreen) {
             playerRef.current?.exitFullscreenV2?.();
           }
+          try {
+            playerRef.current?.stop?.();
+            playerRef.current?.release?.();
+          } catch (e) { }
+
+          try {
+            if (cameFrom === "Dashboard") {
+              navigation.navigate("Home");
+            } else if (cameFrom) {
+              navigation.navigate(cameFrom);
+            } else {
+              navigation.navigate("PreviewHome");
+            }
+          } catch (e) { }
         }}
         onFullscreenChange={(isFull) => {
           setIsFullscreen(isFull);

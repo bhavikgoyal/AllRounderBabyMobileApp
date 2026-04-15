@@ -148,7 +148,6 @@ const LoginPage = ({ navigation }) => {
             if (!devicekey) {
                 devicekey = Date.now().toString(36) + Math.random().toString(36).substring(2);
                 await AsyncStorage.setItem('devicekey', devicekey);
-                // console.log('Generated new devicekey:', devicekey);
             } else {
                 console.log('Using existing devicekey:', devicekey);
             }
@@ -188,6 +187,7 @@ const LoginPage = ({ navigation }) => {
             let data = null;
             try {
                 data = await response.json();
+                console.log('Login response data:', data);
             } catch (parseErr) {
                 console.warn('Failed to parse login response JSON', parseErr);
             }
