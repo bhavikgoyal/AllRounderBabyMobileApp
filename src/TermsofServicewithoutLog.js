@@ -12,7 +12,6 @@ const TermsofServicewithoutLog = () => {
   useFocusEffect(
     React.useCallback(() => {
       const backAction = () => {
-        // console.log('TermsofServicewithoutLog: hardware back press');
         try {
           Alert.alert('Debug', 'Android back pressed on Terms of Service');
         } catch (e) {

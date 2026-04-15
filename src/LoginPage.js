@@ -187,7 +187,6 @@ const LoginPage = ({ navigation }) => {
             let data = null;
             try {
                 data = await response.json();
-                console.log('Login response data:', data);
             } catch (parseErr) {
                 console.warn('Failed to parse login response JSON', parseErr);
             }
@@ -226,10 +225,6 @@ const LoginPage = ({ navigation }) => {
                 if (phoneNumber) items.push(['phoneNumber', phoneNumber]);
 
                 await AsyncStorage.multiSet(items);
-
-                //   console.log('Session created:', sessionId);
-                //  console.log('Login API call completed successfully');
-
                 if (rememberMe) {
                     if (keychainAvailable) await Keychain.setGenericPassword(trimmedU, trimmedP, { service: 'loginCredentials' });
                     await AsyncStorage.setItem('rememberMePreference', 'true');

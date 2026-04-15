@@ -332,22 +332,33 @@ const Dashboard = ({ navigation }) => {
         });
     };
 
-    const groupedTrustData = useMemo(() => groupVideosByApiStep(videoData['trust']), [videoData['trust']]);
-    const groupedLoveAndCareData = useMemo(() => groupVideosByApiStep(videoData['loveAndCare']), [videoData['loveAndCare']]);
-    const groupedRespectData = useMemo(() => groupVideosByApiStep(videoData['respect']), [videoData['respect']]);
-    const groupedFamiliarData = useMemo(() => groupVideosByApiStep(videoData['familiar']), [videoData['familiar']]);
-    const groupedSpeechDevData = useMemo(() => groupVideosByApiStep(videoData['speechDevelopment']), [videoData['speechDevelopment']]);
-    const groupedTruthData = useMemo(() => groupVideosByApiStep(videoData['truth']), [videoData['truth']]);
-    const groupedSetBoundariesData = useMemo(() => groupVideosByApiStep(videoData['setBoundaries']), [videoData['setBoundaries']]);
-    const groupedListenFollowData = useMemo(() => groupVideosByApiStep(videoData['listenFollow']), [videoData['listenFollow']]);
-    const groupedCooperationData = useMemo(() => groupVideosByApiStep(videoData['cooperation']), [videoData['cooperation']]);
-    const groupedImaginationData = useMemo(() => groupVideosByApiStep(videoData['imagination']), [videoData['imagination']]);
-    const groupedHelpData = useMemo(() => groupVideosByApiStep(videoData['help']), [videoData['help']]);
-    const groupedDiscussionData = useMemo(() => groupVideosByApiStep(videoData['discussion']), [videoData['discussion']]);
-    const groupedNarrateData = useMemo(() => groupVideosByApiStep(videoData['narrate']), [videoData['narrate']]);
-    const groupedEmotionsData = useMemo(() => groupVideosByApiStep(videoData['emotions']), [videoData['emotions']]);
-    const groupedFeelingsData = useMemo(() => groupVideosByApiStep(videoData['feelings']), [videoData['feelings']]);
-    const groupedKnowledgeData = useMemo(() => groupVideosByApiStep(videoData['knowledge']), [videoData['knowledge']]);
+    const groupedAllData = useMemo(() => {
+        const keys = [
+            'trust', 'loveAndCare', 'respect', 'familiar', 'speechDevelopment', 'truth',
+            'setBoundaries', 'listenFollow', 'cooperation', 'imagination', 'help',
+            'discussion', 'narrate', 'emotions', 'feelings', 'knowledge'
+        ];
+        const out = {};
+        keys.forEach(k => { out[k] = groupVideosByApiStep(videoData[k]); });
+        return out;
+    }, [videoData]);
+
+    const groupedTrustData = groupedAllData.trust;
+    const groupedLoveAndCareData = groupedAllData.loveAndCare;
+    const groupedRespectData = groupedAllData.respect;
+    const groupedFamiliarData = groupedAllData.familiar;
+    const groupedSpeechDevData = groupedAllData.speechDevelopment;
+    const groupedTruthData = groupedAllData.truth;
+    const groupedSetBoundariesData = groupedAllData.setBoundaries;
+    const groupedListenFollowData = groupedAllData.listenFollow;
+    const groupedCooperationData = groupedAllData.cooperation;
+    const groupedImaginationData = groupedAllData.imagination;
+    const groupedHelpData = groupedAllData.help;
+    const groupedDiscussionData = groupedAllData.discussion;
+    const groupedNarrateData = groupedAllData.narrate;
+    const groupedEmotionsData = groupedAllData.emotions;
+    const groupedFeelingsData = groupedAllData.feelings;
+    const groupedKnowledgeData = groupedAllData.knowledge;
     const masterConfig = useMemo(() => {
         const config = {
             'trust': { name: 'TRUST', folderId: 'fa26d3b1719c47f89b3efc758ad107bd', groupedData: groupedTrustData, image: require('../img/trustimg.png'), prerequisiteCategory: null },
@@ -439,7 +450,6 @@ const Dashboard = ({ navigation }) => {
                             setLastViewedRequest(null);
                         },
                         (err) => {
-                            console.log('measureLayout error', err);
                             if (scrollRef && typeof scrollRef.scrollTo === 'function') {
                                 scrollRef.scrollTo({ y: 0, animated: true });
                             }
@@ -474,7 +484,6 @@ const Dashboard = ({ navigation }) => {
 
     const handleLastViewedPress = async () => {
         try {
-            // Prefer using highest completed step (unlockedStepsThreshold) when available.
             if (unlockedStepsThreshold && Number.isFinite(unlockedStepsThreshold) && unlockedStepsThreshold > 0) {
                 const resolvedCategory = getCategoryFromStep(unlockedStepsThreshold);
                 if (resolvedCategory && masterConfig[resolvedCategory]) {
@@ -486,7 +495,6 @@ const Dashboard = ({ navigation }) => {
                 }
             }
 
-            // Fallback: use persisted lastViewed if threshold unavailable or didn't resolve.
             const lastViewedJson = await AsyncStorage.getItem('lastViewed');
             if (!lastViewedJson) {
                 showToast("No last viewed topic found to continue from.");
@@ -496,7 +504,6 @@ const Dashboard = ({ navigation }) => {
             const lastViewed = JSON.parse(lastViewedJson);
             let { category, step } = lastViewed || {};
             console.log("Last viewed data:", lastViewed);
-            console.log("category:", category, "step:", step, "unlockedStepsThreshold:", unlockedStepsThreshold);
             const stepNum = typeof step === 'number' ? step : (step ? Number(step) : NaN);
 
             if (!Number.isNaN(stepNum) && (stepNum === 1001 || stepNum === 1002)) {
@@ -528,22 +535,19 @@ const Dashboard = ({ navigation }) => {
         const loadInitialData = async () => {
             setIsLoading(true);
             try {
-                await loadCompletedSteps();
-                await loadMiddleLevelCompletionTime();
-                await loadAdvancedLevelCompletionTime();
-                await loadTopicCompletionTimes();
+                const [storedToken, storedUserId] = await Promise.all([
+                    AsyncStorage.getItem('token'),
+                    AsyncStorage.getItem('userId'),
+                    loadCompletedSteps(),
+                    loadMiddleLevelCompletionTime(),
+                    loadAdvancedLevelCompletionTime(),
+                    loadTopicCompletionTimes(),
+                ]);
 
-                const storedToken = await AsyncStorage.getItem('token');
-                const storedUserId = await AsyncStorage.getItem('userId');
                 if (storedToken && storedUserId) {
                     setToken(storedToken);
                     setUserID(storedUserId);
                     await fetchUserProgress(storedUserId, storedToken);
-                    try {
-                        await prefetchAllCategoryVideos(storedToken);
-                    } catch (err) {
-                        console.error('Prefetch after initial progress fetch failed:', err);
-                    }
                 } else {
                     setDataLoaded(true);
                 }
@@ -567,23 +571,6 @@ const Dashboard = ({ navigation }) => {
     }, [navigation]);
 
     useEffect(() => { dataLoadedRef.current = dataLoaded; }, [dataLoaded]);
-
-    useEffect(() => {
-        if (token && userId) {
-            (async () => {
-                try {
-                    await fetchUserProgress(userId, token);
-                    try {
-                        await prefetchAllCategoryVideos(token);
-                    } catch (err) {
-                        console.error('Prefetch after token change failed:', err);
-                    }
-                } catch (e) {
-                    console.error('fetchUserProgress on token change failed', e);
-                }
-            })();
-        }
-    }, [token, userId]);
 
     const getCategoryFromStep = (stepNumber) => {
         for (const categoryKey in masterConfig) {
@@ -651,11 +638,7 @@ const Dashboard = ({ navigation }) => {
                             item.level_step > highestCompletedStep
                         ) {
                             highestCompletedStep = item.level_step;
-
-
-
                             if (item.stage_name) {
-                                console.log("Processing stage name:", item.stage_name);
                                 const name = item.stage_name.toString().trim();
 
                                 const match = name.match(/^\s*([^\d]+?)\s*(\d+)?\s*$/);
@@ -691,8 +674,6 @@ const Dashboard = ({ navigation }) => {
                     }
 
                 });
-                console.log("Mapped Category:", mappedCategory, "Mapped Local Step:", mappedLocalCategoryStep, "Highest Completed Step:", highestCompletedStep);
-
                 if (mappedCategory) {
                     try {
                         const lastViewedObj = {
@@ -701,7 +682,6 @@ const Dashboard = ({ navigation }) => {
                             timestamp: new Date().toISOString()
                         };
                         await AsyncStorage.setItem('lastViewed', JSON.stringify(lastViewedObj));
-                        console.log('Primed lastViewed from server progress:', lastViewedObj);
                     } catch (err) {
                         console.error('Failed to save last viewed info from server progress:', err);
                     }
@@ -712,7 +692,6 @@ const Dashboard = ({ navigation }) => {
                     const matched = groups.find(g => Number(g.displayStepNumber) === Number(mappedLocalCategoryStep) || Number(g.apiStepNumber) === Number(mappedLocalCategoryStep));
                     if (matched) {
                         const globalStep = matched.stepNumber;
-                        console.log('Resolved global step for', mappedCategory, mappedLocalCategoryStep, '->', globalStep);
                         if (globalStep > highestCompletedStep) {
                             highestCompletedStep = globalStep;
                         }
@@ -747,6 +726,8 @@ const Dashboard = ({ navigation }) => {
             }
         } catch (error) {
             console.error("Failed to fetch user progress:", error);
+        } finally {
+            setDataLoaded(true);
         }
     };
 
@@ -804,24 +785,24 @@ const Dashboard = ({ navigation }) => {
         }
     };
 
-    // const startHandAnimation = () => {
-    //     const targetX = windowWidth * 0.4;
-    //     const targetY = windowHeight * 0.3;
-    //     return Animated.loop(
-    //         Animated.sequence([
-    //             Animated.delay(1500),
-    //             Animated.parallel([Animated.timing(handOpacity, { toValue: 1, duration: 300, useNativeDriver: true }), Animated.timing(handPositionX, { toValue: targetX, duration: 1000, useNativeDriver: true }), Animated.timing(handPositionY, { toValue: targetY, duration: 1000, useNativeDriver: true }),]),
-    //             Animated.sequence([Animated.timing(handScale, { toValue: 0.85, duration: 150, useNativeDriver: true }), Animated.timing(handScale, { toValue: 1, duration: 150, useNativeDriver: true }),]),
-    //             Animated.delay(300),
-    //             Animated.parallel([Animated.timing(handOpacity, { toValue: 0, duration: 300, delay: 700, useNativeDriver: true }), Animated.timing(handPositionX, { toValue: windowWidth * 0.6, duration: 1000, useNativeDriver: true }), Animated.timing(handPositionY, { toValue: windowHeight * 0.4, duration: 1000, useNativeDriver: true }),]),
-    //             Animated.delay(1000),
-    //         ])
-    //     );
-    // };
+    const startHandAnimation = () => {
+        const targetX = windowWidth * 0.4;
+        const targetY = windowHeight * 0.3;
+        return Animated.loop(
+            Animated.sequence([
+                Animated.delay(1500),
+                Animated.parallel([Animated.timing(handOpacity, { toValue: 1, duration: 300, useNativeDriver: true }), Animated.timing(handPositionX, { toValue: targetX, duration: 1000, useNativeDriver: true }), Animated.timing(handPositionY, { toValue: targetY, duration: 1000, useNativeDriver: true }),]),
+                Animated.sequence([Animated.timing(handScale, { toValue: 0.85, duration: 150, useNativeDriver: true }), Animated.timing(handScale, { toValue: 1, duration: 150, useNativeDriver: true }),]),
+                Animated.delay(300),
+                Animated.parallel([Animated.timing(handOpacity, { toValue: 0, duration: 300, delay: 700, useNativeDriver: true }), Animated.timing(handPositionX, { toValue: windowWidth * 0.6, duration: 1000, useNativeDriver: true }), Animated.timing(handPositionY, { toValue: windowHeight * 0.4, duration: 1000, useNativeDriver: true }),]),
+                Animated.delay(1000),
+            ])
+        );
+    };
 
     useEffect(() => {
-        // const handAnimation = startHandAnimation();
-        // handAnimation.start();
+        const handAnimation = startHandAnimation();
+        handAnimation.start();
 
         const blinkingAnimation = Animated.loop(
             Animated.sequence([Animated.timing(opacity, { toValue: 0, duration: 500, useNativeDriver: true }), Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),]), { iterations: 8 }
@@ -841,21 +822,31 @@ const Dashboard = ({ navigation }) => {
     const fetchVideos = async (folderIds, tokenParam) => {
         if (!Array.isArray(folderIds)) folderIds = [folderIds];
         const authToken = tokenParam || token;
-        let allVideos = { rows: [] };
-        for (const folderId of folderIds) {
-            try {
+        try {
+            const promises = folderIds.map(folderId => {
                 const endpoint = `${url}Vdocipher/GetAllVDOCipherVideosByFolderID?folderId=${folderId}`;
-                const response = await fetch(endpoint, { headers: { 'Authorization': `Bearer ${authToken}`, 'Accept': 'application/json' } });
-                if (!response.ok) throw new Error(`Failed to fetch videos for folder ${folderId}`);
-                const data = await response.json();
-                if (data && data.rows) { allVideos.rows.push(...data.rows); }
-            } catch (error) {
-                console.error(`Error fetching videos from folder ${folderId}:`, error);
-                Alert.alert("API Error", `Could not load some videos. Please check your connection and try again. Details: ${error.message}`);
+                return fetch(endpoint, { headers: { 'Authorization': `Bearer ${authToken}`, 'Accept': 'application/json' } })
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Failed to fetch videos for folder ${folderId}: ${response.status}`);
+                        return response.json();
+                    })
+                    .catch(err => {
+                        console.error(`Error fetching videos from folder ${folderId}:`, err);
+                        return null;
+                    });
+            });
 
-            }
+            const results = await Promise.all(promises);
+            const allVideos = { rows: [] };
+            results.forEach(data => {
+                if (data && data.rows) allVideos.rows.push(...data.rows);
+            });
+            return allVideos;
+        } catch (error) {
+            console.error('Error fetching videos in parallel:', error);
+            Alert.alert("API Error", `Could not load videos. Please check your connection and try again. Details: ${error.message}`);
+            return { rows: [] };
         }
-        return allVideos;
 
     };
 
@@ -932,7 +923,6 @@ const Dashboard = ({ navigation }) => {
                 const lastStepNumber = lastStepOfPrereq.stepNumber;
                 const DETAILS_ENDPOINT = `${url}User/User_Watch_Data_StepId?id=${userId}&level_step=${lastStepNumber}&DeviceKey=${deviceKey}`;
                 try {
-                    debugger;
                     const response = await fetch(DETAILS_ENDPOINT, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } });
 
                     if (response.ok) {
@@ -942,11 +932,9 @@ const Dashboard = ({ navigation }) => {
                             let lockDurationHours = 0;
                             if (foundationKeys.includes(config.prerequisiteCategory)) lockDurationHours = 24;
                             else if (middleKeys.includes(config.prerequisiteCategory) || advancedKeys.includes(config.prerequisiteCategory)) lockDurationHours = 48;
-                            console.log(`Prerequisite completion date: ${completionDate}, lock duration (hours): ${lockDurationHours}`);
                             if (lockDurationHours > 0) {
                                 const hoursSinceCompletion = (new Date() - completionDate) / (1000 * 60 * 60);
                                 if (hoursSinceCompletion < lockDurationHours) {
-                                    console.log(`Topic is still locked. Hours since completion: ${lockDurationHours.toFixed(2)}`);
                                     Alert.alert("Topic Locked", `Great progress! Your next topic will unlock in ${lockDurationHours} hours. Use this time to practice what you’ve learned so far.`);
                                     return false;
                                 } else {
@@ -978,7 +966,6 @@ const Dashboard = ({ navigation }) => {
     };
 
     const handleCategoryPress = async (categoryKey) => {
-        debugger;
         if (!dataLoaded) {
             showToast("Loading progress data...");
             return;
@@ -1050,7 +1037,7 @@ const Dashboard = ({ navigation }) => {
             setSelectedStepGroup({ ...group, category: openCategory });
             setIsModalVisible(true);
         } else {
-            // Alert.alert('Error', `Video group for step ${stepNumber} not found.`);
+
         }
     };
 
@@ -1058,7 +1045,6 @@ const Dashboard = ({ navigation }) => {
         const deviceKey = await AsyncStorage.getItem('deviceKey');
 
         if (!selectedStepGroup) {
-            //  Alert.alert('Error', 'No video selected. Please select a video first.');
             return;
         }
         if (step !== 1001 && step !== 1002) {
@@ -1067,7 +1053,6 @@ const Dashboard = ({ navigation }) => {
             const englishVideoId = stepGroup?.englishVideo?.id;
             let totalWatchCount = 0;
             try {
-                debugger;
                 const videoIdsForStep = [hindiVideoId, englishVideoId].filter(Boolean);
                 for (const id of videoIdsForStep) {
                     const endpoint = `${url}User/User_Watch_Data?id=${userId}&video_id=${id}&DeviceKey=${deviceKey}`;
@@ -1085,7 +1070,6 @@ const Dashboard = ({ navigation }) => {
                     Alert.alert("Limit Reached",
                         `You’ve reached the maximum limit for now. If any new update comes, we’ll notify you instantly.`);
 
-                    //  Alert.alert(' You’ve reached the maximum limit for now. If any new update comes, we’ll notify you instantly.');
                     return;
                 }
                 const specificVideoEndpoint = `${url}User/User_Watch_Data?id=${userId}&video_id=${videoId}&DeviceKey=${deviceKey}`;
@@ -1135,8 +1119,6 @@ const Dashboard = ({ navigation }) => {
             const email = typeof emailRaw === 'string' ? emailRaw : JSON.stringify(emailRaw);
             const phone = typeof phoneRaw === 'string' ? phoneRaw : JSON.stringify(phoneRaw);
             const sessionId = typeof sessionIdRaw === 'string' ? sessionIdRaw : JSON.stringify(sessionIdRaw);
-
-            console.log("Watermark Details:", { name, email, phone, sessionId });
 
             const startX = 20;
             const startY = 5;
@@ -1197,7 +1179,6 @@ const Dashboard = ({ navigation }) => {
                 annotate: JSON.stringify(annotationObject),
             };
 
-            // Skip server POST; directly navigate to player with prepared annotation and metadata
             await saveCompletedStep(`step${step}`);
             try {
                 const lastViewedObj = {
@@ -1282,7 +1263,6 @@ const Dashboard = ({ navigation }) => {
             }
             return await response.json();
         } catch (error) {
-            //Alert.alert("API Error", `An unexpected error occurred: ${error.message}`);
             return null;
         } finally {
             setIsVideoLoading(false);
@@ -1515,9 +1495,7 @@ const Dashboard = ({ navigation }) => {
         return allSteps.every(stepKey => completedSteps[stepKey]);
     };
 
-    if (isLoading) {
-        return <View style={styles.loaderContainer}><ActivityIndicator size="large" /></View>;
-    }
+    // Render the UI even when loading; show an overlay loader instead of replacing the UI.
 
     const isLandscape = windowWidth > windowHeight;
     const portraitContentWidth = Math.max(280, Math.round(windowWidth * 0.9));
@@ -1608,7 +1586,12 @@ const Dashboard = ({ navigation }) => {
                     </Pressable>
                 </View>
             )}
-            {isVideoLoading && (<View style={styles.modalLikeContainer}><ActivityIndicator size="large" color="#FFFFFF" /><Text style={styles.loadingText}>Loading...</Text></View>)}
+            {(isVideoLoading || isLoading) && (
+                <View style={styles.modalLikeContainer} pointerEvents="auto">
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={styles.loadingText}>Loading...</Text>
+                </View>
+            )}
             {!activeLevel && !openCategory && !isModalVisible ? (
                 <TouchableOpacity
                     style={[styles.customButton, isLandscape ? { marginRight: Math.round(windowWidth * 0.08) } : null]}
@@ -1658,7 +1641,6 @@ const styles = StyleSheet.create({
     modalButton: { backgroundColor: 'rgba(20, 52, 164, 1)', paddingVertical: 10, width: 100, borderRadius: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 5, elevation: 5 },
     disabledButton: { backgroundColor: '#a0a0a0' },
     modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold', textAlign: 'center', },
-    // videolist: { paddingHorizontal: 0, width: '100%', flex: 1 },
     tabimage: { width: 25, height: 22 },
     modalContentClose: { color: '#000', fontSize: 16, fontWeight: 'bold', },
     modalContentMainDiv: { flexDirection: "row", justifyContent: "space-between", width: '100%', },
