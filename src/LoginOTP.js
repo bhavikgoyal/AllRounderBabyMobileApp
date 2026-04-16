@@ -170,17 +170,14 @@ const LoginOTP = ({ navigation }) => {
         setWhatsappMessage('');
         try {
             if (isValidEmail(id)) {
-                // clear any previous server-provided WhatsApp number when using email
                 setServerFullNumber(null);
                 const resp = await sendOtpEmail(id);
-                console.log('sendOtpEmail response', resp);
                 const ok = responseIsSuccess(resp);
                 if (ok) {
                     setOtpVisible(true);
                     startOtpTimer(60);
                     showToast(getMessage(resp) || 'OTP sent to your email.');
                 } else {
-                    console.log('sendOtpEmail failed', resp);
                     const msg = getMessage(resp) || 'Failed to send OTP to email.';
                     if (resp && (resp.status === 400 || (resp.result && (resp.result.code === 400 || resp.result.Code === 400)))) {
                         setAdminMessage(msg);
@@ -190,7 +187,6 @@ const LoginOTP = ({ navigation }) => {
             } else if (isValidWhatsAppNumber(id)) {
                 const normalized = id.replace(/[\s\-()]/g, '');
                 const existResp = await checkWhatsappNumber(normalized);
-                console.log('checkWhatsappNumber response', existResp);
                 const exists = Boolean(existResp && existResp.exists);
                 if (!exists) {
                     const serverMsg = getMessage(existResp) || existResp?.message;
@@ -206,17 +202,14 @@ const LoginOTP = ({ navigation }) => {
                     targetNumber = parsed.Data || parsed.data || parsed || normalized;
                 }
                 const resp = await sendWhatsAppOtp(targetNumber);
-                console.log('sendWhatsAppOtp response', resp);
                 const ok = responseIsSuccess(resp);
                 if (ok) {
                     setWhatsappMessage('');
-                    // store the server-provided full number for later verification/login
                     setServerFullNumber(targetNumber || null);
                     setOtpVisible(true);
                     startOtpTimer(60);
                     showToast(getMessage(resp) || 'OTP sent to your WhatsApp.');
                 } else {
-                    console.log('sendWhatsAppOtp failed', resp);
                     const msg = getMessage(resp) || 'Failed to send OTP to WhatsApp.';
                     if (resp && (resp.status === 400 || (resp.data && (resp.data.code === 400 || resp.data.Code === 400)))) {
                         setAdminMessage(msg);
@@ -246,9 +239,7 @@ const LoginOTP = ({ navigation }) => {
         setVerifyLoading(true);
         try {
             const apiIdentifier = isValidEmail(id) ? id : (serverFullNumber || id);
-            console.log('Verifying OTP for identifier:', apiIdentifier);
             const resp = await verifyOtp(null, apiIdentifier, digitsOnly);
-            console.log('verifyOtp response', resp);
             const ok = responseIsSuccess(resp);
             const message = getMessage(resp);
             if (ok) {
@@ -260,14 +251,11 @@ const LoginOTP = ({ navigation }) => {
                 try {
                     let localDeviceKey = await getDeviceKey();
                     const loginResp = await loginByOtp(apiIdentifier, localDeviceKey);
-                    console.log('loginByOtp response', loginResp);
-
                     const data = loginResp && loginResp.data ? loginResp.data : null;
 
                     if (!loginResp || !loginResp.ok) {
                         const msg = getMessage(loginResp) || `Request failed with status ${loginResp?.status || 0}`;
                         if (loginResp?.status === 400 || data?.code === 400) {
-                            // show admin message in UI instead of toast
                             setAdminMessage(msg);
                             if (typeof setPasswordError === 'function') setPasswordError(msg);
                             return;

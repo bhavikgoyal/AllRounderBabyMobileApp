@@ -310,8 +310,6 @@ const CashbackforFeedback = () => {
     const phone = typeof phoneRaw === 'string' ? phoneRaw : JSON.stringify(phoneRaw);
     const sessionId = typeof sessionIdRaw === 'string' ? sessionIdRaw : JSON.stringify(sessionIdRaw);
 
-    console.log("Watermark Details:", { name, email, phone, sessionId });
-
     const startX = 20;
     const startY = 5;
     const spacing = 10;
@@ -363,11 +361,6 @@ const CashbackforFeedback = () => {
         y: Math.min(startY + 2 * spacing, maxY)
       }
     ];
-
-    console.log("Final Annotation Object:", annotationObject);
-
-
-    console.log("Annotation Object:", JSON.stringify(annotationObject));
     try {
       const detailsData = await vdoCipherApi(videoId);
       if (detailsData) {
@@ -401,9 +394,6 @@ const CashbackforFeedback = () => {
     let englishCashbackItem = null;
     let hindiCashbackItem = null;
 
-    // Debug log for API response
-    console.log('cashbackVideos.rows:', cashbackVideos?.rows);
-
     cashbackVideos?.rows?.forEach(item => {
       if (item.title && item.title.toLowerCase().includes('100 cashback for feedback')) {
         if (item.title.toLowerCase().includes('english')) {
@@ -431,9 +421,6 @@ const CashbackforFeedback = () => {
         poster: hindiCashbackItem.poster,
       });
     }
-
-    // Debug log for filtered videos
-    console.log('playableCashbackVideos:', videos);
 
     return videos;
   }, [cashbackVideos]);

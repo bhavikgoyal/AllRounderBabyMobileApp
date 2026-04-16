@@ -6,7 +6,6 @@ export async function getDeviceKey() {
         if (!devicekey) {
             devicekey = Date.now().toString(36) + Math.random().toString(36).substring(2);
             await AsyncStorage.setItem('devicekey', devicekey);
-            console.log('Generated new devicekey:', devicekey);
         } else {
             console.log('Using existing devicekey:', devicekey);
         }

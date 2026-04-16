@@ -420,19 +420,17 @@ const ReferAndEarn = ({ navigation }) => {
     const phoneRaw = await AsyncStorage.getItem('phoneNumber');
     const sessionIdRaw = await AsyncStorage.getItem('sessionId');
 
-    // Ensure all values are string
+
     const name = typeof nameRaw === 'string' ? nameRaw : JSON.stringify(nameRaw);
     const email = typeof emailRaw === 'string' ? emailRaw : JSON.stringify(emailRaw);
     const phone = typeof phoneRaw === 'string' ? phoneRaw : JSON.stringify(phoneRaw);
     const sessionId = typeof sessionIdRaw === 'string' ? sessionIdRaw : JSON.stringify(sessionIdRaw);
 
-    console.log("Watermark Details:", { name, email, phone, sessionId });
 
-    // Define safe positions
-    const startX = 20;   // all watermarks start 5 units from left
-    const startY = 5;  // top padding
-    const spacing = 10; // vertical spacing between watermarks
-    const maxY = 50;    // maximum y to avoid cutting at bottom
+    const startX = 20;
+    const startY = 5;
+    const spacing = 10;
+    const maxY = 50;
 
     const annotationObject = [
       {
@@ -480,11 +478,6 @@ const ReferAndEarn = ({ navigation }) => {
         y: Math.min(startY + 2 * spacing, maxY)
       }
     ];
-
-    console.log("Final Annotation Object:", annotationObject);
-
-
-    console.log("Annotation Object:", JSON.stringify(annotationObject));
     try {
       if (videoId) {
         const detailsData = await vdoCipher_api(videoId);
