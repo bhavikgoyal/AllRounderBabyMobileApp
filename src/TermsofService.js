@@ -120,6 +120,7 @@ const TermsofService = ({ navigation, route }) => {
                   <Text style={styles.listItem}>• Outcomes may vary for each child and family,</Text>
                   <Text style={styles.listItem}>• The Company does not guarantee specific developmental results, and</Text>
                   <Text style={styles.listItem}>• You remain solely responsible for decisions relating to your child's care, development, and well-being.</Text>
+                  <Text style={styles.listItem}>•Any reliance on the content is at your own discretion and risk.</Text>
                 </View>
 
                 <Text style={styles.leadText}>The Platform is not a substitute for professional medical, developmental, psychological, therapeutic, or emergency advice, diagnosis, or treatment, and you should seek qualified professional guidance for child-specific concerns where appropriate.</Text>
@@ -145,7 +146,7 @@ const TermsofService = ({ navigation, route }) => {
 
                 <Text style={styles.subHeading}>1.6 Contact Information</Text>
                 <Text style={styles.leadText}>For any questions, concerns, or support requests regarding these Terms, you may contact us at:</Text>
-                <Text style={styles.leadText}>Email: support@allrounderbaby.com</Text>
+                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Email:</Text> support@allrounderbaby.com</Text>
                 <Text style={styles.leadText}>The Company has designated a Grievance Officer for handling user concerns, complaints, and data-related requests.</Text>
                 <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Name:</Text> Shubha Nayak</Text>
                 <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Designation:</Text> Director & Grievance Officer</Text>
@@ -448,7 +449,7 @@ const TermsofService = ({ navigation, route }) => {
                 <Text style={styles.subHeading}>4.6 Reward Disbursement Mechanism</Text>
                 <Text style={styles.leadText}>Rewards are disbursed through authorized third-party payout service providers.</Text>
 
-                <Text style={styles.leadText}>(a) International Users</Text>
+                <Text style={styles.leadText}><Text style={{ fontWeight: 'bold' }}>(a) International Users</Text></Text>
                 <Text style={styles.leadText}>For users outside India:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• rewards may be issued via payout platforms such as Tremendous, or similar providers;</Text>
@@ -463,7 +464,7 @@ const TermsofService = ({ navigation, route }) => {
                   <Text style={styles.listItem}>• any issues arising after payout initiation.</Text>
                 </View>
 
-                <Text style={styles.leadText}>(b) Domestic Users (India)</Text>
+                <Text style={styles.leadText}><Text style={{ fontWeight: 'bold' }}>(b) Domestic Users (India)</Text></Text>
                 <Text style={styles.leadText}>For users receiving payouts within India:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• rewards may be processed through bank transfer, UPI, or other authorized methods based on user-provided details.</Text>
@@ -1038,6 +1039,7 @@ const TermsofService = ({ navigation, route }) => {
     </View >
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -1064,7 +1066,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   sectionHeader: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1434a4',
     marginTop: -10,
@@ -1079,9 +1081,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   leadText: {
-    fontSize: 15,
+    paddingLeft: 20,
+    fontSize: 14,
     lineHeight: 24,
-    marginBottom: 15,
+    marginBottom: 10,
     color: '#666',
     paddingHorizontal: 5,
     textAlign: 'justify',
@@ -1117,17 +1120,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionContainer: {
-    padding: 12,
+    padding: 0,
     borderRadius: 8,
     margin: 12,
   },
   subHeading: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     marginTop: 6,
-    color: '#000',
+    color: '#1434a4',
     paddingHorizontal: 10,
-    marginBottom: 6,
+    marginBottom: 7,
   },
   list: {
     paddingHorizontal: 18,
@@ -1142,10 +1145,12 @@ const styles = StyleSheet.create({
   addressBox: {
     backgroundColor: '#fafafa',
     padding: 10,
+    paddingTop: 0,
     borderRadius: 8,
     marginVertical: 8,
   },
   addressText: {
+    paddingLeft: 15,
     fontSize: 14,
     color: '#333',
     marginBottom: 2,
@@ -1166,4 +1171,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
   },
 });
+
 export default TermsofService;
