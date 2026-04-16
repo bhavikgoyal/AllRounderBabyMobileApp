@@ -1796,7 +1796,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   sectionHeader: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1434a4',
     marginTop: -10,
@@ -1811,9 +1811,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   leadText: {
-    fontSize: 15,
+    paddingLeft: 20,
+    fontSize: 14,
     lineHeight: 24,
-    marginBottom: 15,
+    marginBottom: 10,
     color: '#666',
     paddingHorizontal: 5,
     textAlign: 'justify',
@@ -1849,15 +1850,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionContainer: {
-    padding: 12,
+    padding: 0,
     borderRadius: 8,
     margin: 12,
   },
   subHeading: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     marginTop: 6,
-    color: '#000',
+    color: '#1434a4',
     paddingHorizontal: 10,
     marginBottom: 7,
   },
@@ -1879,6 +1880,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   addressText: {
+    paddingLeft: 15,
     fontSize: 14,
     color: '#333',
     marginBottom: 2,
