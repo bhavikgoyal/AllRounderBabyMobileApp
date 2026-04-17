@@ -97,7 +97,9 @@ const PrivacyPolicywithoutLog = () => {
                 </View>
 
                 <Text style={styles.subHeading}>1.2 Who this Privacy Policy applies to</Text>
-                <Text style={styles.leadText}>This Privacy Policy applies to individuals who interact with Allrounder Baby in any manner, including:</Text>
+                <Text style={styles.leadText}>
+                  This Privacy Policy applies to individuals who interact with Allrounder Baby in any manner, including:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• visitors to our website,</Text>
                   <Text style={styles.listItem}>• prospective customers,</Text>
@@ -107,62 +109,162 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• individuals who contact us for support, updates, or other communications.</Text>
                 </View>
 
-                <Text style={styles.subHeading}>1.3 Who we are</Text>
-                <Text style={styles.leadText}>The data controller responsible for your personal data is:</Text>
-                <View style={styles.addressBox}>
-                  <Text style={styles.addressText}>Sarvashine Allrounder Baby Solutions Private Limited</Text>
-                  <Text style={styles.addressText}>Flat A 304, Royal City, Potiya Road,</Text>
-                  <Text style={styles.addressText}>Durg, Chhattisgarh – 491001, India</Text>
-                  <Text style={styles.addressText}>Email: support@allrounderbaby.com</Text>
+                <Text style={styles.leadText}>
+                  This Privacy Policy applies in connection with our:
+                </Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• website, including public and account areas,</Text>
+                  <Text style={styles.listItem}>• mobile applications (including Android and iOS applications), where available,</Text>
+                  <Text style={styles.listItem}>• checkout, payment, and order flows,</Text>
+                  <Text style={styles.listItem}>• customer dashboards and post-purchase features,</Text>
+                  <Text style={styles.listItem}>• referral, reward, payout, feedback, and testimonial features,</Text>
+                  <Text style={styles.listItem}>• customer support and communication channels,</Text>
+                  <Text style={styles.listItem}>• cookies, tracking technologies, pixels, SDKs, and similar tools used on our digital properties.</Text>
                 </View>
+
+                <Text style={styles.leadText}>
+                  Certain features, including payout, referral, reward, feedback, or testimonial-related functions, may be available only to eligible users or customers, subject to applicable terms, eligibility conditions, verification requirements, consent flows, and internal controls.
+                </Text>
+
+                <Text style={styles.subHeading}>1.3 Who we are</Text>
+                <Text style={styles.leadText}>
+                  The data controller responsible for your personal data is:
+                </Text>
+                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Sarvashine Allrounder Baby Solutions Private Limited</Text></Text>
+                <Text style={styles.leadText}>Flat A 304, Royal City, Potiya Road,</Text>
+                <Text style={styles.leadText}>Durg, Chhattisgarh – 491001, India</Text>
+                <Text style={styles.leadText}>Email: support@allrounderbaby.com</Text>
+
+                <Text style={styles.leadText}>
+                  Where applicable data protection laws use the term “controller,” this means that we determine the purposes and means of processing personal data.
+                </Text>
 
                 <Text style={styles.subHeading}>1.4 Our services and intended users</Text>
                 <Text style={styles.leadText}>
-                  Allrounder Baby is a digital early childhood development and parenting support platform intended primarily for parents, guardians, and caregivers, particularly in relation to children in the 0–5 years age group. Our core service consists of pre-recorded educational and developmental video-based programs delivered through our website and mobile application after purchase.
-                </Text>
-                <Text style={styles.leadText}>
-                  Our mobile applications are distributed through the Google Play Store and the Apple App Store. Use of our applications may also be subject to the terms, policies, and privacy frameworks of these platform providers.
+                  Allrounder Baby is a digital early childhood development and parenting support platform intended primarily for parents, guardians, and caregivers, particularly in relation to children in the 0–5 years age group.
                 </Text>
 
-                <Text style={[styles.subHeading, { paddingBottom: 10 }]}>1.5 Child-related information</Text>
-                <Text style={[styles.leadText, { marginBottom: 0 }]}>
-                  We do not knowingly collect personal data directly from children through independent child accounts. However, a parent or guardian may choose to provide limited child-related information voluntarily, including age range, developmental stage, program-relevant contextual details, parent-reported feedback, and optional uploaded media (such as videos) submitted through secure, logged-in feedback or testimonial features.
+                <Text style={styles.leadText}>
+                  Our core service consists of pre-recorded educational and developmental video-based programs delivered through our website and/or mobile application after purchase.
                 </Text>
-                <Text style={styles.leadText}>Such information:</Text>
+
+                <Text style={styles.leadText}>
+                  Our mobile applications are distributed through platforms including the Google Play Store and the Apple App Store. Use of our applications may also be subject to the terms, policies, and privacy frameworks of these platform providers.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  On iOS devices, certain data collection, tracking, or attribution activities may be governed by Apple platform requirements, including user permissions and device-level privacy settings. Users may control such permissions through their device settings.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Our services are intended for adults. Children are not permitted to independently create accounts or directly enter into legal agreements with us through the platform.
+                </Text>
+
+                <Text style={styles.subHeading}>1.5 Child-related information</Text>
+                <Text style={styles.leadText}>
+                  We do not knowingly collect personal data directly from children through independent child accounts.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  However, a parent or guardian may choose to provide limited child-related information voluntarily, including:
+                </Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• age range,</Text>
+                  <Text style={styles.listItem}>• developmental stage,</Text>
+                  <Text style={styles.listItem}>• program-relevant contextual details,</Text>
+                  <Text style={styles.listItem}>• parent-reported feedback,</Text>
+                  <Text style={styles.listItem}>• optional uploaded media (such as videos) submitted through secure, logged-in feedback or testimonial features.</Text>
+                </View>
+
+                <Text style={styles.leadText}>
+                  Such information:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• is provided voluntarily by the parent or guardian,</Text>
                   <Text style={styles.listItem}>• is submitted under their control and responsibility,</Text>
                   <Text style={styles.listItem}>• is not required to access or use our core services,</Text>
                   <Text style={styles.listItem}>• does not affect the delivery of our primary service, which is access to pre-recorded video content.</Text>
                 </View>
-                <Text style={styles.leadText}>We aim to apply a high standard of care when handling child-related information, including principles such as data minimization, limited use, and avoidance of unnecessary processing.</Text>
-                <Text style={styles.leadText}>We do not knowingly allow children to independently submit personal data, create independent child accounts, or use child-related information for sale of personal data.</Text>
+
+                <Text style={styles.leadText}>
+                  We aim to apply a high standard of care when handling child-related information, including principles such as data minimization, limited use, and avoidance of unnecessary processing.
+                </Text>
+
+                <Text style={styles.leadText}>We do not:</Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• knowingly allow children to independently submit personal data,</Text>
+                  <Text style={styles.listItem}>• create independent child accounts,</Text>
+                  <Text style={styles.listItem}>• use child-related information for sale of personal data.</Text>
+                </View>
 
                 <Text style={styles.subHeading}>1.6 Geographic scope</Text>
                 <Text style={styles.leadText}>
-                  We may offer our services to users in multiple jurisdictions. Depending on your location, different privacy or data protection laws may apply to our processing of personal data. We aim to process personal data in accordance with applicable legal requirements relevant to our services and user base, including requirements relating to transparency, lawful processing, consent where required, user rights, international transfers, security, and retention.
+                  We may offer our services to users in multiple jurisdictions.
                 </Text>
-                <Text style={styles.leadText}>The rights, disclosures, and protections available to you may vary depending on your country, state, or region of residence and the applicable data protection laws.</Text>
+
+                <Text style={styles.leadText}>
+                  Depending on your location, different privacy or data protection laws may apply to our processing of personal data. We aim to process personal data in accordance with applicable legal requirements relevant to our services and user base, including requirements relating to transparency, lawful processing, consent where required, user rights, international transfers, security, and retention.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  The rights, disclosures, and protections available to you may vary depending on your country, state, or region of residence and the applicable data protection laws.
+                </Text>
 
                 <Text style={styles.subHeading}>1.7 Relationship with other policies and internal governance</Text>
-                <Text style={styles.leadText}>This Privacy Policy should be read together with our other applicable documents, including our Terms of Use, Cookies Policy, and any referral, reward, feedback, payout, testimonial, campaign, or offer-specific terms, consent requests, release forms, or authorization notices presented at the point of collection.</Text>
-                <Text style={styles.leadText}>We may maintain internal governance processes such as access controls, verification workflows, audit records, moderation systems, fraud detection mechanisms, and operational logs to support security, compliance, and accountability.</Text>
+                <Text style={styles.leadText}>
+                  This Privacy Policy should be read together with our other applicable documents, including:
+                </Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• our Terms of Use,</Text>
+                  <Text style={styles.listItem}>• our Cookies Policy,</Text>
+                  <Text style={styles.listItem}>• any referral, reward, feedback, payout, testimonial, campaign, or offer-specific terms,</Text>
+                  <Text style={styles.listItem}>• any consent requests, release forms, or authorization notices presented at the point of collection,</Text>
+                  <Text style={styles.listItem}>• any just-in-time notices shown within our website, account area, or applications.</Text>
+                </View>
+
+                <Text style={styles.leadText}>
+                  We may maintain internal governance processes such as access controls, verification workflows, audit records, moderation systems, fraud detection mechanisms, and operational logs to support security, compliance, and accountability.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  These internal processes are designed to support responsible data handling but do not reduce any rights available to users under applicable law.
+                </Text>
 
                 <Text style={styles.subHeading}>1.8 Relationship with contractual terms</Text>
-                <Text style={styles.leadText}>This Privacy Policy explains how we handle personal data. It does not by itself override contractual terms that apply to specific products, services, transactions, campaigns, payouts, feedback programs, or testimonial features, except where required by applicable law. Your use of our services may also be subject to our Terms of Use and other applicable policies, notices, and consent mechanisms.</Text>
+                <Text style={styles.leadText}>
+                  This Privacy Policy explains how we handle personal data. It does not by itself override contractual terms that apply to specific products, services, transactions, campaigns, payouts, feedback programs, or testimonial features, except where required by applicable law.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Your use of our services may also be subject to our Terms of Use and other applicable policies, notices, and consent mechanisms.
+                </Text>
 
                 <Text style={styles.subHeading}>1.9 Changes to this Privacy Policy</Text>
-                <Text style={styles.leadText}>We may update this Privacy Policy from time to time to reflect changes in our services, legal requirements, or operational practices. Unless otherwise stated, updates become effective when posted on the Platform or on the effective date mentioned. Where required by law, or where changes are material, we may provide additional notice via the Platform, email, WhatsApp, or other communication channels.</Text>
-                <Text style={styles.leadText}>Continued use of the Platform after an updated Privacy Policy becomes effective means the updated Policy will apply to your ongoing use of the Platform, except that any processing that requires your consent under applicable law will continue to depend on that consent and will not be deemed granted merely by continued use.</Text>
+                <Text style={styles.leadText}>
+                  We may update this Privacy Policy from time to time to reflect changes in our services, legal requirements, or operational practices.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Unless otherwise stated, updates become effective when posted on the Platform or on the effective date mentioned.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Where required by applicable law, or where changes are material, we may provide additional notice via the Platform, email, WhatsApp, or other communication channels.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Continued use of the Platform after an updated Privacy Policy becomes effective means that the updated Policy will apply to your ongoing use of the Platform, except that any processing that requires your consent under applicable law will continue to depend on that consent and will not be deemed granted merely by continued use.
+                </Text>
 
                 <Text style={styles.subHeading}>1.10 Contact us</Text>
-                <Text style={styles.leadText}>If you have any questions, concerns, or requests relating to this Privacy Policy or our handling of personal data, you may contact us at:</Text>
-                <View style={styles.addressBox}>
-                  <Text style={styles.addressText}>Sarvashine Allrounder Baby Solutions Private Limited</Text>
-                  <Text style={styles.addressText}>Flat A 304, Royal City, Potiya Road,</Text>
-                  <Text style={styles.addressText}>Durg, Chhattisgarh – 491001, India</Text>
-                  <Text style={styles.addressText}>Email: support@allrounderbaby.com</Text>
-                </View>
+                <Text style={styles.leadText}>
+                  If you have any questions, concerns, or requests relating to this Privacy Policy or our handling of personal data, you may contact us at:
+                </Text>
+                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Sarvashine Allrounder Baby Solutions Private Limited</Text></Text>
+                <Text style={styles.leadText}>Flat A 304, Royal City, Potiya Road,</Text>
+                <Text style={styles.leadText}>Durg, Chhattisgarh – 491001, India</Text>
+                <Text style={styles.leadText}>Email: support@allrounderbaby.com</Text>
+
               </>
             )}
           </View>
@@ -181,15 +283,39 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• information collected automatically;</Text>
                   <Text style={styles.listItem}>• information required for payouts or compliance;</Text>
                   <Text style={styles.listItem}>• information related to child development inputs provided voluntarily;</Text>
-                  <Text style={styles.listItem}>• information from third‑party services.</Text>
+                  <Text style={styles.listItem}>• information from third-party services.</Text>
                 </View>
 
-                <Text style={styles.leadText}>We collect personal data to operate, provide, support, improve, secure, and manage our services and related business functions.</Text>
+                <Text style={styles.leadText}>
+                  We collect personal data to operate, provide, support, improve, secure, and manage our services and related business functions.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  The type and amount of personal data we collect depends on how you interact with our platform, including whether you:
+                </Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• browse our website,</Text>
+                  <Text style={styles.listItem}>• make a purchase,</Text>
+                  <Text style={styles.listItem}>• access purchased content,</Text>
+                  <Text style={styles.listItem}>• create or update a profile,</Text>
+                  <Text style={styles.listItem}>• participate in referral, reward, feedback, or testimonial programs,</Text>
+                  <Text style={styles.listItem}>• submit payout details,</Text>
+                  <Text style={styles.listItem}>• contact customer support,</Text>
+                  <Text style={styles.listItem}>• upload content voluntarily,</Text>
+                  <Text style={styles.listItem}>• interact with cookies or tracking technologies.</Text>
+                </View>
+
+                <Text style={styles.leadText}>
+                  Certain data is necessary for providing our core services, while other data is optional and depends on your participation in additional features.
+                </Text>
 
                 <Text style={styles.subHeading}>2.2 Personal data you provide directly</Text>
-                <Text style={styles.leadText}>You may provide personal data directly when interacting with our platform, services, or features.</Text>
+                <Text style={styles.leadText}>
+                  You may provide personal data directly when interacting with our platform, services, or features.
+                </Text>
 
-                <Text style={styles.subHeading}>(a) Identity and contact data</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(a) Identity and contact data</Text>
+                <Text style={styles.leadText}>This may include:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• full name,</Text>
                   <Text style={styles.listItem}>• email address,</Text>
@@ -199,23 +325,31 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• billing or postal address (where required).</Text>
                 </View>
 
-                <Text style={styles.subHeading}>(b) Account and access data</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(b) Account and access data</Text>
+                <Text style={styles.leadText}>Where applicable, this may include:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• login identifiers,</Text>
-                  <Text style={styles.listItem}>• authentication data (such as OTP‑based access),</Text>
+                  <Text style={styles.listItem}>• authentication data (such as OTP-based access),</Text>
                   <Text style={styles.listItem}>• account status and preferences.</Text>
                 </View>
 
-                <Text style={styles.subHeading}>(c) Transaction and purchase data</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(c) Transaction and purchase data</Text>
+                <Text style={styles.leadText}>This may include:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• purchased program details,</Text>
                   <Text style={styles.listItem}>• order and invoice records,</Text>
                   <Text style={styles.listItem}>• transaction identifiers,</Text>
                   <Text style={styles.listItem}>• payment status.</Text>
                 </View>
-                <Text style={styles.leadText}>Payments are processed through third‑party providers such as Razorpay, Cashfree, or PayPal. We do not store full card numbers or equivalent sensitive payment credentials.</Text>
 
-                <Text style={styles.subHeading}>(d) Referral, reward, feedback, and program data</Text>
+                <Text style={styles.leadText}>
+                  Payments are processed through third-party providers such as Razorpay, Cashfree, or PayPal. We do not store full card numbers or equivalent sensitive payment credentials.
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(d) Referral, reward, feedback, and program data</Text>
+                <Text style={styles.leadText}>
+                  If you participate in referral or feedback-based programs, we may collect:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• referral codes and referral relationships,</Text>
                   <Text style={styles.listItem}>• eligibility and approval status,</Text>
@@ -224,7 +358,10 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• testimonial participation data.</Text>
                 </View>
 
-                <Text style={styles.subHeading}>(e) Domestic payout data (India)</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(e) Domestic payout data (India)</Text>
+                <Text style={styles.leadText}>
+                  If you choose to receive payouts, we may collect:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• bank account holder name,</Text>
                   <Text style={styles.listItem}>• bank account number,</Text>
@@ -235,9 +372,22 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• PAN (optional but may affect payout processing).</Text>
                 </View>
 
-                <Text style={styles.leadText}>PAN may be requested or required to comply with applicable tax laws and withholding obligations. Where PAN is not provided, not verified, or invalid, higher tax deduction or withholding may be applied in accordance with applicable regulations.</Text>
-                <Text style={styles.subHeading}>(f) International payout data</Text>
-                <Text style={styles.leadText}>For international payouts, we may collect:</Text>
+                <Text style={styles.leadText}>
+                  PAN may be requested or required to comply with applicable tax laws and withholding obligations. Where PAN is not provided, not verified, or invalid, higher tax deduction or withholding may be applied in accordance with applicable regulations.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Where multiple payout methods are available, only one payout method may be active at a time. Updating or selecting one method (such as UPI) may replace previously stored payout details (such as bank account information).
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Where required for payouts, verification, or compliance, we may collect tax-related information such as PAN or equivalent identifiers. Such information is collected solely for validation, regulatory compliance, and payout processing purposes and is not used for marketing.
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(f) International payout data</Text>
+                <Text style={styles.leadText}>
+                  For international payouts, we may collect:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• full legal name,</Text>
                   <Text style={styles.listItem}>• payout email address,</Text>
@@ -246,17 +396,22 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• postal address,</Text>
                   <Text style={styles.listItem}>• optional tax identification information where required.</Text>
                 </View>
-                <Text style={styles.leadText}>International payouts may be processed through third‑party platforms such as Tremendous.</Text>
 
-                <Text style={styles.subHeading}>(g) Declarations and confirmations</Text>
-                <Text style={styles.leadText}>We may collect confirmations that:</Text>
+                <Text style={styles.leadText}>
+                  International payouts may be processed through third-party platforms such as Tremendous.
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(g) Declarations and confirmations</Text>
+                <Text style={styles.leadText}>
+                  We may collect confirmations that:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• the provided payout details belong to you,</Text>
                   <Text style={styles.listItem}>• the information submitted is accurate,</Text>
-                  <Text style={styles.listItem}>• you understand payout, consent, or program‑related terms.</Text>
+                  <Text style={styles.listItem}>• you understand payout, consent, or program-related terms.</Text>
                 </View>
 
-                <Text style={styles.subHeading}>(h) Communications data</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(h) Communications data</Text>
                 <Text style={styles.leadText}>This may include:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• support queries,</Text>
@@ -265,32 +420,50 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• survey responses.</Text>
                 </View>
 
-                {/* <View style={styles.imageGallery}>
-                  <View style={styles.imageWrap}>
-                    <Text style={[styles.leadText, { textAlign: 'center', color: '#444' }]}>Image / Illustration placeholder</Text>
-                  </View>
-                </View> */}
                 <Text style={styles.subHeading}>2.3 Child-related and feedback data (voluntary)</Text>
-                <Text style={[styles.leadText, { marginBottom: 0 }]}>Child-related information, such as age, developmental stage, parent‑reported observations, or optional media voluntarily submitted by a parent or guardian, is collected only when the parent or guardian chooses to provide it. Such data is not required for access to our core pre‑recorded content and is used only for the limited purposes described in this Privacy Policy, such as feedback handling, optional program‑related features, internal analysis, program improvement, and other specifically authorised uses.</Text>
+                <Text style={styles.leadText}>
+                  Child-related information, such as age, developmental stage, parent-reported observations, or optional media voluntarily submitted by a parent or guardian, is collected only when the parent or guardian chooses to provide it. Such data is not required for access to our core pre-recorded content and is used only for the limited purposes described in this Privacy Policy, such as feedback handling, optional program-related features, internal analysis, program improvement, and other specifically authorized uses.
+                </Text>
 
-                <Text style={styles.leadText}>Public marketing or promotional use of such content will occur only where such use has been clearly disclosed at the time of submission, and the user has acknowledged such use through acceptance of applicable policies and submission of the content.</Text>
+                <Text style={styles.leadText}>
+                  Public marketing or promotional use of such content will occur only where such use has been clearly disclosed at the time of submission, and the user has acknowledged such use through acceptance of applicable policies and submission of the content.
+                </Text>
 
-                <Text style={[styles.leadText, { marginBottom: 0 }]}>Where feedback‑based programs are linked to rewards or payouts, users may be requested to submit testimonial or experience‑based content. Such submissions may include:</Text>
+                <Text style={styles.leadText}>
+                  Where feedback-based programs are linked to rewards or payouts, users may be requested to submit testimonial or experience-based content. Such submissions may include:
+                </Text>
                 <View style={styles.list}>
-                  <Text style={styles.listItem}>• a general feedback or testimonial video, where applicable to a specific voluntary feedback, reward, or testimonial workflow; and</Text>
-                  <Text style={styles.listItem}>• optional child‑related content or demonstrations, which are not mandatory.</Text>
+                  <Text style={styles.listItem}>• a general feedback or testimonial video, where applicable to a specific voluntary feedback, reward, or testimonial workflow,</Text>
+                  <Text style={styles.listItem}>• optional child-related content or demonstrations, which are not mandatory.</Text>
                 </View>
 
-                <Text style={styles.leadText}>Submission of child‑related content is always voluntary and is not required to access services or to participate in core platform functionality.</Text>
+                <Text style={styles.leadText}>
+                  Submission of child-related content is always voluntary and is not required to access services or to participate in core platform functionality.
+                </Text>
 
-                <Text style={styles.subHeading}>Clarification on Submission‑Based Authorization</Text>
-                <Text style={styles.leadText}>Where feedback, testimonials, images, audio, or videos are submitted through a workflow that clearly discloses intended use (including marketing, promotional, or public display purposes), the user’s acceptance of applicable policies at the time of submission, together with the act of submission, shall be treated as informed acknowledgement and authorization for such use.</Text>
+                <Text style={styles.leadText}>
+                  Where feedback, testimonials, or media content are submitted as part of voluntary programs (including reward or payout-based participation), such submissions may include consent for internal use and, where such use has been clearly disclosed at the time of submission, for marketing or promotional use based on the user's acceptance of applicable policies during submission and the act of submission.
+                </Text>
 
-                <Text style={styles.leadText}>Such authorization is considered part of the submission process and does not require a separate standalone consent mechanism, unless required under applicable law.</Text>
+                <Text style={styles.leadText}>
+                  Users are clearly informed of the intended use of such content at the point of submission, and any marketing or public usage is based on the user's acceptance of applicable policies during submission together with the act of submission, as required or permitted under applicable law.
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Clarification on Submission-Based Authorization</Text>
+                <Text style={styles.leadText}>
+                  Where feedback, testimonials, images, audio, or videos are submitted through a workflow that clearly discloses intended use (including marketing, promotional, or public display purposes), the user's acceptance of applicable policies at the time of submission, together with the act of submission, shall be treated as informed acknowledgment and authorization for such use.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Such authorization is considered part of the submission process and does not require a separate standalone consent mechanism, unless required under applicable law.
+                </Text>
+
                 <Text style={styles.subHeading}>2.4 Personal data collected automatically</Text>
-                <Text style={styles.leadText}>When you use our platform, we may collect certain technical and usage data.</Text>
+                <Text style={styles.leadText}>
+                  When you use our platform, we may collect certain technical and usage data.
+                </Text>
 
-                <Text style={styles.subHeading}>(a) Device and technical data</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(a) Device and technical data</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• IP address,</Text>
                   <Text style={styles.listItem}>• browser type and version,</Text>
@@ -299,7 +472,7 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• approximate location (derived from technical signals).</Text>
                 </View>
 
-                <Text style={styles.subHeading}>(b) Usage and interaction data</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(b) Usage and interaction data</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• pages visited,</Text>
                   <Text style={styles.listItem}>• navigation patterns,</Text>
@@ -309,7 +482,7 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• video interaction events (where applicable).</Text>
                 </View>
 
-                <Text style={styles.subHeading}>(c) Authentication and security data</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(c) Authentication and security data</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• login attempts,</Text>
                   <Text style={styles.listItem}>• session identifiers,</Text>
@@ -318,30 +491,43 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• failed access attempts.</Text>
                 </View>
 
-                <Text style={styles.subHeading}>(d) Cookies and tracking technologies</Text>
-                <Text style={styles.leadText}>We may use cookies, pixels, SDKs, and similar technologies for:</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(d) Cookies and tracking technologies</Text>
+                <Text style={styles.leadText}>
+                  We may use cookies, pixels, SDKs, and similar technologies for:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• platform functionality and security,</Text>
                   <Text style={styles.listItem}>• analytics and performance measurement,</Text>
                   <Text style={styles.listItem}>• advertising and campaign effectiveness,</Text>
                   <Text style={styles.listItem}>• remarketing and retargeting,</Text>
-                  <Text style={styles.listItem}>• personalization (where applicable).</Text>
+                  <Text style={styles.listItem}>• personalization (where applicable)</Text>
                 </View>
-                <Text style={styles.leadText}>Non‑essential tracking technologies are used only after obtaining your consent where required by applicable law.</Text>
+                <Text style={styles.leadText}>Non-essential tracking technologies are used only after obtaining your consent where required by applicable law.</Text>
 
                 <Text style={styles.subHeading}>2.5 Personal data from third parties</Text>
-                <Text style={styles.leadText}>We may receive limited data from trusted third‑party providers, including:</Text>
-                <Text style={styles.subHeading}>(a) Payment providers</Text>
-                <Text style={styles.leadText}>Transaction confirmations and payment status from providers such as Razorpay, Cashfree, or PayPal.</Text>
+                <Text style={styles.leadText}>
+                  We may receive limited data from trusted third-party providers, including:
+                </Text>
 
-                <Text style={styles.subHeading}>(b) Validation providers</Text>
-                <Text style={styles.leadText}>Verification results for bank accounts, PAN, or related data from providers used in payout workflows.</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(a) Payment providers</Text>
+                <Text style={styles.leadText}>
+                  Transaction confirmations and payment status from providers such as Razorpay, Cashfree, or PayPal.
+                </Text>
 
-                <Text style={styles.subHeading}>(c) Payout providers</Text>
-                <Text style={styles.leadText}>Payout status and processing information from providers such as Tremendous.</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(b) Validation providers</Text>
+                <Text style={styles.leadText}>
+                  Verification results for bank accounts, PAN, or related data from providers used in payout workflows.
+                </Text>
 
-                <Text style={styles.subHeading}>(d) Service and technology providers</Text>
-                <Text style={styles.leadText}>Technical and usage‑related data from providers supporting:</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(c) Payout providers</Text>
+                <Text style={styles.leadText}>
+                  Payout status and processing information from providers such as Tremendous.
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(d) Service and technology providers</Text>
+                <Text style={styles.leadText}>
+                  Technical and usage-related data from providers supporting:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• analytics,</Text>
                   <Text style={styles.listItem}>• hosting and infrastructure,</Text>
@@ -350,8 +536,10 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• platform operations.</Text>
                 </View>
 
-                <Text style={styles.subHeading}>2.6 Internal records and system‑generated data</Text>
-                <Text style={styles.leadText}>We may generate and maintain internal records to support operations, including:</Text>
+                <Text style={styles.subHeading}>2.6 Internal records and system-generated data</Text>
+                <Text style={styles.leadText}>
+                  We may generate and maintain internal records to support operations, including:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• payout processing records,</Text>
                   <Text style={styles.listItem}>• verification and validation results,</Text>
@@ -361,92 +549,139 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• audit and compliance records,</Text>
                   <Text style={styles.listItem}>• dispute and exception handling records.</Text>
                 </View>
-                <Text style={styles.leadText}>These records may include personal data where necessary for operational security, compliance, or legal purposes.</Text>
-                <Text style={styles.leadText}>For processes such as payout validation, account verification, or fraud prevention, we may implement system controls such as validation checks, attempt limits, cooldown periods, or verification workflows to protect users, prevent misuse, and maintain platform integrity.</Text>
-                <Text style={styles.subHeading}>2.7 Mandatory and optional data</Text>
-                <Text style={styles.leadText}>Some personal data is required to provide services, while other data is optional.</Text>
 
-                <Text style={styles.subHeading}>Mandatory data (for core services)</Text>
-                <Text style={[styles.leadText, { marginBottom: 8 }]}>This may include:</Text>
+                <Text style={styles.leadText}>
+                  These records may include personal data where necessary for operational, security, compliance, or legal purposes.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  For certain processes such as payout validation, account verification, or fraud prevention, we may implement system controls such as validation checks, attempt limits, cooldown periods, or verification workflows. These controls are designed to protect users, prevent misuse, and maintain platform integrity.
+                </Text>
+
+                <Text style={styles.subHeading}>2.7 Mandatory and optional data</Text>
+                <Text style={styles.leadText}>
+                  Some personal data is required to provide services, while other data is optional.
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Mandatory data (for core services)</Text>
+                <Text style={styles.leadText}>This may include:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• name,</Text>
                   <Text style={styles.listItem}>• email or mobile number,</Text>
-                  <Text style={styles.listItem}>• payment‑related information required to complete a purchase,</Text>
+                  <Text style={styles.listItem}>• payment-related information required to complete a purchase,</Text>
                   <Text style={styles.listItem}>• authentication data required for access.</Text>
                 </View>
-                <Text style={styles.leadText}>Without this data, we may not be able to provide the purchased service.</Text>
 
-                <Text style={styles.subHeading}>Optional or feature‑based data</Text>
-                <Text style={[styles.leadText, { marginBottom: 8 }]}>This may include:</Text>
+                <Text style={styles.leadText}>
+                  Without this data, we may not be able to provide the purchased service.
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Optional or feature-based data</Text>
+                <Text style={styles.leadText}>This may include:</Text>
                 <View style={styles.list}>
-                  <Text style={styles.listItem}>• child‑related data,</Text>
+                  <Text style={styles.listItem}>• child-related data,</Text>
                   <Text style={styles.listItem}>• feedback responses,</Text>
                   <Text style={styles.listItem}>• media uploads,</Text>
                   <Text style={styles.listItem}>• referral participation data,</Text>
                   <Text style={styles.listItem}>• payout details (only if claiming payouts),</Text>
-                  <Text style={styles.listItem}>• PAN or tax‑related information,</Text>
+                  <Text style={styles.listItem}>• PAN or tax-related information,</Text>
                   <Text style={styles.listItem}>• testimonial or marketing permissions.</Text>
                 </View>
-                <Text style={styles.leadText}>Providing such data is optional, but certain features (such as payouts or rewards) may not function without required information.</Text>
+
+                <Text style={styles.leadText}>
+                  Providing such data is optional, but certain features (such as payouts or rewards) may not function without required information.
+                </Text>
 
                 <Text style={styles.subHeading}>2.8 Data source summary</Text>
-                <Text style={[styles.leadText, { marginBottom: 8 }]}>We may collect personal data:</Text>
+                <Text style={styles.leadText}>
+                  We may collect personal data:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• directly from you,</Text>
                   <Text style={styles.listItem}>• automatically through your use of our platform,</Text>
-                  <Text style={styles.listItem}>• from third‑party service providers supporting payments, payouts, analytics, and infrastructure,</Text>
+                  <Text style={styles.listItem}>• from third-party service providers supporting payments, payouts, analytics, and infrastructure,</Text>
                   <Text style={styles.listItem}>• from internal systems used for verification, security, and compliance.</Text>
                 </View>
 
                 <Text style={styles.subHeading}>2.9 Data sensitivity and handling</Text>
-                <Text style={[styles.leadText, { marginBottom: 8 }]}>Certain categories of personal data, such as:</Text>
+                <Text style={styles.leadText}>
+                  Certain categories of personal data, such as:
+                </Text>
                 <View style={styles.list}>
-                  <Text style={styles.listItem}>• financial and payout‑related data,</Text>
+                  <Text style={styles.listItem}>• financial and payout-related data,</Text>
                   <Text style={styles.listItem}>• identification numbers (such as PAN),</Text>
                   <Text style={styles.listItem}>• account access data,</Text>
                   <Text style={styles.listItem}>• uploaded media content,</Text>
                 </View>
-                <Text style={styles.leadText}>may be treated as higher‑sensitivity data under our internal data classification and risk management practices.</Text>
-                <Text style={styles.leadText}>Such data may be subject to additional safeguards, access controls, and handling measures appropriate to its nature and associated risks.</Text>
 
+                <Text style={styles.leadText}>
+                  may be treated as higher-sensitivity data under our internal data classification and risk management practices.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Such data may be subject to additional safeguards, access controls, and handling measures appropriate to its nature and associated risks.
+                </Text>
                 <Text style={styles.subHeading}>2.10 Legal Basis for Processing (Where Applicable)</Text>
-                <Text style={styles.leadText}>Where required by applicable data protection laws (including GDPR or similar regulations), we process personal data on one or more of the following legal bases:</Text>
+                <Text style={styles.leadText}>
+                  • Where required by applicable data protection laws (including GDPR or similar regulations), we process personal data on one or more of the following legal bases:
+                </Text>
                 <View style={styles.list}>
-                  <Text style={styles.listItem}>• performance of a contract (e.g., providing program access after purchase),</Text>
-                  <Text style={styles.listItem}>• compliance with legal obligations (e.g., tax, accounting, regulatory requirements),</Text>
-                  <Text style={styles.listItem}>• legitimate interests (e.g., fraud prevention, platform security, analytics, service improvement, and internal operations),</Text>
-                  <Text style={styles.listItem}>• consent or submission‑based authorization (where such authorization is obtained through clearly disclosed submission workflows and acceptance of applicable policies during submission), as permitted under applicable law,</Text>
+                  <Text style={styles.listItem}>• performance of a contract (e.g., providing program access after purchase);</Text>
+                  <Text style={styles.listItem}>• compliance with legal obligations (e.g., tax, accounting, regulatory requirements);</Text>
+                  <Text style={styles.listItem}>• legitimate interests (e.g., fraud prevention, platform security, analytics, service improvement, and internal operations);</Text>
+                  <Text style={styles.listItem}>• consent or submission-based authorization (where such authorization is obtained through clearly disclosed submission workflows and acceptance of applicable policies during submission), as permitted under applicable law (e.g., marketing communications, cookies, tracking technologies, testimonials, or optional data submission);</Text>
                   <Text style={styles.listItem}>• other lawful bases as permitted under applicable laws.</Text>
                 </View>
-                <Text style={styles.leadText}>Where processing is based on consent, you may withdraw such consent at any time, without affecting the lawfulness of processing prior to withdrawal.</Text>
 
-                <Text style={styles.subHeading}>2.10A Jurisdiction‑Specific Legal Basis Clarification</Text>
-                <Text style={styles.leadText}>The legal bases described above, including consent, contractual necessity, and legitimate interests, are primarily intended to comply with applicable international data protection laws such as the General Data Protection Regulation (GDPR) for users located in the European Union.</Text>
-                <Text style={styles.leadText}>For users located in India, personal data is processed in accordance with applicable Indian laws, including the Digital Personal Data Protection framework and the Information Technology Act and Rules. Such processing is based on:</Text>
+                <Text style={styles.leadText}>
+                  Where processing is based on consent, you may withdraw such consent at any time, without affecting the lawfulness of processing prior to withdrawal.
+                </Text>
+
+                <Text style={styles.subHeading}>2.10A Jurisdiction-Specific Legal Basis Clarification</Text>
+                <Text style={styles.leadText}>
+                  The legal bases described above, including consent, contractual necessity, and legitimate interests, are primarily intended to comply with applicable international data protection laws such as the General Data Protection Regulation (GDPR) for users located in the European Union.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  For users located in India, personal data is processed in accordance with applicable Indian laws, including the Digital Personal Data Protection framework and the Information Technology Act and Rules. Such processing is based on:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• voluntary provision of data by the user,</Text>
-                  <Text style={styles.listItem}>• consent provided at the time of data collection or submission‑based authorization (where such authorization is obtained through clearly disclosed submission workflows and acceptance of applicable policies during submission), as permitted under applicable law,</Text>
+                  <Text style={styles.listItem}>• consent provided at the time of data collection or submission-based authorization (where such authorization is obtained through clearly disclosed submission workflows and acceptance of applicable policies during submission), as permitted under applicable law,</Text>
                   <Text style={styles.listItem}>• necessity to provide requested services,</Text>
                   <Text style={styles.listItem}>• compliance with legal and regulatory obligations,</Text>
                   <Text style={styles.listItem}>• other lawful purposes permitted under applicable Indian law.</Text>
                 </View>
-                <Text style={styles.leadText}>References to “legitimate interests” or similar legal bases should be interpreted in a manner consistent with the laws applicable to the user’s jurisdiction.</Text>
+
+                <Text style={styles.leadText}>
+                  References to “legitimate interests” or similar legal bases should be interpreted in a manner consistent with the laws applicable to the user's jurisdiction.
+                </Text>
                 <Text style={styles.subHeading}>2.11 Unified Authorization Framework for User-Submitted Content</Text>
-                <Text style={styles.leadText}>For clarity, where users submit feedback, testimonials, images, audio, or video content through workflows that clearly disclose intended use (including marketing, promotional, or public display purposes):</Text>
+                <Text style={styles.leadText}>
+                  For clarity, where users submit feedback, testimonials, images, audio, or video content through workflows that clearly disclose intended use (including marketing, promotional, or public display purposes):
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• such disclosure shall define the scope of use;</Text>
                   <Text style={styles.listItem}>• acceptance of applicable policies at the time of submission; and</Text>
                   <Text style={styles.listItem}>• the act of submission itself</Text>
                 </View>
-                <Text style={styles.leadText}>shall together constitute informed acknowledgment and authorization for such use.</Text>
+                <Text style={styles.leadText}>
+                  shall together constitute informed acknowledgment and authorization for such use.
+                </Text>
 
-                <Text style={styles.leadText}>This authorization:</Text>
+                <Text style={styles.leadText}>
+                  This authorization:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• forms part of the submission process;</Text>
                   <Text style={styles.listItem}>• does not require a separate standalone consent mechanism unless required under applicable law; and</Text>
                   <Text style={styles.listItem}>• shall be interpreted in accordance with applicable data protection laws, including GDPR and relevant Indian data protection laws.</Text>
                 </View>
-                <Text style={styles.leadText}>Where required by applicable law, such authorization shall be treated as valid consent, provided that the disclosure is clear, specific, and transparent at the point of submission.</Text>
+
+                <Text style={styles.leadText}>
+                  Where required by applicable law, such authorization shall be treated as valid consent, provided that the disclosure is clear, specific, and transparent at the point of submission.
+                </Text>
+
               </>
             )}
           </View>
@@ -457,24 +692,36 @@ const PrivacyPolicywithoutLog = () => {
             {expandedSections['3'] && (
               <>
                 <Text style={styles.subHeading}>3.1 Overview</Text>
-                <Text style={[styles.leadText, { marginBottom: 0 }]}>
-                  The Company processes personal data in accordance with applicable laws based on the user's location, including GDPR principles for EU users and applicable Indian data protection laws for users in India. We process personal data for specific, defined purposes related to the operation, delivery, improvement, security, and promotion of our services.
+                <Text style={styles.leadText}>
+                  The Company processes personal data in accordance with applicable laws based on the user's location, including GDPR principles for EU users and applicable Indian data protection laws for users in India.
                 </Text>
 
-                <Text style={styles.leadText}>Depending on the context, we rely on one or more of the following legal bases:</Text>
+                <Text style={styles.leadText}>
+                  We process personal data for specific, defined purposes related to the operation, delivery, improvement, security, and promotion of our services.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Depending on the context, we rely on one or more of the following legal bases:
+                </Text>
                 <View style={styles.list}>
-                  <Text style={styles.listItem}>• Contractual necessity — where processing is required to provide services requested by you</Text>
-                  <Text style={styles.listItem}>• Legal obligation — where processing is required to comply with applicable laws</Text>
-                  <Text style={styles.listItem}>• Legitimate interests — where processing is necessary for our business operations, provided such interests are not overridden by your rights</Text>
-                  <Text style={styles.listItem}>• Consent — where processing is necessary and you have given consent</Text>
+                  <Text style={styles.listItem}>• <Text style={{ fontWeight: '700' }}>Contractual necessity</Text> — where processing is required to provide services requested by you</Text>
+                  <Text style={styles.listItem}>• <Text style={{ fontWeight: '700' }}>Legal obligation</Text> — where processing is required to comply with applicable laws</Text>
+                  <Text style={styles.listItem}>• <Text style={{ fontWeight: '700' }}>Legitimate interests</Text> — where processing is necessary for our business operations, provided such interests are not overridden by your rights</Text>
+                  <Text style={styles.listItem}>• <Text style={{ fontWeight: '700' }}>Consent</Text> — where processing is necessary for our business operations, provided such interests are not overridden by your rights</Text>
                 </View>
 
                 <Text style={styles.leadText}>
-                  The applicable legal basis depends on the nature of the processing activity described below. Where processing is based on legitimate interests, such processing is carried out only where permitted under applicable law and balanced against user rights.
+                  The applicable legal basis depends on the nature of the processing activity described below.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Where processing is based on legitimate interests, such processing is carried out only where permitted under applicable law and balanced against user rights, and may not apply in all jurisdictions.
                 </Text>
 
                 <Text style={styles.subHeading}>3.2 Providing and delivering services</Text>
-                <Text style={styles.leadText}>We process personal data to:</Text>
+                <Text style={styles.leadText}>
+                  We process personal data to:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• provide access to purchased programs and content,</Text>
                   <Text style={styles.listItem}>• deliver pre-recorded video-based services,</Text>
@@ -482,28 +729,45 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• authenticate users and manage access,</Text>
                   <Text style={styles.listItem}>• provide customer support and service communications.</Text>
                 </View>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Contractual necessity</Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Contractual necessity</Text>
                 <Text style={styles.leadText}>Without this processing, we would not be able to provide our services.</Text>
 
                 <Text style={styles.subHeading}>3.3 Managing referrals, rewards, feedback, and payouts</Text>
-                <Text style={styles.leadText}>We process personal data to:</Text>
+                <Text style={styles.leadText}>
+                  We process personal data to:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• track referrals and link referrers and customers,</Text>
                   <Text style={styles.listItem}>• determine eligibility for rewards, cashback, or payouts,</Text>
-                  <Text style={styles.listItem}>• review and evaluate feedback or testimonial submissions (including child-related content where applicable, for clearly disclosed promotional uses),</Text>
+                  <Text style={styles.listItem}>• review and evaluate feedback or testimonial submissions,</Text>
+                  <Text style={styles.listItem}>• use testimonials, feedback, or user-submitted content (including child-related content where applicable) for marketing or promotional purposes where such use has been clearly disclosed at the time of submission and acknowledged by the user through acceptance of applicable policies during submission and submission of the content;</Text>
                   <Text style={styles.listItem}>• process and execute payouts,</Text>
                   <Text style={styles.listItem}>• maintain records for payout tracking, audit, and dispute resolution.</Text>
                 </View>
-                <Text style={styles.leadText}>This may include processing payout-related information such as bank details, UPI IDs, PAN, or international payout details.</Text>
-                <Text style={styles.leadText}>Where applicable:</Text>
+
+                <Text style={styles.leadText}>
+                  This may include processing payout-related information such as bank details, UPI IDs, PAN, or international payout details.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Where applicable:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• higher tax deduction or withholding may apply if required information (such as PAN) is not provided or validated,</Text>
                   <Text style={styles.listItem}>• payout processing may depend on submission, verification, and approval workflows.</Text>
                 </View>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Contractual necessity; Legal obligation; Legitimate interests (including fraud prevention, validation, and operational integrity)</Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Contractual necessity</Text>
+                <Text style={styles.leadText}>Legal obligation</Text>
+                <Text style={styles.leadText}>Legitimate interests (including fraud prevention, validation, and operational integrity)</Text>
 
                 <Text style={styles.subHeading}>3.4 Verification, fraud prevention, and platform integrity</Text>
-                <Text style={styles.leadText}>We process personal data to:</Text>
+                <Text style={styles.leadText}>
+                  We process personal data to:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• verify identity and payout details,</Text>
                   <Text style={styles.listItem}>• validate bank accounts, UPI IDs, or tax-related identifiers,</Text>
@@ -512,11 +776,28 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• enforce platform rules and eligibility criteria,</Text>
                   <Text style={styles.listItem}>• maintain audit trails and investigation records.</Text>
                 </View>
-                <Text style={styles.leadText}>This may include monitoring login attempts, validation attempts, account activity patterns, and payout-related behavior. Decisions involving account restrictions, payout approval, or fraud detection are not based solely on automated processing and involve human review where appropriate.</Text>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Contractual necessity; Legal obligation (where applicable)</Text>
 
+                <Text style={styles.leadText}>
+                  This may include monitoring:
+                </Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• login attempts,</Text>
+                  <Text style={styles.listItem}>• validation attempts,</Text>
+                  <Text style={styles.listItem}>• account activity patterns,</Text>
+                  <Text style={styles.listItem}>• payout-related behavior.</Text>
+                </View>
+
+                <Text style={styles.leadText}>
+                  Decisions involving account restrictions, payout approval, or fraud detection are <Text style={{ fontWeight: '700' }}>not based solely on automated processing</Text> and involve human review where appropriate.
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Legitimate interests</Text>
+                <Text style={styles.leadText}>Legal obligation (where applicable)</Text>
                 <Text style={styles.subHeading}>3.5 Improving services, analytics, and product development</Text>
-                <Text style={styles.leadText}>We process personal data to:</Text>
+                <Text style={styles.leadText}>
+                  We process personal data to:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• understand how users interact with our platform,</Text>
                   <Text style={styles.listItem}>• analyze usage patterns and engagement,</Text>
@@ -525,11 +806,18 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• develop new services and program enhancements,</Text>
                   <Text style={styles.listItem}>• conduct internal analysis and business insights.</Text>
                 </View>
-                <Text style={styles.leadText}>Where possible, we may use aggregated or non‑identifiable data for long‑term analysis.</Text>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Contractual necessity</Text>
+
+                <Text style={styles.leadText}>
+                  Where possible, we may use aggregated or non-identifiable data for long-term analysis.
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Legitimate interests</Text>
 
                 <Text style={styles.subHeading}>3.6 Personalization, profiling, and optimization</Text>
-                <Text style={styles.leadText}>We may process personal data to:</Text>
+                <Text style={styles.leadText}>
+                  We may process personal data to:
+                </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• personalize user experience within the platform,</Text>
                   <Text style={styles.listItem}>• tailor content, recommendations, or communications,</Text>
@@ -537,9 +825,35 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• improve relevance of offers, features, and messaging,</Text>
                   <Text style={styles.listItem}>• optimize marketing campaigns and performance.</Text>
                 </View>
-                <Text style={styles.leadText}>This may involve profiling based on interaction patterns, feedback data, usage behavior, or contextual information. We do not use profiling to make solely automated decisions producing legal or similarly significant effects without appropriate human involvement where required by law.</Text>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Contractual necessity</Text>
 
+                <Text style={styles.leadText}>
+                  This may involve profiling based on:
+                </Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• interaction patterns,</Text>
+                  <Text style={styles.listItem}>• feedback data,</Text>
+                  <Text style={styles.listItem}>• usage behavior,</Text>
+                  <Text style={styles.listItem}>• preferences or contextual information.</Text>
+                </View>
+
+                <Text style={styles.leadText}>
+                  We do not use profiling to make solely automated decisions that produce legal or similarly significant effects without appropriate human involvement where required by applicable law.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  You have the right to object to such processing where it is based on legitimate interests, subject to applicable law.
+                </Text>
+
+                <Text style={styles.leadText}>
+                  Where profiling is based on legitimate interests, users have the right to object to such processing at any time, and we will assess such objections in accordance with applicable law.
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Legitimate interests</Text>
+
+                <Text style={styles.leadText}>
+                  We do not use profiling involving sensitive personal data or special categories of data for advertising or marketing purposes.
+                </Text>
                 <Text style={styles.subHeading}>3.7 Marketing communications</Text>
                 <Text style={styles.leadText}>We may use your personal data to:</Text>
                 <View style={styles.list}>
@@ -548,33 +862,72 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• communicate offers, campaigns, or new features,</Text>
                   <Text style={styles.listItem}>• provide relevant information related to your purchase or usage.</Text>
                 </View>
-                <Text style={styles.leadText}>Where you are an existing customer, we may send communications based on a legitimate interest (soft opt-in). Where required by law, we will obtain your consent before sending marketing communications. You will be provided with clear and easy opt-out options.</Text>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Contractual necessity; Consent (where required)</Text>
+
+                <Text style={styles.leadText}>Where you are an existing customer:</Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• we may send communications based on a legitimate interest (soft opt-in),</Text>
+                  <Text style={styles.listItem}>• such communications will relate to similar services,</Text>
+                  <Text style={styles.listItem}>• you will be provided with clear and easy opt-out options.</Text>
+                </View>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Legitimate interests</Text>
+                <Text style={styles.leadText}>Consent (where required)</Text>
+
+                <Text style={styles.leadText}>Where required by applicable law, we will obtain your consent before sending marketing communications.</Text>
+
+                <Text style={styles.leadText}>Where marketing communications are based on legitimate interests, such communications are limited to existing customers, relate to similar services, and include a clear and simple opt-out mechanism in every communication. Where required under applicable law, such communications will be sent only with prior consent.</Text>
+
+                <Text style={styles.leadText}>Users are provided with a clear and simple mechanism to opt out of such communications at any time, and such opt-out requests are respected without undue delay.</Text>
+
+                <Text style={styles.leadText}>For users located in the European Economic Area, direct marketing communications shall be based on prior consent where required under applicable law, except where a soft opt-in is permitted in accordance with applicable regulations.</Text>
+
 
                 <Text style={styles.subHeading}>3.8 Advertising, remarketing, and tracking</Text>
-                <Text style={[styles.leadText, { marginBottom: 9 }]}>We process personal data to:</Text>
+                <Text style={styles.leadText}>We process personal data to:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• measure campaign performance,</Text>
                   <Text style={styles.listItem}>• understand user behavior across sessions or platforms,</Text>
                   <Text style={styles.listItem}>• build audiences for advertising,</Text>
                   <Text style={styles.listItem}>• enable remarketing or retargeting,</Text>
-                  <Text style={styles.listItem}>• optimize advertising effectiveness and relevance.</Text>
+                  <Text style={styles.listItem}>• optimize advertising effectiveness,</Text>
+                  <Text style={styles.listItem}>• manage frequency and relevance of advertisements.</Text>
                 </View>
-                <Text style={styles.leadText}>This may involve the use of cookies, pixels, SDKs, device identifiers, and event data. Non‑essential tracking and advertising technologies are used only after obtaining your consent where required by applicable law.</Text>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Consent (for non-essential tracking and advertising); Legitimate interests (for essential analytics and operational insights)</Text>
+
+                <Text style={styles.leadText}>This may involve the use of:</Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• cookies,</Text>
+                  <Text style={styles.listItem}>• pixels,</Text>
+                  <Text style={styles.listItem}>• SDKs,</Text>
+                  <Text style={styles.listItem}>• device identifiers,</Text>
+                  <Text style={styles.listItem}>• interaction and event data.</Text>
+                </View>
+
+                <Text style={styles.leadText}>
+                  Non-essential tracking and advertising technologies are used <Text style={{ fontWeight: '700' }}>only after obtaining your consent where required by applicable law.</Text>
+                </Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Consent (for non-essential tracking and advertising)</Text>
+                <Text style={styles.leadText}>Legitimate interests (for essential analytics and operational insights)</Text>
+
+                <Text style={styles.leadText}>Where consent is required under applicable law, such processing will not be carried out on the basis of legitimate interests alone.</Text>
 
                 <Text style={styles.subHeading}>3.9 Communications and support</Text>
-                <Text style={[styles.leadText, { marginBottom: 9 }]}>We process personal data to:</Text>
+                <Text style={styles.leadText}>We process personal data to:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• respond to queries and support requests,</Text>
                   <Text style={styles.listItem}>• provide important service-related communications,</Text>
                   <Text style={styles.listItem}>• manage customer relationships,</Text>
                   <Text style={styles.listItem}>• maintain records of communications for quality and compliance purposes.</Text>
                 </View>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Contractual necessity; Legitimate interests</Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Contractual necessity</Text>
+                <Text style={styles.leadText}>Legitimate interests</Text>
 
                 <Text style={styles.subHeading}>3.10 Testimonials, feedback, and media processing</Text>
-                <Text style={[styles.leadText, { marginBottom: 9 }]}>We process feedback, testimonial submissions, and uploaded content to:</Text>
+                <Text style={styles.leadText}>We process feedback, testimonial submissions, and uploaded content to:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• evaluate and review submissions,</Text>
                   <Text style={styles.listItem}>• determine eligibility for rewards or payouts,</Text>
@@ -582,16 +935,23 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• maintain internal records and audit trails.</Text>
                 </View>
 
-                <Text style={[styles.leadText, { marginBottom: 9 }]}>Submission of feedback or media content:</Text>
+                <Text style={styles.leadText}>Submission of feedback or media content:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• is voluntary,</Text>
                   <Text style={styles.listItem}>• may be linked to reward or payout programs,</Text>
                   <Text style={styles.listItem}>• may be subject to review and approval processes.</Text>
                 </View>
 
-                <Text style={styles.leadText}>We do not use submitted content for public marketing purposes unless such use has been clearly disclosed at the time of submission and acknowledged by the user through acceptance of applicable policies during submission.</Text>
+                <Text style={styles.leadText}>We do not use submitted content for public marketing purposes unless such use has been clearly disclosed at the time of submission and acknowledged by the user through acceptance of applicable policies during submission and submission of the content, where permitted or required under applicable law.</Text>
 
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Contractual necessity (for program participation and payouts); Legitimate interests (for internal analysis and improvement); Consent or submission-based authorization where required</Text>
+                <Text style={styles.leadText}>Where feedback, testimonials, or media content are submitted through workflows that clearly disclose intended use, including potential marketing or promotional use, the user's acceptance of applicable policies at the time of submission, together with the act of submission, constitutes acknowledgment and authorization for such use.</Text>
+
+                <Text style={styles.leadText}>Such authorization is considered part of voluntary participation in feedback, testimonial, or reward-based programs and does not require a separate standalone consent mechanism, unless required under applicable law.</Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Contractual necessity (for program participation and payouts)</Text>
+                <Text style={styles.leadText}>Legitimate interests (for internal analysis and improvement)</Text>
+                <Text style={styles.leadText}>Consent or submission-based authorization (where such authorization is obtained through clearly disclosed submission workflows and acceptance of applicable policies during submission), as permitted under applicable law.</Text>
 
                 <Text style={styles.subHeading}>3.11 Legal compliance and enforcement</Text>
                 <Text style={styles.leadText}>We may process personal data to:</Text>
@@ -601,16 +961,32 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• enforce our Terms of Use and policies,</Text>
                   <Text style={styles.listItem}>• establish, exercise, or defend legal claims.</Text>
                 </View>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Legal obligation; Legitimate interests</Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Legal obligation</Text>
+                <Text style={styles.leadText}>Legitimate interests</Text>
+
 
                 <Text style={styles.subHeading}>3.12 Internal research, analysis, and program improvement</Text>
-                <Text style={styles.leadText}>We may use personal data for internal research, analysis, quality review, and program improvement, including evaluating the effectiveness of our content, services, and user experience. Where feasible, we aim to use aggregated, de‑identified, or anonymized information for these purposes.</Text>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Legitimate interests; Consent, where required by applicable law or where we rely on optional submissions provided for such use</Text>
+                <Text style={styles.leadText}>We may use personal data for internal research, analysis, quality review, and program improvement, including evaluating the effectiveness of our content, services, and user experience.</Text>
 
-                <Text style={styles.subHeading}>3.13 Marketing, testimonials, and user‑submitted content</Text>
-                <Text style={[styles.leadText, { marginBottom: 0 }]}>We may use testimonials, feedback, and user‑submitted content, including child‑related content where applicable, for marketing, promotional, or public‑facing purposes where such use has been clearly disclosed at the time of submission. Where such disclosure is provided, the user's acceptance of applicable policies during submission, together with the act of submission, shall constitute acknowledgment and authorization for such use.</Text>
-                <Text style={styles.leadText}>Such authorization forms part of voluntary participation and does not require a separate standalone consent mechanism unless required under applicable law.</Text>
-                <Text style={styles.leadText}><Text style={{ fontWeight: '700' }}>Legal basis:</Text> Consent or submission-based authorization (where such authorization is obtained through clearly disclosed submission workflows and acceptance of applicable policies during submission), as permitted under applicable law.</Text>
+                <Text style={styles.leadText}>Where feasible, we aim to use aggregated, de-identified, or anonymized information for these purposes.</Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Legitimate interests</Text>
+                <Text style={styles.leadText}>Consent, where required by applicable law or where we rely on optional submissions provided for such use</Text>
+
+
+                <Text style={styles.subHeading}>3.13 Marketing, testimonials, and user-submitted content</Text>
+                <Text style={styles.leadText}>We may use testimonials, feedback, and user-submitted content, including child-related content where applicable, for marketing, promotional, or public-facing purposes where such use has been clearly disclosed at the time of submission.</Text>
+
+                <Text style={styles.leadText}>Where such disclosure is provided, the user's acceptance of applicable policies during submission, together with the act of submission, shall constitute acknowledgment and authorization for such use.</Text>
+
+                <Text style={styles.leadText}>Such authorization forms part of the user's voluntary participation in feedback, testimonial, or reward-related workflows and does not require a separate standalone consent mechanism unless required by applicable law.</Text>
+
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>Legal basis:</Text>
+                <Text style={styles.leadText}>Consent or submission-based authorization (where such authorization is obtained through clearly disclosed submission workflows and acceptance of applicable policies during submission), as permitted under applicable law.</Text>
+
               </>
             )}
           </View>
@@ -808,7 +1184,8 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• legal advice and regulatory compliance.</Text>
                 </View>
 
-                <Text style={styles.leadText}>This may include sharing data with professional advisors, including auditors, accountants, tax consultants, and legal advisors engaged for compliance and regulatory purposes.</Text>
+                <Text style={styles.leadText}>This may include sharing data with:</Text>
+                <Text style={styles.leadText}>professional advisors, including auditors, accountants, tax consultants, and legal advisors engaged for compliance and regulatory purposes.</Text>
 
                 <Text style={[styles.subHeading, { marginTop: 18 }]}>4.10 Legal obligations and regulatory disclosures</Text>
                 <Text style={[styles.leadText, { marginBottom: 8 }]}>
@@ -1188,6 +1565,7 @@ const PrivacyPolicywithoutLog = () => {
                 </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• validation checks,</Text>
+                  <Text style={styles.listItem}>• verification requirements,</Text>
                   <Text style={styles.listItem}>• system controls such as update limits, cooldown periods, or restricted edit frequency, to prevent fraud, misuse, or errors.</Text>
                 </View>
 
@@ -1238,8 +1616,17 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• analytics (where applicable).</Text>
                 </View>
                 <Text style={styles.leadText}>
-                  We will evaluate such requests in accordance with applicable law. However, certain processing may continue where necessary for service delivery, contractual obligations, legal compliance, or security and fraud prevention.
+                  We will evaluate such requests in accordance with applicable law.
                 </Text>
+                <Text style={styles.leadText}>
+                  However, certain processing may continue where necessary for:
+                </Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• service delivery,</Text>
+                  <Text style={styles.listItem}>• contractual obligations,</Text>
+                  <Text style={styles.listItem}>• legal compliance,</Text>
+                  <Text style={styles.listItem}>• security and fraud prevention.</Text>
+                </View>
 
                 <Text style={styles.subHeading}>8.6 Marketing preferences and opt-out</Text>
                 <Text style={styles.leadText}>
@@ -1255,7 +1642,14 @@ const PrivacyPolicywithoutLog = () => {
                 </Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• you will no longer receive marketing communications,</Text>
-                  <Text style={styles.listItem}>• however, you may continue to receive service-related communications such as account updates, transaction notifications, payout or referral-related updates, and security alerts.</Text>
+                  <Text style={styles.listItem}>• however, you may continue to receive service-related communications such as:
+                  </Text>
+                  <View style={styles.list}>
+                    <Text style={styles.listItem}>• account updates,</Text>
+                    <Text style={styles.listItem}>• transaction notifications,</Text>
+                    <Text style={styles.listItem}>• payout or referral-related updates,</Text>
+                    <Text style={styles.listItem}>• security alerts.</Text>
+                  </View>
                 </View>
 
                 <Text style={styles.subHeading}>8.7 Cookies and tracking choices</Text>
@@ -1271,8 +1665,11 @@ const PrivacyPolicywithoutLog = () => {
                   Where processing is based on consent, you may withdraw your consent at any time.
                 </Text>
                 <Text style={styles.leadText}>
-                  Withdrawal of consent does not affect processing already carried out and may impact your ability to use certain features or services.
-                </Text>
+                  Withdrawal of consent:</Text>
+                <View style={styles.list}>
+                  <Text style={styles.listItem}>• does not affect processing already carried out,</Text>
+                  <Text style={styles.listItem}>•may impact your ability to use certain features or services.</Text>
+                </View>
                 <Text style={styles.leadText}>
                   This includes consent or authorization associated with testimonials, feedback, images, audio, or videos submitted through clearly disclosed submission workflows, subject to applicable law and the practical limitations described in this Privacy Policy.
                 </Text>
@@ -1373,7 +1770,7 @@ const PrivacyPolicywithoutLog = () => {
                 <Text style={styles.subHeading}>9.3 Types of cookies and tracking technologies</Text>
                 <Text style={styles.leadText}>We use different categories of cookies and similar technologies:</Text>
 
-                <Text style={styles.leadText}>(a) Necessary cookies</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(a) Necessary cookies</Text>
                 <Text style={styles.leadText}>These cookies are essential for the functioning of our platform.</Text>
                 <Text style={styles.leadText}>They may be used to:</Text>
                 <View style={styles.list}>
@@ -1384,7 +1781,7 @@ const PrivacyPolicywithoutLog = () => {
                 </View>
                 <Text style={styles.leadText}>These cookies are used without requiring consent where permitted by applicable law.</Text>
 
-                <Text style={styles.leadText}>(b) Functional cookies</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(b) Functional cookies</Text>
                 <Text style={styles.leadText}>These cookies help improve user experience by:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• remembering preferences,</Text>
@@ -1392,7 +1789,7 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• enhancing usability of features.</Text>
                 </View>
 
-                <Text style={styles.leadText}>(c) Analytics and performance technologies</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(c) Analytics and performance technologies</Text>
                 <Text style={styles.leadText}>These technologies help us:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• understand how users interact with our platform,</Text>
@@ -1400,7 +1797,7 @@ const PrivacyPolicywithoutLog = () => {
                   <Text style={styles.listItem}>• improve performance and functionality.</Text>
                 </View>
 
-                <Text style={styles.leadText}>(d) Advertising and marketing technologies</Text>
+                <Text style={[styles.leadText, { fontWeight: '700' }]}>(d) Advertising and marketing technologies</Text>
                 <Text style={styles.leadText}>These technologies are used to:</Text>
                 <View style={styles.list}>
                   <Text style={styles.listItem}>• measure campaign effectiveness,</Text>
@@ -1596,7 +1993,6 @@ const PrivacyPolicywithoutLog = () => {
                 </View>
 
                 <Text style={styles.leadText}>Requests will be reviewed on a case-by-case basis.</Text>
-                <Text style={styles.leadText}>Requests will be reviewed on a case-by-case basis.</Text>
 
                 <Text style={styles.subHeading}>10.10 Incorrect or unauthorized submissions</Text>
                 <Text style={styles.leadText}>If we become aware that:</Text>
@@ -1757,9 +2153,9 @@ const PrivacyPolicywithoutLog = () => {
         </View>
       </ScreenScroll >
     </View >
+
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
