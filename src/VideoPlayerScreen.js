@@ -15,6 +15,7 @@ const VideoPlayerScreen = () => {
   const progressSentRef = useRef(false);
   const finishedSentRef = useRef(false);
   const maxWatchedTimeRef = useRef(0);
+  const hasNavigatedRef = useRef(false);
   const {
     VideoId,
     annotate,
@@ -100,6 +101,7 @@ const VideoPlayerScreen = () => {
 
   useEffect(() => {
     if (videoId) {
+      hasNavigatedRef.current = false;
       progressSentRef.current = false;
       finishedSentRef.current = false;
       maxWatchedTimeRef.current = 0;
@@ -121,50 +123,46 @@ const VideoPlayerScreen = () => {
     };
   }, []);
 
-  useEffect(() => {
-    try {
-      Orientation.unlockAllOrientations();
-    } catch (e) {
-    }
+  // useEffect(() => {
+  //   try {
+  //     Orientation.unlockAllOrientations();
+  //   } catch (e) {
+  //   }
 
-    return () => {
-      try {
-        Orientation.lockToPortrait();
-      } catch (e) {
-      }
-    };
-  }, []);
+  //   return () => {
+  //     try {
+  //       Orientation.lockToPortrait();
+  //     } catch (e) {
+  //     }
+  //   };
+  // }, []);
+
+  useEffect(() => {
+  try { Orientation.unlockAllOrientations(); } catch (_) {}
+  return () => {
+    try { Orientation.lockToPortrait(); } catch (_) {}
+  };
+}, []);
+
+
   useEffect(() => {
     navigation.setOptions({ headerShown: !isLandscape });
     StatusBar.setHidden(isLandscape || isFullscreen);
   }, [isLandscape, isFullscreen, navigation]);
 
-  useFocusEffect(
-    useCallback(() => {
-      setIsFullscreen(false);
-      setError(null);
-      setCredentials({ otp: null, playbackInfo: null });
-      progressSentRef.current = false;
-      finishedSentRef.current = false;
-
-      if (videoId) {
-        fetchVideoCredentials();
-      }
-      const sub = BackHandler.addEventListener(
-        "hardwareBackPress",
-        handleBack
-      );
-
-      return () => {
-        sub.remove();
-        setIsFullscreen(false);
-        setError(null);
-        setCredentials({ otp: null, playbackInfo: null });
-        progressSentRef.current = false;
-        finishedSentRef.current = false;
-      };
-    }, [videoId, fetchVideoCredentials, handleBack])
-  );
+useFocusEffect(
+  useCallback(() => {
+    hasNavigatedRef.current = false;
+    progressSentRef.current = false;
+    finishedSentRef.current = false;
+    currentTimeRef.current = 0;
+    if (videoId) {
+      fetchVideoCredentials();
+    }
+    const sub = BackHandler.addEventListener("hardwareBackPress", handleBack);
+    return () => sub.remove();
+  }, [videoId, fetchVideoCredentials, handleBack])
+);
 
   const updateProgress = useCallback(
     async (isFinished = false, overrideSeconds = null) => {
@@ -224,24 +222,18 @@ const VideoPlayerScreen = () => {
     [videoId, currentTime, language, step, stage_name, displayStep, total_time]
   );
 
-  const handleBack = useCallback(() => {
-    if (playerRef.current) {
-      playerRef.current.stop?.();
-      playerRef.current.release?.();
-    }
+ const handleBack = useCallback(() => {
+  if (playerRef.current) {
+    try { playerRef.current.stop?.(); } catch (_) {}
+    try { playerRef.current.release?.(); } catch (_) {}
+  }
+  try { Orientation.lockToPortrait(); } catch (_) {}
 
-    updateProgress().catch(() => { });
+  updateProgress(false).catch(() => {});
 
-    if (cameFrom === "Dashboard") {
-      navigation.navigate("Home");
-    } else if (cameFrom) {
-      navigation.navigate(cameFrom);
-    } else {
-      navigation.goBack();
-    }
-
-    return true;
-  }, [navigation, cameFrom, updateProgress]);
+  navigation.goBack();
+  return true;
+}, [navigation, updateProgress]);
 
   if (isLoading || !credentials?.otp) {
     return (
@@ -265,7 +257,7 @@ const VideoPlayerScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#000" hidden={isLandscape} />
 
       <VdoPlayerView
-        key={videoId}
+        // key={videoId}
         ref={playerRef}
         style={{
           width: "100%",
@@ -276,39 +268,32 @@ const VideoPlayerScreen = () => {
           otp: credentials.otp,
           playbackInfo: credentials.playbackInfo,
         }}
-        onProgress={(p) => {
-          if (p && typeof p.currentTime === "number") {
-            const secs = Math.floor(p.currentTime > 1000 ? p.currentTime / 1000 : p.currentTime);
-            setCurrentTime(secs);
-            currentTimeRef.current = secs;
-          }
-        }}
-        onMediaEnded={async () => {
-          setVideoCompleted(true);
-          try {
-            await updateProgress(true);
-          } catch (e) {
-          }
-          if (isFullscreen) {
-            playerRef.current?.exitFullscreenV2?.();
-          }
-          try {
-            playerRef.current?.stop?.();
-            playerRef.current?.release?.();
-          } catch (e) { }
-
-          try {
-            if (cameFrom === "Dashboard") {
-              navigation.navigate("Home");
-            } else if (cameFrom) {
-              navigation.navigate(cameFrom);
-            } else {
-              navigation.navigate("PreviewHome");
-            }
-          } catch (e) { }
+      onProgress={(p) => {
+        if (!p || typeof p.currentTime !== "number") return;
+        const secs = Math.floor(
+          p.currentTime > 1000 ? p.currentTime / 1000 : p.currentTime
+        );
+        currentTimeRef.current = secs;
+          }}
+         onMediaEnded={() => {
+          if (hasNavigatedRef.current) return;
+          hasNavigatedRef.current = true;
+          updateProgress(true).catch(() => {});
+          try { playerRef.current?.exitFullscreenV2?.(); } catch (_) {}
+          try { playerRef.current?.stop?.(); } catch (_) {}
+          try { playerRef.current?.release?.(); } catch (_) {}
+          try { Orientation.lockToPortrait(); } catch (_) {}
+          navigation.goBack();
         }}
         onFullscreenChange={(isFull) => {
           setIsFullscreen(isFull);
+          try {
+            if (isFull) {
+              Orientation.lockToLandscape();     
+            } else {
+              Orientation.unlockAllOrientations(); 
+            }
+          } catch (_) {}
         }}
         onInitializationFailure={(e) => {
           Alert.alert(
