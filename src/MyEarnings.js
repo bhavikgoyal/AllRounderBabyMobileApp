@@ -1,21 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  useColorScheme,
-  BackHandler,
-  StatusBar,
-  Alert,
-  ActivityIndicator,
-  Linking
-} from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform, useColorScheme, BackHandler, StatusBar, Alert, ActivityIndicator, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { BASE_URL } from './config/api';
@@ -53,7 +37,6 @@ const lightThemeColors = {
   activeNavText: 'rgba(20, 52, 164, 1)',
   inactiveNavText: 'gray',
 };
-
 const darkThemeColors = {
   screenBackground: '#121212',
   cardBackground: '#1E1E1E',
@@ -87,7 +70,6 @@ const darkThemeColors = {
   activeNavText: 'rgba(60, 102, 224, 1)',
   inactiveNavText: '#888888',
 };
-
 const createMyEarningsStyles = (theme) => StyleSheet.create({
   keyboardAvoidingContainer: {
     flex: 1,
@@ -272,27 +254,26 @@ const createMyEarningsStyles = (theme) => StyleSheet.create({
     paddingBottom: 0,
   },
 });
-
-
 const MyEarnings = ({ navigation, route }) => {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkThemeColors : lightThemeColors;
   const styles = createMyEarningsStyles(theme);
-
   const [token, setToken] = useState(null);
   const [userId, setUserID] = useState(null);
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [bankDetails, setBankDetails] = useState(null);
-
   const [totalEarnings, setTotalEarnings] = useState('0.00');
   const [referralCount, setReferralCount] = useState(0);
   const [earningsPerReferral, setEarningsPerReferral] = useState(3000);
   const [feedbackEarnings, setFeedbackEarnings] = useState('0.00');
   const [pendingReferralCount, setPendingReferralCount] = useState(2);
-
+  const [isIndia, setIsIndia] = useState(null);
+  const [earningFromReferrals, setEarningFromReferrals] = useState(null);
+  const [totalReferralsCount, setTotalReferralsCount] = useState(0);
+  const [feedbackPaidCount, setFeedbackPaidCount] = useState(0);
   const url = BASE_URL;
-
+  const feedbackRate = isIndia ? 1000 : 10;
   useFocusEffect(
     React.useCallback(() => {
       const loadAllData = async () => {
@@ -303,12 +284,12 @@ const MyEarnings = ({ navigation, route }) => {
           if (storedToken && storedUserId) {
             setUserID(storedUserId);
             setToken(storedToken);
+            const bankResult = await handleBankDetails(storedToken, storedUserId);
+
             await Promise.all([
-              handleBankDetails(storedToken, storedUserId),
               handleEarningDetails(storedToken, storedUserId),
-              handleFeedbackEarnings(storedToken, storedUserId)
+              handleFeedbackEarnings(storedToken, storedUserId, bankResult && bankResult.isIndia)
             ]);
-          } else {
           }
         } catch (error) {
           console.error("Failed to load data from storage", error);
@@ -321,16 +302,15 @@ const MyEarnings = ({ navigation, route }) => {
 
     }, [])
   );
-
   useEffect(() => {
-    const calculatedTotal = (referralCount * earningsPerReferral) + parseFloat(feedbackEarnings);
-    setTotalEarnings(calculatedTotal.toFixed(2));
-  }, [referralCount, earningsPerReferral, feedbackEarnings]);
-
-
+    const referralRate = earningsPerReferral || (isIndia ? 3000 : 30);
+    const feedbackAmountToAdd = feedbackEarnings && !isNaN(parseFloat(feedbackEarnings)) ? parseFloat(feedbackEarnings) : 0;
+    const totalByCount = (parseInt(totalReferralsCount || 0, 10) * referralRate) + (feedbackAmountToAdd > 0 ? feedbackAmountToAdd : 0);
+    setTotalEarnings(totalByCount.toFixed(2));
+  }, [totalReferralsCount, feedbackPaidCount, isIndia, feedbackEarnings, earningsPerReferral]);
   const handleBankDetails = async (token, userId) => {
     if (!userId || !token) {
-       return;
+      return;
     }
 
     const DETAILS_ENDPOINT = `${url}MyProfile/MyProfileDetails_Get_ByID?UserID=${userId}`;
@@ -368,24 +348,33 @@ const MyEarnings = ({ navigation, route }) => {
           panNumber: result.data.panNumber,
         };
         setBankDetails(details);
+        try {
+          const countryLower = (result.data.country || '').toString().toLowerCase();
+          const india = countryLower === 'india';
+          setIsIndia(india);
+          setEarningsPerReferral(india ? 3000 : 30);
+        } catch (e) {
+        }
+        return { isIndia: (result.data.country || '').toString().toLowerCase() === 'india' };
       } else {
-         setBankDetails(null);
+        setBankDetails(null);
+        return null;
       }
     } catch (error) {
       console.error("handleBankDetails: Network or unexpected error:", error);
       setBankDetails(null);
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
-
   const handleEarningDetails = async (token, userId) => {
     if (!userId || !token) {
-       return;
+      return;
     }
 
-    const DETAILS_ENDPOINT = `${url}ReferralTransaction/ReferralTransactionList_Get_ByID?ReferralCodeFromUserID=${userId}`;
- 
+    const DETAILS_ENDPOINT = `${url}ReferralTransaction/GetByReferralCodeFromUserId?ReferralCodeFromUserID=${userId}`;
+
     try {
       const response = await fetch(DETAILS_ENDPOINT, {
         method: 'GET',
@@ -396,56 +385,80 @@ const MyEarnings = ({ navigation, route }) => {
       });
 
       if (!response.ok) {
-        let errorData;
         const responseText = await response.text();
+        let parsed;
         try {
-          errorData = JSON.parse(responseText);
+          parsed = responseText ? JSON.parse(responseText) : null;
         } catch (parseError) {
-          errorData = { message: response.statusText, rawResponse: responseText };
+          parsed = null;
         }
-        console.error("handleEarningDetails: API Error Response:", errorData);
+
+        const info = {
+          url: DETAILS_ENDPOINT,
+          status: response.status,
+          statusText: response.statusText,
+          contentType: response.headers && typeof response.headers.get === 'function' ? response.headers.get('content-type') : undefined,
+          parsedBody: parsed,
+          rawBody: responseText,
+        };
+        console.error('handleEarningDetails: API Error Response:', info);
         setReferralCount(0);
         setEarningsPerReferral(3000);
-        if (code === "Login Req." || code === "") setCode("N/A");
+        setPendingReferralCount(0);
+        if (code === 'Login Req.' || code === '') setCode('N/A');
         return;
       }
 
       const jsonResponse = await response.json();
-      if (jsonResponse && Array.isArray(jsonResponse.data) && jsonResponse.data.length > 0) {
-        const referralTransactions = jsonResponse.data;
+      const dataArray = jsonResponse && jsonResponse.data
+        ? (Array.isArray(jsonResponse.data) ? jsonResponse.data : [jsonResponse.data])
+        : [];
 
-        const initiatedReferrals = referralTransactions.filter(
-          (ref) => ref.status === 'Payment Initiated'
-        );
-        const pendingReferrals = referralTransactions.filter(
-          (ref) => ref.status === 'Payment Pending'
-        );
+      if (dataArray.length > 0) {
+        const allReferrals = dataArray.filter(Boolean);
+        const isPaid = (item) => {
+          if (!item) return false;
+          if (item.payoutdone !== undefined && item.payoutdone !== null) return !!item.payoutdone;
+          if (item.paymentStatus) return item.paymentStatus.toString().toLowerCase() === 'paid' || item.paymentStatus.toString().toLowerCase() === 'completed';
+          if (item.status) return item.status.toString().toLowerCase() === 'paid' || item.status.toString().toLowerCase() === 'completed' || item.status.toString().toLowerCase() === 'payment initiated';
+          return false;
+        };
 
+        const paidReferrals = allReferrals.filter(isPaid);
+        const totalPaidCount = paidReferrals.length;
+        const totalPendingCount = Math.max(0, allReferrals.length - totalPaidCount);
 
-        setReferralCount(initiatedReferrals.length);
-        setPendingReferralCount(pendingReferrals.length);
+        setReferralCount(totalPaidCount);
+        setPendingReferralCount(totalPendingCount);
+        setTotalReferralsCount(allReferrals.length);
 
-
-        setEarningsPerReferral(3000);
-
-        if (referralTransactions.length > 0 && referralTransactions[0].referralCodeName) {
-          setCode(referralTransactions[0].referralCodeName);
-         } else {
-           if (code === "Login Req." || code === "") setCode("N/A");
+        let referralSum = 0;
+        try {
+          paidReferrals.forEach(item => {
+            const keys = ['amount', 'cashbackAmount', 'value', 'amountValue', 'price'];
+            for (const k of keys) {
+              if (item[k] !== undefined && item[k] !== null) {
+                const n = parseFloat(item[k]);
+                if (!isNaN(n)) { referralSum += n; break; }
+              }
+            }
+          });
+        } catch (e) { referralSum = 0; }
+        if (!referralSum) {
+          referralSum = totalPaidCount * earningsPerReferral;
         }
+        setEarningFromReferrals(referralSum.toFixed(2));
 
-      } else if (jsonResponse && jsonResponse.data && !Array.isArray(jsonResponse.data)) {
-        console.warn("handleEarningDetails: Response contains a 'data' property, but it's not an array. Please verify API response structure for earning details.");
-
-        setReferralCount(0);
-        setEarningsPerReferral(3000); 
-        setPendingReferralCount(0);
-        if (code === "Login Req." || code === "") setCode("N/A");
+        if (allReferrals.length > 0 && allReferrals[0].referralCodeName) {
+          setCode(allReferrals[0].referralCodeName);
+        } else {
+          if (code === 'Login Req.' || code === '') setCode('N/A');
+        }
       } else {
-         setReferralCount(0);
-        setEarningsPerReferral(3000);
+        setReferralCount(0);
         setPendingReferralCount(0);
-        if (code === "Login Req." || code === "") setCode("N/A");
+        setEarningFromReferrals((0).toFixed(2));
+        if (code === 'Login Req.' || code === '') setCode('N/A');
       }
 
     } catch (error) {
@@ -458,53 +471,74 @@ const MyEarnings = ({ navigation, route }) => {
     } finally {
     }
   };
-
-  const handleFeedbackEarnings = async (currentToken, currentUserId) => {
-    if (!currentUserId || !currentToken) {
-       return;
-    }
-
-    const FEEDBACK_ENDPOINT = `${url}MyProfile/cashback-processed?userId=${currentUserId}`;
- 
+  const handleFeedbackEarnings = async (currentToken, currentUserId, isIndiaParam) => {
+    if (!currentUserId || !currentToken) return;
+    const localFeedbackRate = (typeof isIndiaParam === 'boolean') ? (isIndiaParam ? 1000 : 10) : (isIndia ? 1000 : 10);
+    const isDone = true;
+    const payDone = false;
+    const FEEDBACK_ENDPOINT = `${url}CashbackFeedback/GetTopByUserStatus?userId=${encodeURIComponent(currentUserId)}&isDone=${isDone}&payDone=${payDone}`;
     try {
       const response = await fetch(FEEDBACK_ENDPOINT, {
         method: 'GET',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`,
-          'Accept': 'application/json'
         }
       });
-
       if (!response.ok) {
-        const errorData = await response.text();
+        const text = await response.text();
+        console.warn(`handleFeedbackEarnings: API Error ${response.status} - ${text}`);
         setFeedbackEarnings('0.00');
         return;
       }
+      const json = await response.json();
+      console.debug('handleFeedbackEarnings: raw response json:', json);
+      const success = json && (json.code === 200 || response.status === 200);
+      const dataArray = json && json.data ? (Array.isArray(json.data) ? json.data : [json.data]) : [];
+      const dataList = Array.isArray(dataArray) ? dataArray : [dataArray];
+      console.debug('handleFeedbackEarnings: dataList (all feedback entries):', dataList);
 
-      const jsonResponse = await response.json();
-        if (jsonResponse.code === 200) {
-        setFeedbackEarnings('1000.00');
-      } else if (jsonResponse.code === 404) {
-        setFeedbackEarnings('0.00');
-      } else {
-         setFeedbackEarnings('0.00');
+      if (!dataList || dataList.length === 0 || (dataList.length === 1 && (dataList[0] === null || dataList[0] === undefined))) {
+        const fallback = localFeedbackRate;
+        setFeedbackEarnings(fallback.toFixed(2));
+        setFeedbackPaidCount(0);
+        return { data: dataArray, error: !success, message: json && json.message ? json.message : '' };
+      }
+      let feedbackSum = 0;
+      try {
+        dataList.forEach(item => {
+          const keys = ['amount', 'cashbackAmount', 'value', 'amountValue', 'price'];
+          for (const k of keys) {
+            if (item && item[k] !== undefined && item[k] !== null) {
+              const n = parseFloat(item[k]);
+              if (!isNaN(n)) { feedbackSum += n; break; }
+            }
+          }
+        });
+      } catch (e) { feedbackSum = 0; console.warn('handleFeedbackEarnings: error summing feedback amounts', e); }
+
+      if (!feedbackSum) {
+        feedbackSum = localFeedbackRate;
+        console.debug('handleFeedbackEarnings: fallback to localFeedbackRate (single):', localFeedbackRate);
       }
 
-    } catch (error) {
-      console.error("handleFeedbackEarnings: Network or unexpected error:", error);
+      setFeedbackEarnings(feedbackSum.toFixed(2));
+      setFeedbackPaidCount(dataList.length);
+      console.debug('handleFeedbackEarnings: computed feedbackSum, feedbackEarnings:', feedbackSum, feedbackSum.toFixed(2));
+      return { data: dataArray, error: !success, message: json && json.message ? json.message : '' };
+    } catch (apiError) {
+      console.error('handleFeedbackEarnings: API call failed', apiError);
       setFeedbackEarnings('0.00');
+      return { data: [], error: true, message: apiError.message };
     }
   };
-
   const handleFeedbackLinkPress = () => {
-    const feedbackUrl = 'https://allrounderbaby.com/feedback';
+    const feedbackUrl = 'https://allrounderbaby.com';
     Linking.openURL(feedbackUrl).catch(err => {
       console.error("Couldn't load page", err);
       Alert.alert('Error', 'Unable to open feedback page. Please try again later.');
     });
   };
-
-
   useEffect(() => {
     const backAction = () => {
       if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
@@ -527,19 +561,15 @@ const MyEarnings = ({ navigation, route }) => {
       backHandler.remove();
     };
   }, [navigation]);
-
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.keyboardAvoidingContainer}
-    >
+      style={styles.keyboardAvoidingContainer}>
       <StatusBar barStyle="light-content" backgroundColor="#1434A4" />
       <View style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
-        >
+          keyboardShouldPersistTaps="handled">
           {isLoading ? (
             <ActivityIndicator size="large" color={theme.buttonBackground} style={{ marginTop: 50 }} />
           ) : (
@@ -547,81 +577,91 @@ const MyEarnings = ({ navigation, route }) => {
               <View style={styles.card}>
                 <Text style={styles.earningsHeader}>My Earnings</Text>
 
-                <View style={styles.totalEarningsCard}>
-                  <Text style={styles.totalEarningsText}>A. Total Earnings (INR): &nbsp;
-                    <Text style={styles.totalEarningsAmount}>₹ {parseFloat(totalEarnings).toLocaleString('en-IN')}</Text>
-                  </Text>
-                </View>
-                <View style={styles.earningsBreakdownSection}>
-                  <Text style={styles.breakdownTitle}>Earnings Breakdown:</Text>
-
-                  <View style={styles.breakdownItem}>
-                    <Text style={styles.breakdownLabel}>
-                      1) Number of Referrals (Payment <Text style={{ color: '#5f9b3d' }}>Initiated</Text>)
-                    </Text>
-                    <Text style={styles.breakdownValue}>{referralCount}</Text>
+                {isIndia === null ? (
+                  <View style={{ padding: 20 }}>
+                    <Text style={styles.subText}>Detecting account country...</Text>
                   </View>
+                ) : isIndia ? (
+                  <>
+                    <View style={styles.totalEarningsCard}>
+                      <Text style={styles.totalEarningsText}>A. Total Earnings (INR): &nbsp;
+                        <Text style={styles.totalEarningsAmount}>₹ {parseFloat(totalEarnings).toLocaleString('en-IN')}</Text>
+                      </Text>
+                    </View>
+                    <View style={styles.earningsBreakdownSection}>
+                      <Text style={styles.breakdownTitle}>Earnings Breakdown:</Text>
 
-                  <View style={styles.breakdownItem}>
-                    <Text style={styles.breakdownLabel}>2) Earnings from Referrals:</Text>
-                    <Text style={styles.breakdownValue}>{referralCount * earningsPerReferral}</Text>
-                  </View>
-                  <Text style={styles.subText}>(Fixed rate: ₹{earningsPerReferral.toLocaleString('en-IN')} per referral)</Text>
+                      <View style={styles.breakdownItem}>
+                        <Text style={styles.breakdownLabel}>
+                          1) Number of Referrals (Payment <Text style={{ color: '#5f9b3d' }}>Initiated</Text>)
+                        </Text>
+                        <Text style={styles.breakdownValue}>{referralCount}</Text>
+                      </View>
 
-                  <View style={styles.breakdownItem}>
-                    <Text style={styles.breakdownLabel}>3) Earnings from Feedback:</Text>
-                    <Text style={styles.breakdownValue}>₹ {parseFloat(feedbackEarnings).toLocaleString('en-IN')}</Text>
-                  </View>
-                  <Text style={styles.subText}>
-                    (Fixed amount: ₹1,000 – one-time only)
-                    <Text style={styles.feedbackLink} onPress={handleFeedbackLinkPress}> submit your feedback!</Text>
-                  </Text>
+                      <View style={styles.breakdownItem}>
+                        <Text style={styles.breakdownLabel}>2) Earnings from Referrals :</Text>
+                        <Text style={styles.breakdownValue}>{referralCount}</Text>
+                      </View>
+                      <Text style={styles.subText}>(Fixed rate: ₹{earningsPerReferral.toLocaleString('en-IN')} per referral)</Text>
 
-                  <View style={styles.breakdownItem}>
-                    <Text style={styles.breakdownLabel}>
-                      4) Number of Referrals (Payment <Text style={{ color: '#dc3545' }}>Pending</Text>):
-                    </Text>
-                    <Text style={[styles.breakdownValue, styles.paymentPendingText]}>{pendingReferralCount}</Text>
-                  </View>
-                </View>
+                      <View style={styles.breakdownItem}>
+                        <Text style={styles.breakdownLabel}>{`3) Earnings from Feedback${feedbackPaidCount > 0 ? ` (${feedbackPaidCount})` : ''}:`}</Text>
+                        <Text style={styles.breakdownValue}>{feedbackEarnings && parseFloat(feedbackEarnings) > 0 ? `₹ ${parseFloat(feedbackEarnings).toLocaleString('en-IN')}` : 'N/A'}</Text>
+                      </View>
+                      <Text style={styles.subText}>
+                        {`(Fixed amount: ₹${feedbackRate.toLocaleString('en-IN')} – one-time only)`}
+                        <Text style={styles.feedbackLink} onPress={handleFeedbackLinkPress}> submit your feedback!</Text>
+                      </Text>
 
-                <View style={styles.totalEarningsCardSecond}>
-                  <Text style={styles.totalEarningsText}>A. Total Earnings (USD): &nbsp;
-                    <Text style={styles.totalEarningsAmount}>$ {parseFloat(totalEarnings).toLocaleString('en-IN')}</Text>
-                  </Text>
-                </View>
-                <View style={styles.earningsBreakdownSection}>
-                  <Text style={styles.breakdownTitle}>Earnings Breakdown:</Text>
+                      <View style={styles.breakdownItem}>
+                        <Text style={styles.breakdownLabel}>
+                          4) Number of Referrals (Payment <Text style={{ color: '#dc3545' }}>Pending</Text>):
+                        </Text>
+                        <Text style={[styles.breakdownValue, styles.paymentPendingText]}>{pendingReferralCount}</Text>
+                      </View>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <View style={styles.totalEarningsCardSecond}>
+                      <Text style={styles.totalEarningsText}>A. Total Earnings (USD): &nbsp;
+                        <Text style={styles.totalEarningsAmount}>$ {parseFloat(totalEarnings).toLocaleString('en-IN')}</Text>
+                      </Text>
+                    </View>
+                    <View style={styles.earningsBreakdownSection}>
+                      <Text style={styles.breakdownTitle}>Earnings Breakdown:</Text>
 
-                  <View style={styles.breakdownItem}>
-                    <Text style={styles.breakdownLabel}>
-                      1) Number of Referrals (Payment <Text style={{ color: '#5f9b3d' }}>Initiated</Text>)
-                    </Text>
-                    <Text style={styles.breakdownValue}>{referralCount}</Text>
-                  </View>
+                      <View style={styles.breakdownItem}>
+                        <Text style={styles.breakdownLabel}>
+                          1) Number of Referrals (Payment <Text style={{ color: '#5f9b3d' }}>Initiated</Text>)
+                        </Text>
+                        <Text style={styles.breakdownValue}>{referralCount}</Text>
+                      </View>
 
-                  <View style={styles.breakdownItem}>
-                    <Text style={styles.breakdownLabel}>2) Earnings from Referrals:</Text>
-                    <Text style={styles.breakdownValue}>{referralCount * earningsPerReferral}</Text>
-                  </View>
-                  <Text style={styles.subText}>(Fixed rate: ${earningsPerReferral.toLocaleString('en-IN')} per referral)</Text>
+                      <View style={styles.breakdownItem}>
+                        <Text style={styles.breakdownLabel}>2) Earnings from Referrals :</Text>
+                        <Text style={styles.breakdownValue}>{referralCount}</Text>
+                      </View>
+                      <Text style={styles.subText}>(Fixed rate: ${earningsPerReferral.toLocaleString('en-IN')} per referral)</Text>
 
-                  <View style={styles.breakdownItem}>
-                    <Text style={styles.breakdownLabel}>3) Earnings from Feedback:</Text>
-                    <Text style={styles.breakdownValue}>$ {parseFloat(feedbackEarnings).toLocaleString('en-IN')}</Text>
-                  </View>
-                  <Text style={styles.subText}>
-                    (Fixed amount: $1,000 – one-time only)
-                    <Text style={styles.feedbackLink} onPress={handleFeedbackLinkPress}> submit your feedback!</Text>
-                  </Text>
+                      <View style={styles.breakdownItem}>
+                        <Text style={styles.breakdownLabel}>{`3) Earnings from Feedback${feedbackPaidCount > 0 ? ` (${feedbackPaidCount})` : ''}:`}</Text>
+                        <Text style={styles.breakdownValue}>{feedbackEarnings && parseFloat(feedbackEarnings) > 0 ? `$ ${parseFloat(feedbackEarnings).toLocaleString('en-IN')}` : 'N/A'}</Text>
+                      </View>
+                      <Text style={styles.subText}>
+                        {`(Fixed amount: $${feedbackRate} – one-time only)`}
+                        <Text style={styles.feedbackLink} onPress={handleFeedbackLinkPress}> submit your feedback!</Text>
+                      </Text>
 
-                  <View style={styles.breakdownItem}>
-                    <Text style={styles.breakdownLabel}>
-                      4) Number of Referrals (Payment <Text style={{ color: '#dc3545' }}>Pending</Text>):
-                    </Text>
-                    <Text style={[styles.breakdownValue, styles.paymentPendingText]}>{pendingReferralCount}</Text>
-                  </View>
-                </View>
+                      <View style={styles.breakdownItem}>
+                        <Text style={styles.breakdownLabel}>
+                          4) Number of Referrals (Payment <Text style={{ color: '#dc3545' }}>Pending</Text>):
+                        </Text>
+                        <Text style={[styles.breakdownValue, styles.paymentPendingText]}>{pendingReferralCount}</Text>
+                      </View>
+                    </View>
+                  </>
+                )}
                 <Text style={styles.noteText}>
                   <Text>
                     <Text style={styles.noteLabel}>Note:</Text>
@@ -641,10 +681,8 @@ const MyEarnings = ({ navigation, route }) => {
                   (b) Cashback from feedback
                 </Text>
               </View>
-
               <View style={styles.transactionsSection}>
                 <Text style={styles.bankLinked}>Linked Bank Account Details for Receiving Payment</Text>
-
                 {bankDetails ? (
                   <>
                     <View style={styles.bankBox}>
@@ -655,7 +693,6 @@ const MyEarnings = ({ navigation, route }) => {
                         editable={false}
                       />
                     </View>
-
                     <View style={styles.bankBox}>
                       <Text style={styles.bankLinkedLabel}>Payment Method</Text>
                       <TextInput
@@ -664,7 +701,6 @@ const MyEarnings = ({ navigation, route }) => {
                         editable={false}
                       />
                     </View>
-
                     {bankDetails.paymentMethod === 'upi' && (
                       <>
                         <View style={styles.bankBox}>
@@ -685,7 +721,6 @@ const MyEarnings = ({ navigation, route }) => {
                         </View>
                       </>
                     )}
-
                     {bankDetails.paymentMethod === 'bank' && (
                       <>
                         <View style={styles.bankBox}>

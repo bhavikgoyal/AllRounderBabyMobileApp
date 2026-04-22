@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,7 +8,10 @@ import {
   BackHandler,
   StatusBar,
   Platform,
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const lightThemeColors = {
   screenBackground: '#f1f2f2',
@@ -44,9 +47,9 @@ const createMyReferralsStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.screenBackground,
   },
   scrollContainer: {
-     flexGrow: 1,
-     paddingBottom: 20,
-     paddingHorizontal: 15,
+    flexGrow: 1,
+    paddingBottom: 20,
+    paddingHorizontal: 15,
   },
   title: {
     fontSize: 22,
@@ -56,70 +59,161 @@ const createMyReferralsStyles = (theme) => StyleSheet.create({
     marginBottom: 20,
     color: theme.textPrimary,
   },
-  statsContainer: {
-     flexDirection: 'row',
-     justifyContent: 'space-around',
-     backgroundColor: theme.cardBackground,
-     paddingVertical: 15,
-     borderRadius: 8,
-     marginBottom: 25,
-     elevation: theme.elevation,
-     shadowColor: theme.shadowColor,
-     shadowOffset: { width: 0, height: 1 },
-     shadowOpacity: theme.shadowOpacity,
-     shadowRadius: theme.shadowRadius,
-     borderColor: theme.cardBorder,
-     borderWidth: Platform.OS === 'android' && theme.elevation === 0 ? 1 : 0,
-  },
-  statBox: {
-      alignItems: 'center',
-  },
+
   statValue: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: theme.textPrimary,
-      marginBottom: 3,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.textPrimary,
+    marginBottom: 3,
   },
   statLabel: {
-      fontSize: 12,
-      color: theme.textSecondary,
+    fontSize: 12,
+    color: theme.textSecondary,
   },
   placeholderContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-      minHeight: 200,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    minHeight: 200,
   },
   placeholderText: {
-      fontSize: 16,
-      color: theme.textPlaceholder,
-      textAlign: 'center',
-      lineHeight: 22,
+    fontSize: 16,
+    color: theme.textPlaceholder,
+    textAlign: 'center',
+    lineHeight: 22,
   },
   listContainer: {
   },
   listHeader: {
-     fontSize: 18,
-     fontWeight: 'bold',
-     color: theme.textPrimary,
-     marginBottom: 15,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.textPrimary,
+    marginBottom: 15,
   },
-  referralItem: {},
+
+  statsCard: {
+    backgroundColor: theme.cardBackground,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    marginTop: -3,
+    marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    elevation: theme.elevation,
+    shadowColor: theme.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: theme.shadowOpacity,
+    shadowRadius: theme.shadowRadius,
+    borderColor: theme.cardBorder,
+    borderWidth: Platform.OS === 'android' && theme.elevation === 0 ? 1 : 0,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  statItemm: {
+    flex: 1,
+    justifyContent: 'center', marginTop: 12,
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  statCaption: {
+    fontSize: 12,
+    color: theme.textSecondary,
+    marginTop: 4,
+    textAlign: 'left',
+  },
+  referralCard: {
+    backgroundColor: theme.cardBackground,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    elevation: theme.elevation,
+    shadowColor: theme.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: theme.shadowOpacity,
+    shadowRadius: theme.shadowRadius,
+    borderColor: theme.cardBorder,
+    borderWidth: Platform.OS === 'android' && theme.elevation === 0 ? 1 : 0,
+  },
+  referralLeft: {
+    flex: 1,
+  },
+  referralName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    marginBottom: 4,
+  },
+  referralDate: {
+    fontSize: 13,
+    color: theme.textSecondary,
+  },
+  rightColumn: {
+    alignItems: 'flex-end',
+    marginLeft: 8,
+  },
+  badge: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  badgeText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+
 });
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const day = ("0" + d.getDate()).slice(-2);
+  const month = ("0" + (d.getMonth() + 1)).slice(-2);
+  const year = d.getFullYear();
+  return `${year}/${month}/${day}`;
+};
 
 const MyReferrals = ({ navigation, route }) => {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkThemeColors : lightThemeColors;
   const styles = createMyReferralsStyles(theme);
+  const [referrals, setReferrals] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { BASE_URL } = require('./config/api');
 
-  const referrals = [
-    { id: 'ref1', name: 'Alice Smith', date: '2023-10-25', status: 'Completed', earnings: '₹300' },
-    { id: 'ref2', name: 'Bob Johnson', date: '2023-10-27', status: 'Pending', earnings: 'Pending' },
-    { id: 'ref3', name: 'Charlie Brown', date: '2023-09-15', status: 'Completed', earnings: '₹300' },
-    { id: 'ref4', name: 'Diana Prince', date: '2023-11-01', status: 'Pending', earnings: 'Pending' },
-  ];
-
+  const fetchReferrals = async (userId, token) => {
+    try {
+      setLoading(true);
+      const url = `${BASE_URL}ReferralTransaction/ReferralTransactionHistory?userId=${userId}`;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(url, { headers });
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data = await res.json();
+      const mapped = data.map(item => ({
+        id: String(item.id),
+        name: item.fullName || item.referralCodeName || 'Unknown',
+        date: item.date ? formatDate(item.date) : '',
+        status: item.payoutdone ? 'Completed' : 'Pending',
+        earnings: item.currency_Code || '-',
+      }));
+      setReferrals(mapped);
+    } catch (err) {
+      console.warn('Failed to fetch referrals', err);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     const backAction = () => {
       if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
@@ -132,50 +226,86 @@ const MyReferrals = ({ navigation, route }) => {
       }
       return false;
     };
-
     const backHandler = BackHandler.addEventListener(
-        'hardwareBackPress',
-        backAction
+      'hardwareBackPress',
+      backAction
     );
-
     return () => {
-        backHandler.remove();
+      backHandler.remove();
     };
   }, [navigation]);
-
+  useEffect(() => {
+    const routeUserId = route && route.params && route.params.userId ? route.params.userId : null;
+    if (routeUserId) {
+      fetchReferrals(routeUserId);
+      return;
+    }
+    (async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        const storedUserId = await AsyncStorage.getItem('userId');
+        if (storedUserId) {
+          fetchReferrals(storedUserId, storedToken);
+        } else {
+          setReferrals([]);
+          setLoading(false);
+        }
+      } catch (e) {
+        console.warn('Error reading AsyncStorage for userId/token', e);
+        setReferrals([]);
+        setLoading(false);
+      }
+    })();
+  }, [route]);
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1434A4" />
+      <StatusBar barStyle={theme.statusBarContent} backgroundColor={theme.screenBackground} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.title}>My Referrals</Text>
-
-        <View style={styles.statsContainer}>
-           <View style={styles.statBox}>
-               <Text style={styles.statValue}>{referrals.length}</Text>
-               <Text style={[styles.statLabel, { fontWeight: '900' }]}>Total Referrals</Text>
-                <Text style={styles.statLabel}>your referral code used</Text>
-           </View>
-           <View style={styles.statBox}>
-               <Text style={styles.statValue}>{referrals.filter(r => r.status === 'Completed').length}</Text>
-               <Text style={[styles.statLabel, { fontWeight: '900' }]}>Completed</Text>
-                <Text style={styles.statLabel}>Payout initiated</Text>
-           </View>
-           <View style={styles.statBox}>
-               <Text style={styles.statValue}>{referrals.filter(r => r.status === 'Pending').length}</Text>
-               <Text style={[styles.statLabel, { fontWeight: '900' }]}>Pending</Text>
-                 <Text style={styles.statLabel}>Payout pending</Text>
-           </View>
-        </View>
-
-        {referrals.length === 0 ? (
-          <View style={styles.placeholderContainer}>
-            <Text style={styles.placeholderText}>You haven't referred anyone yet. Share your code to start earning!</Text>
+        <View style={styles.statsCard}>
+          <View style={styles.statItemm}>
+            <Text style={styles.statValue}>{referrals.length}</Text>
+            <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Total Referrals</Text>
+            <Text style={styles.statCaption}>your referral code used</Text>
           </View>
-        ) : (<></>
-        )}
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{referrals.filter(r => r.status === 'Completed').length}</Text>
+            <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Completed</Text>
+            <Text style={styles.statCaption}>Payout initiated</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{referrals.filter(r => r.status === 'Pending').length}</Text>
+            <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Pending</Text>
+            <Text style={styles.statCaption}>Payout pending</Text>
+          </View>
+        </View>
+        <Text style={styles.listHeader}>Referral History</Text>
+        <View style={styles.listContainer}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#1434A4" style={{ marginTop: 30 }} />
+          ) : referrals.length === 0 ? (
+            <View style={styles.placeholderContainer}>
+              <Text style={styles.placeholderText}>You haven't referred anyone yet. Share your code to start earning!</Text>
+            </View>
+          ) : (
+            referrals.map(item => (
+              <TouchableOpacity key={item.id} activeOpacity={0.8} style={styles.referralCard} onPress={() => { }}>
+                <View style={styles.referralLeft}>
+                  <Text style={styles.referralName}>{item.name}</Text>
+                  <Text style={styles.referralDate}>{item.date}</Text>
+                </View>
+                <View style={styles.rightColumn}>
+                  <View style={[styles.badge, { backgroundColor: item.status === 'Completed' ? '#2ecc71' : '#f39c12' }]}>
+                    <Text style={styles.badgeText}>{item.status}</Text>
+                  </View>
+
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
       </ScrollView>
     </View>
   );
 };
-
 export default MyReferrals;
