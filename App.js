@@ -11,6 +11,13 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SplashScreen from './SplashScreen';
+import messaging from '@react-native-firebase/messaging';
+import {
+  requestPushNotifications,
+  getFcmToken,
+  createChannel,
+  foreGoundLisneter,
+} from './src/services/PushNotifications';
 import LoginPage from './src/LoginPage';
 import Dashboard from './src/Dashboard';
 import ChasCashbackforFeedback from './src/CashbackforFeedback';
@@ -228,6 +235,41 @@ const App = () => {
     RNScreenshotPrevent.enabled(true);
     return () => {
       RNScreenshotPrevent.enabled(false);
+    };
+  }, []);
+
+  // Background handler must be at top level
+  messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+    console.log('Message handled in the background!', remoteMessage);
+    try {
+      // minimal handling - showNotifications is available in service if needed
+      // require inside to avoid circular imports at module init
+      const svc = require('./src/services/PushNotifications');
+      if (svc && typeof svc.showNotifications === 'function') {
+        await svc.showNotifications(remoteMessage);
+      }
+    } catch (e) {
+      console.warn('background handler error', e);
+    }
+  });
+
+  useEffect(() => {
+    let unsubscribeForeground = null;
+    (async () => {
+      try {
+        await requestPushNotifications();
+        await getFcmToken({ sendToServer: true });
+        await createChannel();
+        unsubscribeForeground = foreGoundLisneter();
+      } catch (e) {
+        console.warn('notification init failed', e);
+      }
+    })();
+
+    return () => {
+      try {
+        if (typeof unsubscribeForeground === 'function') unsubscribeForeground();
+      } catch (e) { }
     };
   }, []);
   const [initialRoute, setInitialRoute] = useState(null);
