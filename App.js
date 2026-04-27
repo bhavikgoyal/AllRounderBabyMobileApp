@@ -16,8 +16,8 @@ import {
   requestPushNotifications,
   getFcmToken,
   createChannel,
-  foreGoundLisneter,
-} from './src/services/PushNotifications';
+  foregroundListener,
+} from './src/services/notificationService';
 import LoginPage from './src/LoginPage';
 import Dashboard from './src/Dashboard';
 import ChasCashbackforFeedback from './src/CashbackforFeedback';
@@ -238,20 +238,7 @@ const App = () => {
     };
   }, []);
 
-  // Background handler must be at top level
-  messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-    console.log('Message handled in the background!', remoteMessage);
-    try {
-      // minimal handling - showNotifications is available in service if needed
-      // require inside to avoid circular imports at module init
-      const svc = require('./src/services/PushNotifications');
-      if (svc && typeof svc.showNotifications === 'function') {
-        await svc.showNotifications(remoteMessage);
-      }
-    } catch (e) {
-      console.warn('background handler error', e);
-    }
-  });
+  // Background handler is registered in the JS entry point (index.js)
 
   useEffect(() => {
     let unsubscribeForeground = null;
@@ -260,7 +247,7 @@ const App = () => {
         await requestPushNotifications();
         await getFcmToken({ sendToServer: true });
         await createChannel();
-        unsubscribeForeground = foreGoundLisneter();
+        unsubscribeForeground = foregroundListener();
       } catch (e) {
         console.warn('notification init failed', e);
       }

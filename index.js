@@ -8,10 +8,9 @@ import messaging from '@react-native-firebase/messaging';
 // a system notification when possible.
 messaging().setBackgroundMessageHandler(async (remoteMessage) => {
     try {
-        // require the service dynamically to avoid cycles at module init
-        const svc = require('./src/services/PushNotifications');
-        if (svc && typeof svc.showNotifications === 'function') {
-            await svc.showNotifications(remoteMessage);
+        const svc = require('./src/services/notificationService');
+        if (svc && typeof svc.showNotification === 'function') {
+            await svc.showNotification(remoteMessage);
         }
     } catch (e) {
         console.warn('background handler error (index.js)', e);

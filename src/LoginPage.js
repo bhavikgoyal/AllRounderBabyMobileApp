@@ -5,6 +5,7 @@ import {
     StatusBar, Platform, KeyboardAvoidingView, useColorScheme, Alert, ActivityIndicator, useWindowDimensions, BackHandler, ToastAndroid, Linking
 } from 'react-native';
 import SmartImage from './components/SmartImage';
+import notificationService from './services/notificationService';
 import { exitApp } from './utils/exitApp';
 import CheckBox from 'react-native-check-box';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
@@ -229,6 +230,18 @@ const LoginPage = ({ navigation }) => {
                     if (keychainAvailable) await Keychain.setGenericPassword(trimmedU, trimmedP, { service: 'loginCredentials' });
                     await AsyncStorage.setItem('rememberMePreference', 'true');
                 }
+
+                try {
+                    const storedFcm = await AsyncStorage.getItem('fcmToken');
+                    if (storedFcm) {
+                        notificationService.syncFcmTokenInBackground({
+                            userId: data.data.userID,
+                            fcmToken: storedFcm,
+                            deviceId: finalDeviceKey,
+                            deviceType: Platform.OS
+                        }).catch(e => console.warn('syncFcmTokenInBackground failed', e));
+                    }
+                } catch (e) { console.warn('Failed to sync FCM token after login', e); }
 
                 navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Home' }] }));
             } else {
