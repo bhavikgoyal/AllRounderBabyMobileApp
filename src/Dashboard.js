@@ -547,7 +547,10 @@ const Dashboard = ({ navigation }) => {
                 if (storedToken && storedUserId) {
                     setToken(storedToken);
                     setUserID(storedUserId);
-                    await fetchUserProgress(storedUserId, storedToken);
+                    const verify = await AsyncStorage.getItem('fcmToken');
+                    console.log('dfsssssssssssssssssssssse:', verify),
+
+                        await fetchUserProgress(storedUserId, storedToken);
                 } else {
                     setDataLoaded(true);
                 }

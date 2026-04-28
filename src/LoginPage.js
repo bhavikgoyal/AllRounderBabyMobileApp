@@ -234,6 +234,7 @@ const LoginPage = ({ navigation }) => {
                 try {
                     const storedFcm = await AsyncStorage.getItem('fcmToken');
                     if (storedFcm) {
+                        console.log('FcmTokenInBackground:', data.data.userID, storedFcm, finalDeviceKey, Platform.OS);
                         notificationService.syncFcmTokenInBackground({
                             userId: data.data.userID,
                             fcmToken: storedFcm,

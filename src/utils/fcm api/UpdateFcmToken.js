@@ -1,7 +1,7 @@
 import { BASE_URL } from '../../config/api';
 
 export async function updateFcmToken(model) {
-    if (!model) return { ok: false, status: 0, result: null, error: 'Missing model' };
+    if (!model) return { ok: false, status: 0, success: false, message: 'Missing model', result: null, error: 'Missing model' };
 
     try {
         const base = (typeof BASE_URL === 'string' && BASE_URL) ? BASE_URL.replace(/\/$/, '') : '';
@@ -16,10 +16,14 @@ export async function updateFcmToken(model) {
         let result = null;
         try { result = await resp.json(); } catch (e) { result = null; }
 
-        return { ok: resp.ok, status: resp.status, result };
+        // Normalize to the API shape: { success: bool, message: string }
+        const success = !!(result && result.success === true);
+        const message = result && typeof result.message === 'string' ? result.message : null;
+
+        return { ok: resp.ok, status: resp.status, success, message, result };
     } catch (err) {
         console.error('updateFcmToken error', err);
-        return { ok: false, status: 0, result: null, error: String(err) };
+        return { ok: false, status: 0, success: false, message: 'Network error', result: null, error: String(err) };
     }
 }
 
