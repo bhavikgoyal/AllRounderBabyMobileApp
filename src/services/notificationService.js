@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import insertFcmToken from '../utils/fcm api/InsertFcmToken';
 import updateFcmToken from '../utils/fcm api/UpdateFcmToken';
 import getFcmTokenById from '../utils/fcm api/GetFcmTokenById';
+import existstocken from '../utils/fcm api/ExistToken';
 import getDeviceKey from '../utils/deviceKey';
 
 let notifee = null;
@@ -36,22 +37,21 @@ export async function requestPushNotifications() {
     }
 }
 
-export async function getFcmToken({ sendToServer = true } = {}) {
+export async function getFcmToken({ sendToServer = true, forceRefresh = false } = {}) {
     try {
+        if (forceRefresh) {
+            try {
+                await messaging().deleteToken();
+                console.log('Deleted existing FCM token to force refresh');
+            } catch (e) {
+                console.warn('deleteToken failed (continuing):', e);
+            }
+        }
+
         const token = await messaging().getToken();
         if (token) {
             await AsyncStorage.setItem('fcmToken', token);
             try { console.log('Saved FCM token to AsyncStorage:', token); } catch (e) { }
-            if (sendToServer) {
-                try {
-                    const deviceId = await getDeviceKey();
-                    const model = { FcmToken: token, DeviceType: Platform.OS, DeviceId: deviceId };
-                    const insertResult = await insertFcmToken(model);
-                    try { console.log('insertFcmToken result:', insertResult); } catch (e) { }
-                } catch (e) {
-                    console.warn('getFcmToken: insertFcmToken failed', e);
-                }
-            }
         }
         return { ok: true, token };
     } catch (error) {
@@ -66,53 +66,126 @@ export async function syncFcmTokenInBackground({
     deviceType
 } = {}) {
     try {
-        if (!fcmToken) {
-            return { ok: false, error: 'Missing fcmToken' };
+        const resolvedDeviceId = deviceId || await getDeviceKey();
+        const check = await getFcmTokenById({
+            userId,
+            deviceId: resolvedDeviceId
+        });
+
+        const result = check?.result;
+        const existingRecord = Array.isArray(result) ? result[0] : result || null;
+
+        console.log('Existing record:', existingRecord);
+
+
+        if (existingRecord) {
+
+            console.log('Token exists → generating new token & updating');
+
+            let newToken = null;
+
+            try {
+                const gen = await getFcmToken({
+                    sendToServer: false,
+                    forceRefresh: true
+                });
+
+                newToken = gen?.ok ? gen.token : null;
+            } catch (e) {
+                console.warn('Token generation failed', e);
+            }
+
+            if (!newToken) {
+                return { ok: false, error: 'failed-to-generate-token' };
+            }
+
+            const model = {
+                UserId: userId,
+                FcmToken: newToken,
+                DeviceType: deviceType || Platform.OS,
+                DeviceId: resolvedDeviceId,
+                IsActive: true
+            };
+
+            const upd = await updateFcmToken(model);
+
+            console.log('Updated token result:', upd);
+
+            if (upd?.ok) {
+                await AsyncStorage.setItem('fcmToken', newToken);
+
+                return {
+                    ok: true,
+                    action: 'updated',
+                    token: newToken,
+                    result: upd.result
+                };
+            }
+
+            return {
+                ok: false,
+                error: 'update-failed',
+                details: upd
+            };
         }
 
-        const resolvedDeviceId = deviceId || await getDeviceKey();
-        console.log('syncFcmTokenInBackground: resolvedDeviceId:', resolvedDeviceId, 'userId:', userId, 'fcmToken:', fcmToken, 'deviceType:', deviceType);
-        const check = await getFcmTokenById({ userId, deviceId: resolvedDeviceId });
-        console.log('syncFcmTokenInBackground getFcmTokenById result:', check);
+        console.log('No existing record → inserting new token');
+
+
+        let tokenToInsert = null;
+
+        try {
+            const gen = await getFcmToken({
+                sendToServer: false,
+                forceRefresh: true
+            });
+
+            tokenToInsert = gen?.ok ? gen.token : null;
+        } catch (e) {
+            console.warn('Token generation failed', e);
+        }
+
+        if (!tokenToInsert) {
+            return { ok: false, error: 'no-token-available' };
+        }
+
 
         const model = {
             UserId: userId,
-            FcmToken: fcmToken,
+            FcmToken: tokenToInsert,
             DeviceType: deviceType || Platform.OS,
             DeviceId: resolvedDeviceId,
             IsActive: true
         };
 
-        const exists = check && check.ok && check.result && (Array.isArray(check.result) ? check.result.length > 0 : true);
+        const ins = await insertFcmToken(model);
 
-        if (exists) {
-            const found = Array.isArray(check.result) ? check.result[0] : check.result;
-            const tokenFromServer = found?.fcmToken || found?.FcmToken || fcmToken;
-            try { await AsyncStorage.setItem('fcmToken', tokenFromServer); } catch (e) { }
-            return { ok: true, action: 'found', resp: found };
+        console.log('Insert result:', ins);
+
+        if (ins?.ok) {
+            await AsyncStorage.setItem('fcmToken', tokenToInsert);
+
+            return {
+                ok: true,
+                action: 'inserted',
+                token: tokenToInsert,
+                result: ins.result
+            };
         }
 
-        let resp = null;
-        try {
-            resp = await updateFcmToken(model);
-            try { console.log('syncFcmTokenInBackground updateFcmToken result:', resp); } catch (e) { }
-        } catch (e) {
-            console.error('syncFcmTokenInBackground updateFcmToken failed', e);
-            return { ok: false, error: String(e) };
-        }
-
-        const tokenFromResp = resp && (resp.fcmToken || resp.FcmToken || (resp.result && (resp.result.fcmToken || resp.result.FcmToken)));
-        if (tokenFromResp) {
-            try { await AsyncStorage.setItem('fcmToken', tokenFromResp); } catch (e) { }
-        }
-
-        return { ok: resp?.ok ?? true, action: 'updated', resp };
-
-
+        return {
+            ok: false,
+            error: 'insert-failed',
+            details: ins
+        };
 
     } catch (err) {
         console.error('syncFcmTokenInBackground error', err);
-        return { ok: false, error: String(err) };
+
+        return {
+            ok: false,
+            error: String(err)
+        };
     }
 }
 export async function createChannel() {

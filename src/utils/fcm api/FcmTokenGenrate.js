@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
-import insertFcmToken from './InsertFcmToken';
 import getDeviceKey from '../deviceKey';
 
 
@@ -28,19 +27,7 @@ async function generateFcmToken(options = {}) {
     try {
         const token = await messaging().getToken();
         console.log('Generated FCM Token:', token);
-        let insertResult = null;
-        if (sendToServer) {
-            const deviceId = await getDeviceKey();
-            const model = {
-                FcmToken: token,
-                DeviceType: Platform.OS,
-                DeviceId: deviceId,
-            };
-
-            insertResult = await insertFcmToken(model);
-        }
-
-        return { ok: true, token, insertResult };
+        return { ok: true, token };
     } catch (error) {
         return { ok: false, error: error?.message || String(error) };
     }
