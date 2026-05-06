@@ -1,7 +1,6 @@
 import { PermissionsAndroid, Linking } from "react-native";
 import RNScreenshotPrevent from "react-native-screenshot-prevent";
 import React, { useEffect, useState, memo, useCallback, useMemo } from 'react';
-// silence console in production to reduce JS-thread overhead
 import './src/utils/disableConsole';
 import { View, Image, StyleSheet, SafeAreaView, Text, useColorScheme, Alert, ActivityIndicator, BackHandler, TouchableOpacity, Dimensions, Platform, StatusBar, useWindowDimensions } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme, CommonActions, createNavigationContainerRef } from '@react-navigation/native';
@@ -24,7 +23,6 @@ import ChasCashbackforFeedback from './src/CashbackforFeedback';
 import ReferAndEarn from './src/ReferAndEarn';
 import Profile from './src/Profile';
 import VideoPlayerScreen from './src/VideoPlayerScreen';
-import ReferAndEarnConditions from './src/ReferAndEarnConditions';
 import ReferralHistory from './src/ReferralHistory';
 import MyOrders from './src/MyOrders';
 import MyEarnings from './src/MyEarnings';
@@ -36,13 +34,10 @@ import TermsofServicewithoutLog from './src/TermsofServicewithoutLog';
 import ForgotPassword from './src/ForgotPassword';
 import LoginOTP from './src/LoginOTP';
 import RateStarsStore from './src/RateStarsStore';
-import Community from './src/Community';
-import FAQ from './src/FAQ';
 import GetHelp from './src/GetHelp';
 import MyNotifications from './src/MyNotifications';
 import MyReferrals from './src/MyReferrals';
 import AboutUs from './src/AboutUs';
-import CashbackforFeedbackConditions from './src/CashbackforFeedbackConditions';
 import { BASE_URL } from './src/config/api';
 import { exitApp } from './src/utils/exitApp';
 
@@ -51,7 +46,6 @@ const Stack = createNativeStackNavigator();
 const url = BASE_URL;
 export const navigationRef = createNavigationContainerRef();
 export const skipNavigationGuards = { current: false };
-// ...existing code...
 const LightThemeColors = {
   background: '#FFFFFF',
   text: '#000000',
@@ -237,9 +231,6 @@ const App = () => {
       RNScreenshotPrevent.enabled(false);
     };
   }, []);
-
-  // Background handler is registered in the JS entry point (index.js)
-
   useEffect(() => {
     let unsubscribeForeground = null;
     (async () => {
@@ -594,7 +585,6 @@ const App = () => {
         <Drawer.Screen name="Cashback for Feedback" component={ChasCashbackforFeedback} options={{}} />
         <Drawer.Screen name="Refer and Earn" component={ReferAndEarn} options={{}} />
         <Drawer.Screen name="VideoPlayerScreen" component={VideoPlayerScreen} options={{}} />
-        <Drawer.Screen name="Refer and Earn conditiions" component={ReferAndEarnConditions} options={{}} />
         <Drawer.Screen name="Referral History" component={ReferralHistory} options={{}} />
         <Drawer.Screen name="My Orders" component={MyOrders} options={{}} />
         <Drawer.Screen name="My Earnings" component={MyEarnings} options={{}} />
@@ -603,11 +593,8 @@ const App = () => {
         <Drawer.Screen name="Terms of Service" component={TermsofService} options={{}} />
         <Drawer.Screen name="TermsofServicewithoutLog" component={TermsofServicewithoutLog} options={{ title: 'Terms of Service' }} />
         <Drawer.Screen name="PrivacyPolicywithoutLog" component={PrivacyPolicywithoutLog} options={{ title: 'Privacy Policy' }} />
-        <Drawer.Screen name="Community" component={Community} options={{}} />
-        <Drawer.Screen name="FAQ" component={FAQ} options={{}} />
         <Drawer.Screen name="My Notifications" component={MyNotifications} options={{}} />
         <Drawer.Screen name="My Referrals" component={MyReferrals} options={{}} />
-        <Drawer.Screen name="Cashback for Feedback Conditions" component={CashbackforFeedbackConditions} options={{}} />
         <Drawer.Screen name="Rate us / Update App" component={RateStarsStore} options={{}} />
         <Drawer.Screen name="Get Help" component={GetHelp} options={{}} />
       </Drawer.Navigator>
@@ -632,8 +619,7 @@ const App = () => {
     const insets = useSafeAreaInsets();
     const bottomInset = insets?.bottom || (Platform.OS === 'android' ? 0 : 0);
     const { width, height } = useWindowDimensions();
-    const baseWidth = Math.min(width, height); // use portrait width so sizes remain consistent across orientations
-    // compute footer sizes dynamically based on portrait width (baseWidth)
+    const baseWidth = Math.min(width, height);
     const iconSize = Math.round(Math.max(18, Math.min(28, baseWidth * 0.06)));
     const footerHeightLocal = Math.round(Math.max(56, Math.min(80, baseWidth * 0.12)));
     const footerFontSizeLocal = Math.round(Math.max(10, Math.min(14, baseWidth * 0.03)));
@@ -685,7 +671,6 @@ const App = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Global StatusBar for white icons */}
       <StatusBar barStyle="light-content" backgroundColor="#1434A4" />
       <SafeAreaProvider>
         <View style={{ flex: 1 }}>
