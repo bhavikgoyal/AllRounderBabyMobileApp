@@ -444,7 +444,7 @@ const AboutUs = ({ navigation, route }) => {
         setSelectedVideoGroup(videoGroup);
         setIsAboutModalVisible(true);
       } else {
-        Alert.alert('Videos Not Available', 'Refer & Earn videos could not be loaded.');
+        //  Alert.alert('Videos Not Available', 'Refer & Earn videos could not be loaded.');
       }
     }
   };
