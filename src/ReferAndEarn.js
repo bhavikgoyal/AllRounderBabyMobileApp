@@ -586,7 +586,7 @@ const ReferAndEarn = ({ navigation }) => {
       setSelectedVideoGroup(videoGroup);
       setIsLanguageModalVisible(true);
     } else {
-      Alert.alert("Videos Not Available", "Refer & Earn videos could not be loaded. Please try again later.");
+      // Alert.alert("Videos Not Available", "Refer & Earn videos could not be loaded. Please try again later.");
     }
   };
 

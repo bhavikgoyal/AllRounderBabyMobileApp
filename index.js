@@ -3,9 +3,14 @@ import App from './App';
 import { name as appName } from './app.json';
 import messaging from '@react-native-firebase/messaging';
 
-// Background handler must be registered at the JS entry point so it runs when
-// the app receives background messages. We call our service helper to display
-// a system notification when possible.
+
+if (typeof __DEV__ !== 'undefined' && !__DEV__) {
+    console.log = () => { };
+    console.error = () => { };
+    console.warn = () => { };
+    console.info = () => { };
+}
+
 messaging().setBackgroundMessageHandler(async (remoteMessage) => {
     try {
         const svc = require('./src/services/notificationService');

@@ -12,8 +12,12 @@ import {
   BackHandler,
   StatusBar,
   useColorScheme,
+  Alert,
+  Linking,
 } from 'react-native';
 import { format } from 'date-fns';
+import getOrderByUserId from './services/GetOrder';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const lightThemeColors = {
   screenBackground: '#dfe6ff',
@@ -32,25 +36,25 @@ const lightThemeColors = {
   shadowRadius: 3,
   elevation: 4,
   statusBarContent: 'dark-content',
-  
+
 };
 
 const darkThemeColors = {
   screenBackground: '#121212',
-  cardBackground: '#1E1E1E',  
+  cardBackground: '#1E1E1E',
   cardBorder: '#3A3A3A',
-  textPrimary: '#E0E0E0',  
+  textPrimary: '#E0E0E0',
   textSecondary: '#B0B0B0',
-  inputBackground: '#2C2C2C',   
+  inputBackground: '#2C2C2C',
   inputBorderColor: '#4A4A4A',
-  inputText: '#E0E0E0',       
+  inputText: '#E0E0E0',
   inputPlaceholderText: '#777777',
-  buttonBackground: 'rgba(30, 62, 174, 1)', 
+  buttonBackground: 'rgba(30, 62, 174, 1)',
   buttonTextColor: '#FFFFFF',
-  shadowColor: '#000000', 
-  shadowOpacity: 0.3, 
-  shadowRadius: 5,  
-  elevation: 0, 
+  shadowColor: '#000000',
+  shadowOpacity: 0.3,
+  shadowRadius: 5,
+  elevation: 0,
   statusBarContent: 'light-content',
 };
 
@@ -67,7 +71,7 @@ const createMyOrdersStyles = (theme) => StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 30,
   },
-  
+
   headerRow: {
     marginHorizontal: 15,
     marginTop: 20,
@@ -101,19 +105,7 @@ const createMyOrdersStyles = (theme) => StyleSheet.create({
     color: theme.inputText,
     marginRight: 10,
   },
-  filterButton: {
-    width: 110,
-    height: 44,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.inputBorderColor,
-    backgroundColor: theme.inputBackground,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filterText: {
-    color: theme.inputText,
-  },
+
   ordersList: {
     paddingHorizontal: 15,
   },
@@ -225,18 +217,73 @@ const MyOrders = ({ navigation, route }) => {
   const theme = colorScheme === 'dark' ? darkThemeColors : lightThemeColors;
   const styles = createMyOrdersStyles(theme);
   const [query, setQuery] = useState('');
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const sampleOrders = [
-    {
-      id: 'ORD12345',
-      placedOn: new Date(2024, 2, 15),
-      status: 'Delivered',
-      statusColor: '#2dbb6e',
-      items: [
-        { id: 'p1', name: 'Intelligent Baby Kit', qty: 1, price: 8000 },
-      ],
-    },
-  ];
+
+
+  useEffect(() => {
+    async function loadOrders() {
+      setLoading(true);
+      setError(null);
+      try {
+        let userId = (route && route.params && route.params.userId) || null;
+        if (!userId) {
+          try {
+            const stored = await AsyncStorage.getItem('userId');
+            if (stored) userId = stored;
+          } catch (asErr) {
+            console.warn('Failed to read userId from AsyncStorage', asErr);
+          }
+        }
+
+        if (!userId) {
+          setError('User not signed in');
+          setOrders([]);
+          setLoading(false);
+          return;
+        }
+
+        const data = await getOrderByUserId(userId);
+        const paymentsArray = Array.isArray(data) ? data : (data && data.data && Array.isArray(data.data) ? data.data : []);
+        if (paymentsArray.length === 0) {
+          setOrders([]);
+        } else {
+          const mapped = paymentsArray.map(p => {
+            const amount = Number(p.paidAmount ?? p.amount ?? 0);
+            const orderDateRaw = p.orderDate ?? p.paidDate ?? null;
+            const displayText = (p.paymentStatus || 'Unknown');
+            const statusLower = String(displayText).toLowerCase();
+            const statusColor = statusLower === 'paid' || statusLower === 'delivered' ? '#2dbb6e' : (statusLower === 'pending' ? '#ffc107' : '#6c757d');
+
+
+            return {
+              id: p.orderID ? String(p.orderID) : (p.referenceId || p.razorpayOrderId || Math.random().toString(36).slice(2, 9)),
+              referenceId: p.referenceId || null,
+              paymentId: p.razorpayPaymentId || null,
+              paymentMethod: p.paymentMethod || null,
+              amount,
+              orderDateRaw,
+              placedOn: orderDateRaw ? new Date(orderDateRaw) : new Date(),
+              displayText,
+              statusColor,
+
+              raw: p,
+            };
+          });
+          setOrders(mapped);
+        }
+      } catch (e) {
+        setError(e.message || 'Failed to load orders');
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadOrders();
+  }, [route]);
 
   useEffect(() => {
     const backAction = () => {
@@ -255,46 +302,101 @@ const MyOrders = ({ navigation, route }) => {
     return () => backHandler.remove();
   }, [navigation]);
 
-  const renderStatus = (status, color) => (
-    <View style={[styles.statusBadge, { backgroundColor: color || '#6c757d' }]}>
-      <Text style={styles.statusText}>{status}</Text>
-    </View>
-  );
 
   const OrderCard = ({ order }) => {
-    const total = order.items.reduce((s, it) => s + it.price * it.qty, 0);
+    let total = 0;
+    if (order.amount != null) {
+      total = Number(order.amount);
+    } else if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+      total = order.items.reduce((s, it) => s + (Number(it.price || 0) * Number(it.qty || 0)), 0);
+    }
+
+    const orderDate = order.orderDateRaw ? format(new Date(order.orderDateRaw), 'dd MMM yyyy') : format(order.placedOn, 'dd MMM yyyy');
+
     return (
       <View style={styles.orderCard}>
         <View style={styles.orderHeaderRow}>
           <View>
-            <Text style={styles.orderIdText}>Order ID: #{order.id}</Text>
-            <Text style={styles.placedDateText}>Placed on: {format(order.placedOn, 'dd MMM yyyy')}</Text>
+            <Text style={styles.orderIdText}>Order ID: #{order.referenceId || order.id}</Text>
+            <Text style={styles.placedDateText}>Placed on: {orderDate}</Text>
           </View>
-          {renderStatus(order.status, order.statusColor)}
+          <View style={[styles.statusBadge, { backgroundColor: order.statusColor || '#6c757d' }]}>
+            <Text style={styles.statusText}>{order.displayText}</Text>
+          </View>
         </View>
 
-        {order.items.map((it) => (
-          <View key={it.id} style={styles.productRow}>
-            <Image source={{ uri: 'https://via.placeholder.com/80' }} style={styles.productImage} />
-            <View style={styles.productInfo}>
-              <Text style={styles.productName}>{it.name}</Text>
-              <Text style={styles.productQty}>Qty: {it.qty}</Text>
-            </View>
-            <Text style={styles.productPrice}>
-              ₹{(it.price * it.qty).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </Text>
+        <View style={styles.productRow}>
+          <Image source={require('../img/loginlogo.png')} style={styles.productImage} />
+          <View style={styles.productInfo}>
+            <Text style={styles.productName}>Payment ID: {order.paymentId || 'N/A'}</Text>
+            <Text style={styles.productQty}>Method: {order.paymentMethod || 'N/A'}</Text>
           </View>
-        ))}
+          <Text style={styles.productPrice}>₹{(total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
+        </View>
 
         <View style={styles.orderFooter}>
-          <Text style={styles.invoiceText}>Order Total: ₹{total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
+          <Text style={styles.invoiceText}>Order Total: ₹{(total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
           <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.ghostButton} onPress={() => { /* view invoice */ }}>
+
+            <TouchableOpacity style={styles.ghostButton} onPress={async () => {
+              try {
+                const baseUrl = 'https://allrounderbaby.com/MyProfile/InvoiceView';
+
+                let userId = (route && route.params && route.params.userId) || (order.raw && order.raw.userId) || null;
+
+                if (!userId) {
+                  try {
+                    const stored = await AsyncStorage.getItem('userId');
+                    if (stored) userId = stored;
+                  } catch (asErr) {
+                    console.warn('Failed to read userId from AsyncStorage', asErr);
+                  }
+                }
+
+                console.log('Opening invoice with userId:', userId);
+
+                try {
+                  const headers = { 'Content-Type': 'application/json' };
+
+                  await fetch(baseUrl, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ userId }),
+                  });
+
+                } catch (postErr) {
+                  console.warn('Failed to POST token+userId to server', postErr);
+                }
+
+                const urlToOpen = userId
+                  ? `${baseUrl}?userId=${encodeURIComponent(userId)}`
+                  : baseUrl;
+
+                const canOpen = await Linking.canOpenURL(urlToOpen);
+
+                if (canOpen) {
+                  await Linking.openURL(urlToOpen);
+                } else {
+                  Alert.alert('Invoice', 'Cannot open invoice URL');
+                }
+
+              } catch (err) {
+                Alert.alert('Error', 'Unable to open invoice');
+              }
+            }}>
               <Text style={styles.ghostButtonText}>View Invoice</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.primaryButton} onPress={() => { /* leave review */ }}>
-              <Text style={styles.primaryButtonText}>Leave a Review</Text>
-            </TouchableOpacity>
+
+            {order.displayText && order.displayText.toLowerCase() === 'delivered' && (
+              <TouchableOpacity style={styles.primaryButton} onPress={() => { /* leave review */ }}>
+                <Text style={styles.primaryButtonText}>Leave a Review</Text>
+              </TouchableOpacity>
+            )}
+            {order.displayText && order.displayText.toLowerCase() === 'shipped' && (
+              <TouchableOpacity style={styles.primaryButton} onPress={() => { /* track order */ }}>
+                <Text style={styles.primaryButtonText}>Track Order</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>
@@ -306,35 +408,44 @@ const MyOrders = ({ navigation, route }) => {
       <StatusBar barStyle="light-content" backgroundColor="#1434A4" />
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-     <View style={[{ paddingLeft: 8, paddingRight: 7}]}>
-           <View style={styles.headerRow}>
-            <Text style={styles.sectionTitle}>My Orders</Text>
+          <View style={[{ paddingLeft: 8, paddingRight: 7 }]}>
+            <View style={styles.headerRow}>
+              <Text style={styles.sectionTitle}>My Orders</Text>
             </View>
 
-          <View style={styles.searchRow}>
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search by Order ID or Product Name..."
-              placeholderTextColor={theme.inputPlaceholderText}
-              style={styles.searchInput}
-            />
-            <TouchableOpacity style={styles.filterButton} onPress={() => { /* open filter */ }}>
-              <Text style={styles.filterText}>All Orders</Text>
-            </TouchableOpacity>
-          </View>
+            <View style={styles.searchRow}>
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search by Order ID or Product Name..."
+                placeholderTextColor={theme.inputPlaceholderText}
+                style={styles.searchInput}
+              />
 
-          <View style={styles.ordersList}>
-            {sampleOrders.filter(o => {
-              if (!query) return true;
-              const q = query.toLowerCase();
-              if (o.id.toLowerCase().includes(q)) return true;
-              return o.items.some(i => i.name.toLowerCase().includes(q));
-            }).map(o => (
-              <OrderCard key={o.id} order={o} />
-            ))}
+            </View>
+
+            <View style={styles.ordersList}>
+              {loading && <Text style={{ color: theme.textSecondary, marginBottom: 8 }}>Loading orders...</Text>}
+
+              {!loading && orders.length === 0 && (
+                <View style={styles.orderCard}>
+                  <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                    <Image source={{ uri: 'https://img.icons8.com/ios-glyphs/90/000000/box.png' }} style={{ width: 64, height: 64, marginBottom: 12, tintColor: theme.textSecondary }} />
+                    <Text style={{ color: theme.textSecondary }}>No orders found</Text>
+                  </View>
+                </View>
+              )}
+
+              {!loading && orders.length > 0 && orders.filter(o => {
+                if (!query) return true;
+                const q = query.toLowerCase();
+                if ((o.id || '').toLowerCase().includes(q)) return true;
+                return o.items.some(i => (i.name || '').toLowerCase().includes(q));
+              }).map(o => (
+                <OrderCard key={o.id} order={o} />
+              ))}
+            </View>
           </View>
-     </View>
         </ScrollView>
       </View>
     </KeyboardAvoidingView>
