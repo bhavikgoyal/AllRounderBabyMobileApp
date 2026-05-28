@@ -37,7 +37,7 @@ const dark = {
 
 const popupDark = { bg: '#333', text: '#fff', allow: '#63B3ED', deny: '#ccc' };
 
-const NotificationSettings = ({ navigation, route }) => {
+const NotificationSettings = ({ navigation }) => {
   const mode = useColorScheme();
   const theme = mode === 'dark' ? dark : light;
   const popupTheme = mode === 'dark' ? popupDark : popupLight;
@@ -45,7 +45,7 @@ const NotificationSettings = ({ navigation, route }) => {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false); 
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [generalEnabled, setGeneralEnabled] = useState(true);
   const [showPermissionPopup, setShowPermissionPopup] = useState(false);
 
@@ -56,18 +56,23 @@ const NotificationSettings = ({ navigation, route }) => {
     if (Platform.OS === 'android' && Platform.Version >= 33) {
       return PERMISSIONS.ANDROID.POST_NOTIFICATIONS;
     }
-    return null; 
+    return null;
   }, []);
 
   const checkNotificationPermission = useCallback(async () => {
-    if (!NOTIFICATION_PERMISSION) {
-      setNotificationsEnabled(true);
-      return;
-    }
-    const result = await check(NOTIFICATION_PERMISSION);
-    const isGranted = result === RESULTS.GRANTED;
-    setNotificationsEnabled(isGranted);
-    if (!isGranted) {
+    try {
+      if (!NOTIFICATION_PERMISSION) {
+        setNotificationsEnabled(true);
+        setGeneralEnabled(true);
+        return;
+      }
+      const result = await check(NOTIFICATION_PERMISSION);
+      const isGranted = result === RESULTS.GRANTED;
+      setNotificationsEnabled(isGranted);
+      setGeneralEnabled(isGranted);
+    } catch (err) {
+      console.warn('Unable to check notification permission', err);
+      setNotificationsEnabled(false);
       setGeneralEnabled(false);
     }
   }, [NOTIFICATION_PERMISSION]);
@@ -81,18 +86,14 @@ const NotificationSettings = ({ navigation, route }) => {
     });
 
     return () => {
-      subscription.remove();
+      subscription?.remove();
     };
   }, [checkNotificationPermission]);
 
   useEffect(() => {
     const backAction = () => {
-      if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
-        navigation.navigate('My Profile');
-        return true;
-      }
-      if (route && route.params && route.params.origin) {
-        navigation.navigate(route.params.origin);
+      if (navigation?.canGoBack()) {
+        navigation.goBack();
         return true;
       }
       return false;
@@ -101,43 +102,70 @@ const NotificationSettings = ({ navigation, route }) => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
     return () => backHandler.remove();
-  }, [navigation, route]);
+  }, [navigation]);
 
-  const handleToggleNotifications = async () => {
-    if (!NOTIFICATION_PERMISSION) {
-      Linking.openSettings();
-      return;
-    }
-    const result = await check(NOTIFICATION_PERMISSION);
-    switch (result) {
-      case RESULTS.UNAVAILABLE:
-        break;
-      case RESULTS.DENIED:
-        const requestResult = await request(NOTIFICATION_PERMISSION);
-        if (requestResult === RESULTS.GRANTED) {
-          setNotificationsEnabled(true);
-        } else {
+  const handleToggleNotifications = async (nextValue) => {
+    try {
+      if (!NOTIFICATION_PERMISSION) {
+        const enabled = !!nextValue;
+        setNotificationsEnabled(enabled);
+        setGeneralEnabled(enabled);
+        return;
+      }
+
+      const result = await check(NOTIFICATION_PERMISSION);
+
+      if (!nextValue) {
+        setNotificationsEnabled(false);
+        setGeneralEnabled(false);
+        return;
+      }
+
+      switch (result) {
+        case RESULTS.UNAVAILABLE:
+          setNotificationsEnabled(false);
           setGeneralEnabled(false);
+          break;
+        case RESULTS.DENIED: {
+          const requestResult = await request(NOTIFICATION_PERMISSION);
+          const granted = requestResult === RESULTS.GRANTED;
+          setNotificationsEnabled(granted);
+          setGeneralEnabled(granted);
+          if (!granted) {
+            setShowPermissionPopup(true);
+          }
+          break;
         }
-        break;
-      case RESULTS.GRANTED:
-        Linking.openSettings();
-        break;
-      case RESULTS.BLOCKED:
-        setShowPermissionPopup(true);
-        break;
+        case RESULTS.GRANTED:
+          setNotificationsEnabled(true);
+          setGeneralEnabled(true);
+          break;
+        case RESULTS.BLOCKED:
+          setShowPermissionPopup(true);
+          setNotificationsEnabled(false);
+          setGeneralEnabled(false);
+          break;
+      }
+    } catch (err) {
+      console.warn('Unable to update notification permission', err);
+      setNotificationsEnabled(false);
+      setGeneralEnabled(false);
     }
   };
 
-  const openSettings = () => {
+  const openSettings = async () => {
     setShowPermissionPopup(false);
-    Linking.openSettings();
+    try {
+      await Linking.openSettings();
+    } catch (err) {
+      console.warn('Unable to open settings', err);
+    }
   };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('My Profile')} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation?.goBack()} style={styles.backButton}>
           <Image
             source={require('../img/arrowicon.png')}
             style={[styles.backIcon, { tintColor: theme.text }]}
@@ -153,6 +181,7 @@ const NotificationSettings = ({ navigation, route }) => {
             <Switch
               value={notificationsEnabled}
               onValueChange={handleToggleNotifications}
+              accessibilityLabel="Enable notifications"
               trackColor={{ false: '#767577', true: '#81b0ff' }}
               thumbColor={notificationsEnabled ? '#1a73e8' : '#f4f3f4'}
             />
@@ -166,6 +195,7 @@ const NotificationSettings = ({ navigation, route }) => {
               value={generalEnabled}
               onValueChange={(newValue) => notificationsEnabled && setGeneralEnabled(newValue)}
               disabled={!notificationsEnabled}
+              accessibilityLabel="General notifications"
               trackColor={{ false: '#767577', true: '#81b0ff' }}
               thumbColor={generalEnabled ? '#1a73e8' : '#f4f3f4'}
             />
@@ -178,6 +208,7 @@ const NotificationSettings = ({ navigation, route }) => {
             <Switch
               value={notificationsEnabled}
               onValueChange={handleToggleNotifications}
+              accessibilityLabel="Enable notifications"
               trackColor={{ false: '#767577', true: '#81b0ff' }}
               thumbColor={notificationsEnabled ? '#1a73e8' : '#f4f3f4'}
             />
@@ -191,6 +222,7 @@ const NotificationSettings = ({ navigation, route }) => {
               value={generalEnabled}
               onValueChange={(newValue) => notificationsEnabled && setGeneralEnabled(newValue)}
               disabled={!notificationsEnabled}
+              accessibilityLabel="General notifications"
               trackColor={{ false: '#767577', true: '#81b0ff' }}
               thumbColor={generalEnabled ? '#1a73e8' : '#f4f3f4'}
             />
@@ -260,6 +292,7 @@ const styles = StyleSheet.create({
   },
   popupBox: {
     width: '80%',
+    maxWidth: 320,
     padding: 25,
     borderRadius: 14,
     alignItems: 'center',
@@ -278,6 +311,8 @@ const styles = StyleSheet.create({
   popupButton: {
     width: '100%',
     paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
   },
   popupButtonTextAllow: {
     color: '#1a73e8',

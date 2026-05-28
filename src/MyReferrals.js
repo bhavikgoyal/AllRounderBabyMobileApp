@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -190,9 +190,10 @@ const MyReferrals = ({ navigation, route }) => {
   const styles = createMyReferralsStyles(theme);
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   const { BASE_URL } = require('./config/api');
 
-  const fetchReferrals = async (userId, token) => {
+  const fetchReferrals = useCallback(async (userId, token) => {
     try {
       setLoading(true);
       const url = `${BASE_URL}ReferralTransaction/ReferralTransactionHistory?userId=${userId}`;
@@ -200,7 +201,8 @@ const MyReferrals = ({ navigation, route }) => {
       const res = await fetch(url, { headers });
       if (!res.ok) throw new Error('Network response was not ok');
       const data = await res.json();
-      const mapped = data.map(item => ({
+      const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+      const mapped = list.map(item => ({
         id: String(item.id),
         name: item.fullName || item.referralCodeName || 'Unknown',
         date: item.date ? formatDate(item.date) : '',
@@ -212,8 +214,9 @@ const MyReferrals = ({ navigation, route }) => {
       console.warn('Failed to fetch referrals', err);
     } finally {
       setLoading(false);
+      setIsInitialLoadDone(true);
     }
-  };
+  }, [BASE_URL]);
   useEffect(() => {
     const backAction = () => {
       if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
@@ -235,28 +238,35 @@ const MyReferrals = ({ navigation, route }) => {
     };
   }, [navigation]);
   useEffect(() => {
-    const routeUserId = route && route.params && route.params.userId ? route.params.userId : null;
+    const routeUserId = route?.params?.userId || null;
     if (routeUserId) {
       fetchReferrals(routeUserId);
       return;
     }
     (async () => {
       try {
-        const storedToken = await AsyncStorage.getItem('token');
-        const storedUserId = await AsyncStorage.getItem('userId');
+        const [storedToken, storedUserId] = await Promise.all([
+          AsyncStorage.getItem('token'),
+          AsyncStorage.getItem('userId'),
+        ]);
         if (storedUserId) {
           fetchReferrals(storedUserId, storedToken);
         } else {
           setReferrals([]);
+          setIsInitialLoadDone(true);
           setLoading(false);
         }
       } catch (e) {
         console.warn('Error reading AsyncStorage for userId/token', e);
         setReferrals([]);
+        setIsInitialLoadDone(true);
         setLoading(false);
       }
     })();
-  }, [route]);
+  }, [route?.params?.userId, fetchReferrals]);
+
+  const completedCount = useMemo(() => referrals.filter(r => r.status === 'Completed').length, [referrals]);
+  const pendingCount = useMemo(() => referrals.filter(r => r.status === 'Pending').length, [referrals]);
   return (
     <View style={styles.container}>
       <StatusBar barStyle={theme.statusBarContent} backgroundColor={theme.screenBackground} />
@@ -269,23 +279,28 @@ const MyReferrals = ({ navigation, route }) => {
             <Text style={styles.statCaption}>your referral code used</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{referrals.filter(r => r.status === 'Completed').length}</Text>
+            <Text style={styles.statValue}>{completedCount}</Text>
             <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Completed</Text>
             <Text style={styles.statCaption}>Payout initiated</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{referrals.filter(r => r.status === 'Pending').length}</Text>
+            <Text style={styles.statValue}>{pendingCount}</Text>
             <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Pending</Text>
             <Text style={styles.statCaption}>Payout pending</Text>
           </View>
         </View>
         <Text style={styles.listHeader}>Referral History</Text>
         <View style={styles.listContainer}>
-          {loading ? (
+          {loading && referrals.length === 0 ? (
             <ActivityIndicator size="large" color="#1434A4" style={{ marginTop: 30 }} />
+          ) : loading && referrals.length > 0 ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+              <ActivityIndicator size="small" color="#1434A4" style={{ marginRight: 8 }} />
+              <Text style={[styles.referralDate, { color: theme.textSecondary }]}>Refreshing referrals...</Text>
+            </View>
           ) : referrals.length === 0 ? (
             <View style={styles.placeholderContainer}>
-              <Text style={styles.placeholderText}>You haven't referred anyone yet. Share your code to start earning!</Text>
+              <Text style={styles.placeholderText}>{isInitialLoadDone ? "You haven't referred anyone yet. Share your code to start earning!" : 'Loading your referral history...'}</Text>
             </View>
           ) : (
             referrals.map(item => (

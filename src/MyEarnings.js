@@ -253,6 +253,28 @@ const createMyEarningsStyles = (theme) => StyleSheet.create({
     paddingTop: 0,
     paddingBottom: 0,
   },
+  errorBanner: {
+    marginHorizontal: 15,
+    marginBottom: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#fdecea',
+    borderWidth: 1,
+    borderColor: '#f5c6cb',
+  },
+  errorBannerText: {
+    color: '#b00020',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  emptyStateText: {
+    fontSize: 12,
+    color: theme.newtextPrimary,
+    marginHorizontal: 15,
+    marginTop: 6,
+    marginBottom: 8,
+  },
 });
 const MyEarnings = ({ navigation, route }) => {
   const colorScheme = useColorScheme();
@@ -272,29 +294,44 @@ const MyEarnings = ({ navigation, route }) => {
   const [earningFromReferrals, setEarningFromReferrals] = useState(null);
   const [totalReferralsCount, setTotalReferralsCount] = useState(0);
   const [feedbackPaidCount, setFeedbackPaidCount] = useState(0);
+  const [profileError, setProfileError] = useState('');
+  const [earningsError, setEarningsError] = useState('');
+  const [feedbackError, setFeedbackError] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isFirstLoadDone, setIsFirstLoadDone] = useState(false);
   const url = BASE_URL;
   const feedbackRate = isIndia ? 1000 : 10;
+  const hasAnyError = !!(authError || profileError || earningsError || feedbackError);
   useFocusEffect(
     React.useCallback(() => {
       const loadAllData = async () => {
         try {
+          setAuthError('');
+          setProfileError('');
+          setEarningsError('');
+          setFeedbackError('');
           const storedToken = await AsyncStorage.getItem('token');
           const storedUserId = await AsyncStorage.getItem('userId');
 
           if (storedToken && storedUserId) {
             setUserID(storedUserId);
             setToken(storedToken);
-            const bankResult = await handleBankDetails(storedToken, storedUserId);
 
-            await Promise.all([
+            const [bankResult] = await Promise.all([
+              handleBankDetails(storedToken, storedUserId),
               handleEarningDetails(storedToken, storedUserId),
-              handleFeedbackEarnings(storedToken, storedUserId, bankResult && bankResult.isIndia)
             ]);
+
+            await handleFeedbackEarnings(storedToken, storedUserId, bankResult && bankResult.isIndia);
+          } else {
+            setAuthError('Login information not found. Please sign in again.');
           }
         } catch (error) {
           console.error("Failed to load data from storage", error);
+          setAuthError('Unable to read login/session data. Please try again.');
         } finally {
           setIsLoading(false);
+          setIsFirstLoadDone(true);
         }
       };
       setIsLoading(true);
@@ -314,7 +351,6 @@ const MyEarnings = ({ navigation, route }) => {
     }
 
     const DETAILS_ENDPOINT = `${url}MyProfile/MyProfileDetails_Get_ByID?UserID=${userId}`;
-    setIsLoading(true);
 
     try {
       const response = await fetch(DETAILS_ENDPOINT, {
@@ -328,11 +364,13 @@ const MyEarnings = ({ navigation, route }) => {
         const errorText = await response.text();
         console.error(`handleBankDetails: Error fetching profile data: ${response.status} - ${errorText}`);
         setBankDetails(null);
+        setProfileError('Could not load linked bank details.');
         return;
       }
 
       const result = await response.json();
       if (result && result.data) {
+        setProfileError('');
         const details = {
           country: result.data.country,
           paymentMethod: result.data.paymentMethod,
@@ -358,14 +396,15 @@ const MyEarnings = ({ navigation, route }) => {
         return { isIndia: (result.data.country || '').toString().toLowerCase() === 'india' };
       } else {
         setBankDetails(null);
+        setProfileError('No bank details found for this account.');
         return null;
       }
     } catch (error) {
       console.error("handleBankDetails: Network or unexpected error:", error);
       setBankDetails(null);
+      setProfileError('Could not load linked bank details. Please check your connection.');
       return null;
     } finally {
-      setIsLoading(false);
     }
   };
   const handleEarningDetails = async (token, userId) => {
@@ -402,12 +441,15 @@ const MyEarnings = ({ navigation, route }) => {
           rawBody: responseText,
         };
         console.error('handleEarningDetails: API Error Response:', info);
+        setEarningsError('Could not load referral transactions right now.');
         setReferralCount(0);
         setEarningsPerReferral(3000);
         setPendingReferralCount(0);
         if (code === 'Login Req.' || code === '') setCode('N/A');
         return;
       }
+
+      setEarningsError('');
 
       const jsonResponse = await response.json();
       const dataArray = jsonResponse && jsonResponse.data
@@ -464,6 +506,7 @@ const MyEarnings = ({ navigation, route }) => {
     } catch (error) {
       console.error("handleEarningDetails: Network or unexpected error:", error);
       Alert.alert("Error", "Could not load your referral earnings. Please check your connection and try again.");
+      setEarningsError('Could not load referral transactions. Please try again.');
       setReferralCount(0);
       setEarningsPerReferral(3000);
       setPendingReferralCount(0);
@@ -488,9 +531,11 @@ const MyEarnings = ({ navigation, route }) => {
       if (!response.ok) {
         const text = await response.text();
         console.warn(`handleFeedbackEarnings: API Error ${response.status} - ${text}`);
+        setFeedbackError('Could not load feedback cashback details.');
         setFeedbackEarnings('0.00');
         return;
       }
+      setFeedbackError('');
       const json = await response.json();
       console.debug('handleFeedbackEarnings: raw response json:', json);
       const success = json && (json.code === 200 || response.status === 200);
@@ -499,8 +544,7 @@ const MyEarnings = ({ navigation, route }) => {
       console.debug('handleFeedbackEarnings: dataList (all feedback entries):', dataList);
 
       if (!dataList || dataList.length === 0 || (dataList.length === 1 && (dataList[0] === null || dataList[0] === undefined))) {
-        const fallback = localFeedbackRate;
-        setFeedbackEarnings(fallback.toFixed(2));
+        setFeedbackEarnings('0.00');
         setFeedbackPaidCount(0);
         return { data: dataArray, error: !success, message: json && json.message ? json.message : '' };
       }
@@ -518,8 +562,7 @@ const MyEarnings = ({ navigation, route }) => {
       } catch (e) { feedbackSum = 0; console.warn('handleFeedbackEarnings: error summing feedback amounts', e); }
 
       if (!feedbackSum) {
-        feedbackSum = localFeedbackRate;
-        console.debug('handleFeedbackEarnings: fallback to localFeedbackRate (single):', localFeedbackRate);
+        feedbackSum = 0;
       }
 
       setFeedbackEarnings(feedbackSum.toFixed(2));
@@ -528,6 +571,7 @@ const MyEarnings = ({ navigation, route }) => {
       return { data: dataArray, error: !success, message: json && json.message ? json.message : '' };
     } catch (apiError) {
       console.error('handleFeedbackEarnings: API call failed', apiError);
+      setFeedbackError('Could not load feedback cashback details. Please try again.');
       setFeedbackEarnings('0.00');
       return { data: [], error: true, message: apiError.message };
     }
@@ -570,240 +614,254 @@ const MyEarnings = ({ navigation, route }) => {
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled">
-          {isLoading ? (
-            <ActivityIndicator size="large" color={theme.buttonBackground} style={{ marginTop: 50 }} />
-          ) : (
-            <>
-              <View style={styles.card}>
-                <Text style={styles.earningsHeader}>My Earnings</Text>
+          <>
+            {isLoading && (
+              <View style={{ paddingTop: 16, paddingBottom: 4 }}>
+                <ActivityIndicator size="small" color={theme.buttonBackground} />
+                <Text style={[styles.subText, { textAlign: 'center', marginTop: 8 }]}>Loading earnings details...</Text>
+              </View>
+            )}
+            <View style={styles.card}>
+              <Text style={styles.earningsHeader}>My Earnings</Text>
+              {hasAnyError && (
+                <View style={styles.errorBanner}>
+                  {!!authError && <Text style={styles.errorBannerText}>- {authError}</Text>}
+                  {!!profileError && <Text style={styles.errorBannerText}>- {profileError}</Text>}
+                  {!!earningsError && <Text style={styles.errorBannerText}>- {earningsError}</Text>}
+                  {!!feedbackError && <Text style={styles.errorBannerText}>- {feedbackError}</Text>}
+                </View>
+              )}
 
-                {isIndia === null ? (
-                  <View style={{ padding: 20 }}>
-                    <Text style={styles.subText}>Detecting account country...</Text>
-                  </View>
-                ) : isIndia ? (
-                  <>
-                    <View style={styles.totalEarningsCard}>
-                      <Text style={styles.totalEarningsText}>A. Total Earnings (INR): &nbsp;
-                        <Text style={styles.totalEarningsAmount}>₹ {parseFloat(totalEarnings).toLocaleString('en-IN')}</Text>
-                      </Text>
-                    </View>
-                    <View style={styles.earningsBreakdownSection}>
-                      <Text style={styles.breakdownTitle}>Earnings Breakdown:</Text>
-
-                      <View style={styles.breakdownItem}>
-                        <Text style={styles.breakdownLabel}>
-                          1) Number of Referrals (Payment <Text style={{ color: '#5f9b3d' }}>Initiated</Text>)
-                        </Text>
-                        <Text style={styles.breakdownValue}>{referralCount}</Text>
-                      </View>
-
-                      <View style={styles.breakdownItem}>
-                        <Text style={styles.breakdownLabel}>2) Earnings from Referrals :</Text>
-                        <Text style={styles.breakdownValue}>{referralCount}</Text>
-                      </View>
-                      <Text style={styles.subText}>(Fixed rate: ₹{earningsPerReferral.toLocaleString('en-IN')} per referral)</Text>
-
-                      <View style={styles.breakdownItem}>
-                        <Text style={styles.breakdownLabel}>{`3) Earnings from Feedback${feedbackPaidCount > 0 ? ` (${feedbackPaidCount})` : ''}:`}</Text>
-                        <Text style={styles.breakdownValue}>{feedbackEarnings && parseFloat(feedbackEarnings) > 0 ? `₹ ${parseFloat(feedbackEarnings).toLocaleString('en-IN')}` : 'N/A'}</Text>
-                      </View>
-                      <Text style={styles.subText}>
-                        {`(Fixed amount: ₹${feedbackRate.toLocaleString('en-IN')} – one-time only)`}
-                        <Text style={styles.feedbackLink} onPress={handleFeedbackLinkPress}> submit your feedback!</Text>
-                      </Text>
-
-                      <View style={styles.breakdownItem}>
-                        <Text style={styles.breakdownLabel}>
-                          4) Number of Referrals (Payment <Text style={{ color: '#dc3545' }}>Pending</Text>):
-                        </Text>
-                        <Text style={[styles.breakdownValue, styles.paymentPendingText]}>{pendingReferralCount}</Text>
-                      </View>
-                    </View>
-                  </>
-                ) : (
-                  <>
-                    <View style={styles.totalEarningsCardSecond}>
-                      <Text style={styles.totalEarningsText}>A. Total Earnings (USD): &nbsp;
-                        <Text style={styles.totalEarningsAmount}>$ {parseFloat(totalEarnings).toLocaleString('en-IN')}</Text>
-                      </Text>
-                    </View>
-                    <View style={styles.earningsBreakdownSection}>
-                      <Text style={styles.breakdownTitle}>Earnings Breakdown:</Text>
-
-                      <View style={styles.breakdownItem}>
-                        <Text style={styles.breakdownLabel}>
-                          1) Number of Referrals (Payment <Text style={{ color: '#5f9b3d' }}>Initiated</Text>)
-                        </Text>
-                        <Text style={styles.breakdownValue}>{referralCount}</Text>
-                      </View>
-
-                      <View style={styles.breakdownItem}>
-                        <Text style={styles.breakdownLabel}>2) Earnings from Referrals :</Text>
-                        <Text style={styles.breakdownValue}>{referralCount}</Text>
-                      </View>
-                      <Text style={styles.subText}>(Fixed rate: ${earningsPerReferral.toLocaleString('en-IN')} per referral)</Text>
-
-                      <View style={styles.breakdownItem}>
-                        <Text style={styles.breakdownLabel}>{`3) Earnings from Feedback${feedbackPaidCount > 0 ? ` (${feedbackPaidCount})` : ''}:`}</Text>
-                        <Text style={styles.breakdownValue}>{feedbackEarnings && parseFloat(feedbackEarnings) > 0 ? `$ ${parseFloat(feedbackEarnings).toLocaleString('en-IN')}` : 'N/A'}</Text>
-                      </View>
-                      <Text style={styles.subText}>
-                        {`(Fixed amount: $${feedbackRate} – one-time only)`}
-                        <Text style={styles.feedbackLink} onPress={handleFeedbackLinkPress}> submit your feedback!</Text>
-                      </Text>
-
-                      <View style={styles.breakdownItem}>
-                        <Text style={styles.breakdownLabel}>
-                          4) Number of Referrals (Payment <Text style={{ color: '#dc3545' }}>Pending</Text>):
-                        </Text>
-                        <Text style={[styles.breakdownValue, styles.paymentPendingText]}>{pendingReferralCount}</Text>
-                      </View>
-                    </View>
-                  </>
-                )}
-                <Text style={styles.noteText}>
-                  <Text>
-                    <Text style={styles.noteLabel}>Note:</Text>
-                    &nbsp;
-                    <Text style={styles.noteSubText}>
-                      Please update your Profile and bank account details after logging in to our website.
+              {isIndia === null ? (
+                <View style={{ paddingHorizontal: 20, paddingBottom: 18 }}>
+                  <Text style={[styles.subText, { marginLeft: 0 }]}>We are preparing your currency and earnings breakdown.</Text>
+                  <Text style={[styles.subText, { marginLeft: 0, marginTop: 2 }]}>Your linked account details are shown below while data loads.</Text>
+                </View>
+              ) : isIndia ? (
+                <>
+                  <View style={styles.totalEarningsCard}>
+                    <Text style={styles.totalEarningsText}>A. Total Earnings (INR): &nbsp;
+                      <Text style={styles.totalEarningsAmount}>₹ {parseFloat(totalEarnings).toLocaleString('en-IN')}</Text>
                     </Text>
+                  </View>
+                  <View style={styles.earningsBreakdownSection}>
+                    <Text style={styles.breakdownTitle}>Earnings Breakdown:</Text>
+
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownLabel}>
+                        1) Number of Referrals (Payment <Text style={{ color: '#5f9b3d' }}>Initiated</Text>)
+                      </Text>
+                      <Text style={styles.breakdownValue}>{referralCount}</Text>
+                    </View>
+
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownLabel}>2) Earnings from Referrals :</Text>
+                      <Text style={styles.breakdownValue}>{`₹ ${parseFloat(earningFromReferrals || 0).toLocaleString('en-IN')}`}</Text>
+                    </View>
+                    <Text style={styles.subText}>(Fixed rate: ₹{earningsPerReferral.toLocaleString('en-IN')} per referral)</Text>
+
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownLabel}>{`3) Earnings from Feedback${feedbackPaidCount > 0 ? ` (${feedbackPaidCount})` : ''}:`}</Text>
+                      <Text style={styles.breakdownValue}>{feedbackEarnings && parseFloat(feedbackEarnings) > 0 ? `₹ ${parseFloat(feedbackEarnings).toLocaleString('en-IN')}` : 'N/A'}</Text>
+                    </View>
+                    <Text style={styles.subText}>
+                      {`(Fixed amount: ₹${feedbackRate.toLocaleString('en-IN')} – one-time only)`}
+                      <Text style={styles.feedbackLink} onPress={handleFeedbackLinkPress}> submit your feedback!</Text>
+                    </Text>
+
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownLabel}>
+                        4) Number of Referrals (Payment <Text style={{ color: '#dc3545' }}>Pending</Text>):
+                      </Text>
+                      <Text style={[styles.breakdownValue, styles.paymentPendingText]}>{pendingReferralCount}</Text>
+                    </View>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={styles.totalEarningsCardSecond}>
+                    <Text style={styles.totalEarningsText}>A. Total Earnings (USD): &nbsp;
+                      <Text style={styles.totalEarningsAmount}>$ {parseFloat(totalEarnings).toLocaleString('en-IN')}</Text>
+                    </Text>
+                  </View>
+                  <View style={styles.earningsBreakdownSection}>
+                    <Text style={styles.breakdownTitle}>Earnings Breakdown:</Text>
+
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownLabel}>
+                        1) Number of Referrals (Payment <Text style={{ color: '#5f9b3d' }}>Initiated</Text>)
+                      </Text>
+                      <Text style={styles.breakdownValue}>{referralCount}</Text>
+                    </View>
+
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownLabel}>2) Earnings from Referrals :</Text>
+                      <Text style={styles.breakdownValue}>{`$ ${parseFloat(earningFromReferrals || 0).toLocaleString('en-IN')}`}</Text>
+                    </View>
+                    <Text style={styles.subText}>(Fixed rate: ${earningsPerReferral.toLocaleString('en-IN')} per referral)</Text>
+
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownLabel}>{`3) Earnings from Feedback${feedbackPaidCount > 0 ? ` (${feedbackPaidCount})` : ''}:`}</Text>
+                      <Text style={styles.breakdownValue}>{feedbackEarnings && parseFloat(feedbackEarnings) > 0 ? `$ ${parseFloat(feedbackEarnings).toLocaleString('en-IN')}` : 'N/A'}</Text>
+                    </View>
+                    <Text style={styles.subText}>
+                      {`(Fixed amount: $${feedbackRate} – one-time only)`}
+                      <Text style={styles.feedbackLink} onPress={handleFeedbackLinkPress}> submit your feedback!</Text>
+                    </Text>
+
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownLabel}>
+                        4) Number of Referrals (Payment <Text style={{ color: '#dc3545' }}>Pending</Text>):
+                      </Text>
+                      <Text style={[styles.breakdownValue, styles.paymentPendingText]}>{pendingReferralCount}</Text>
+                    </View>
+                  </View>
+                </>
+              )}
+              <Text style={styles.noteText}>
+                <Text>
+                  <Text style={styles.noteLabel}>Note:</Text>
+                  &nbsp;
+                  <Text style={styles.noteSubText}>
+                    Please update your Profile and bank account details after logging in to our website.
                   </Text>
                 </Text>
-                <Text style={styles.noteparaText}>
-                  So, we can transfer the following amounts to you:
-                </Text>
-                <Text style={styles.noteparaText}>
-                  (a) Earnings from referrals
-                </Text>
-                <Text style={[styles.noteparaText, { marginBottom: 20 }]}>
-                  (b) Cashback from feedback
-                </Text>
-              </View>
-              <View style={styles.transactionsSection}>
-                <Text style={styles.bankLinked}>Linked Bank Account Details for Receiving Payment</Text>
-                {bankDetails ? (
-                  <>
-                    <View style={styles.bankBox}>
-                      <Text style={styles.bankLinkedLabel}>Country</Text>
-                      <TextInput
-                        style={styles.disabledInput}
-                        value={bankDetails.country || 'N/A'}
-                        editable={false}
-                      />
-                    </View>
-                    <View style={styles.bankBox}>
-                      <Text style={styles.bankLinkedLabel}>Payment Method</Text>
-                      <TextInput
-                        style={styles.disabledInput}
-                        value={bankDetails.paymentMethod || 'N/A'}
-                        editable={false}
-                      />
-                    </View>
-                    {bankDetails.paymentMethod === 'upi' && (
-                      <>
+              </Text>
+              <Text style={styles.noteparaText}>
+                So, we can transfer the following amounts to you:
+              </Text>
+              <Text style={styles.noteparaText}>
+                (a) Earnings from referrals
+              </Text>
+              <Text style={[styles.noteparaText, { marginBottom: 20 }]}>
+                (b) Cashback from feedback
+              </Text>
+              {!hasAnyError && totalReferralsCount === 0 && feedbackPaidCount === 0 && (
+                <Text style={styles.emptyStateText}>{isFirstLoadDone ? 'No earnings data available yet. Start referrals and submit feedback to see values here.' : 'Fetching your latest earnings data...'}</Text>
+              )}
+            </View>
+            <View style={styles.transactionsSection}>
+              <Text style={styles.bankLinked}>Linked Bank Account Details for Receiving Payment</Text>
+              {bankDetails ? (
+                <>
+                  <View style={styles.bankBox}>
+                    <Text style={styles.bankLinkedLabel}>Country</Text>
+                    <TextInput
+                      style={styles.disabledInput}
+                      value={bankDetails.country || 'N/A'}
+                      editable={false}
+                    />
+                  </View>
+                  <View style={styles.bankBox}>
+                    <Text style={styles.bankLinkedLabel}>Payment Method</Text>
+                    <TextInput
+                      style={styles.disabledInput}
+                      value={bankDetails.paymentMethod || 'N/A'}
+                      editable={false}
+                    />
+                  </View>
+                  {bankDetails.paymentMethod === 'upi' && (
+                    <>
+                      <View style={styles.bankBox}>
+                        <Text style={styles.bankLinkedLabel}>UPI ID</Text>
+                        <TextInput
+                          style={styles.disabledInput}
+                          value={bankDetails.upiId || 'N/A'}
+                          editable={false}
+                        />
+                      </View>
+                      <View style={styles.bankBox}>
+                        <Text style={styles.bankLinkedLabel}>Name as per UPI ID</Text>
+                        <TextInput
+                          style={styles.disabledInput}
+                          value={bankDetails.upiName || 'N/A'}
+                          editable={false}
+                        />
+                      </View>
+                    </>
+                  )}
+                  {bankDetails.paymentMethod === 'bank' && (
+                    <>
+                      <View style={styles.bankBox}>
+                        <Text style={styles.bankLinkedLabel}>Name as per bank account</Text>
+                        <TextInput
+                          style={styles.disabledInput}
+                          value={bankDetails.accountHolderName || 'N/A'}
+                          editable={false}
+                        />
+                      </View>
+                      <View style={styles.bankBox}>
+                        <Text style={styles.bankLinkedLabel}>Bank Name</Text>
+                        <TextInput
+                          style={styles.disabledInput}
+                          value={bankDetails.bankName || 'N/A'}
+                          editable={false}
+                        />
+                      </View>
+                      <View style={styles.bankBox}>
+                        <Text style={styles.bankLinkedLabel}>Account Number</Text>
+                        <TextInput
+                          style={styles.disabledInput}
+                          value={bankDetails.accountNumber || 'N/A'}
+                          keyboardType="numeric"
+                          editable={false}
+                        />
+                      </View>
+                      <View style={styles.bankBox}>
+                        <Text style={styles.bankLinkedLabel}>IFSC/SWIFT Code</Text>
+                        <TextInput
+                          style={styles.disabledInput}
+                          value={bankDetails.ifscSwiftCode || 'N/A'}
+                          autoCapitalize="characters"
+                          editable={false}
+                        />
+                      </View>
+                      <View style={styles.bankBox}>
+                        <Text style={styles.bankLinkedLabel}>Bank country</Text>
+                        <TextInput
+                          style={styles.disabledInput}
+                          value={bankDetails.bankCountry || 'N/A'}
+                          autoCapitalize="characters"
+                          editable={false}
+                        />
+                      </View>
+                      <View style={styles.bankBox}>
+                        <Text style={styles.bankLinkedLabel}>Currency to Recieve</Text>
+                        <TextInput
+                          style={styles.disabledInput}
+                          value={bankDetails.currencyToReceive || 'N/A'}
+                          autoCapitalize="characters"
+                          editable={false}
+                        />
+                      </View>
+                      <View style={styles.bankBox}>
+                        <Text style={styles.bankLinkedLabel}>Purpose</Text>
+                        <TextInput
+                          style={styles.disabledInput}
+                          value={bankDetails.purpose || 'N/A'}
+                          autoCapitalize="characters"
+                          editable={false}
+                        />
+                      </View>
+                      {bankDetails.country && bankDetails.country.toLowerCase() === 'india' && (
                         <View style={styles.bankBox}>
-                          <Text style={styles.bankLinkedLabel}>UPI ID</Text>
+                          <Text style={styles.bankLinkedLabel}>Permanent Account Num (PAN)</Text>
                           <TextInput
                             style={styles.disabledInput}
-                            value={bankDetails.upiId || 'N/A'}
-                            editable={false}
-                          />
-                        </View>
-                        <View style={styles.bankBox}>
-                          <Text style={styles.bankLinkedLabel}>Name as per UPI ID</Text>
-                          <TextInput
-                            style={styles.disabledInput}
-                            value={bankDetails.upiName || 'N/A'}
-                            editable={false}
-                          />
-                        </View>
-                      </>
-                    )}
-                    {bankDetails.paymentMethod === 'bank' && (
-                      <>
-                        <View style={styles.bankBox}>
-                          <Text style={styles.bankLinkedLabel}>Name as per bank account</Text>
-                          <TextInput
-                            style={styles.disabledInput}
-                            value={bankDetails.accountHolderName || 'N/A'}
-                            editable={false}
-                          />
-                        </View>
-                        <View style={styles.bankBox}>
-                          <Text style={styles.bankLinkedLabel}>Bank Name</Text>
-                          <TextInput
-                            style={styles.disabledInput}
-                            value={bankDetails.bankName || 'N/A'}
-                            editable={false}
-                          />
-                        </View>
-                        <View style={styles.bankBox}>
-                          <Text style={styles.bankLinkedLabel}>Account Number</Text>
-                          <TextInput
-                            style={styles.disabledInput}
-                            value={bankDetails.accountNumber || 'N/A'}
-                            keyboardType="numeric"
-                            editable={false}
-                          />
-                        </View>
-                        <View style={styles.bankBox}>
-                          <Text style={styles.bankLinkedLabel}>IFSC/SWIFT Code</Text>
-                          <TextInput
-                            style={styles.disabledInput}
-                            value={bankDetails.ifscSwiftCode || 'N/A'}
+                            value={bankDetails.panNumber || 'N/A'}
                             autoCapitalize="characters"
                             editable={false}
                           />
                         </View>
-                        <View style={styles.bankBox}>
-                          <Text style={styles.bankLinkedLabel}>Bank country</Text>
-                          <TextInput
-                            style={styles.disabledInput}
-                            value={bankDetails.bankCountry || 'N/A'}
-                            autoCapitalize="characters"
-                            editable={false}
-                          />
-                        </View>
-                        <View style={styles.bankBox}>
-                          <Text style={styles.bankLinkedLabel}>Currency to Recieve</Text>
-                          <TextInput
-                            style={styles.disabledInput}
-                            value={bankDetails.currencyToReceive || 'N/A'}
-                            autoCapitalize="characters"
-                            editable={false}
-                          />
-                        </View>
-                        <View style={styles.bankBox}>
-                          <Text style={styles.bankLinkedLabel}>Purpose</Text>
-                          <TextInput
-                            style={styles.disabledInput}
-                            value={bankDetails.purpose || 'N/A'}
-                            autoCapitalize="characters"
-                            editable={false}
-                          />
-                        </View>
-                        {bankDetails.country && bankDetails.country.toLowerCase() === 'india' && (
-                          <View style={styles.bankBox}>
-                            <Text style={styles.bankLinkedLabel}>Permanent Account Num (PAN)</Text>
-                            <TextInput
-                              style={styles.disabledInput}
-                              value={bankDetails.panNumber || 'N/A'}
-                              autoCapitalize="characters"
-                              editable={false}
-                            />
-                          </View>
-                        )}
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <Text style={{ textAlign: 'center', color: theme.textSecondary }}>No bank details linked. Please link your bank account.</Text>
-                )}
-              </View>
-            </>
-          )}
+                      )}
+                    </>
+                  )}
+                </>
+              ) : (
+                <Text style={{ textAlign: 'center', color: theme.textSecondary }}>No bank details linked. Please link your bank account.</Text>
+              )}
+            </View>
+          </>
         </ScrollView>
       </View>
     </KeyboardAvoidingView>
