@@ -11,6 +11,7 @@ import {
   StatusBar,
   SafeAreaView,
   Platform,
+  BackHandler,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -93,7 +94,7 @@ const createGetHelpStyles = (theme) => StyleSheet.create({
   },
 });
 
-const GetHelp = ({ navigation }) => {
+const GetHelp = ({ navigation, route }) => {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkThemeColors : lightThemeColors;
   const styles = createGetHelpStyles(theme);
@@ -103,6 +104,30 @@ const GetHelp = ({ navigation }) => {
       StatusBar.setBarStyle('light-content');
     }
   }, [isFocused]);
+
+  useEffect(() => {
+    const backAction = () => {
+      if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
+        navigation.navigate('My Profile');
+        return true;
+      }
+      if (route && route.params && route.params.origin) {
+        navigation.navigate(route.params.origin);
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => {
+      backHandler.remove();
+      StatusBar.setHidden(false);
+    };
+  }, [navigation, route]);
   const handleEmailPress = () => {
     Linking.openURL('mailto:support@allrounderbaby.com').catch(err =>
       console.error('Failed to open mail app:', err)

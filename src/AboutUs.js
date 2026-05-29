@@ -344,6 +344,16 @@ const AboutUs = ({ navigation, route }) => {
   const [referEarnVideos, setReferEarnVideos] = useState({});
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [selectedVideoGroup, setSelectedVideoGroup] = useState(null);
+  const [instanceKey, setInstanceKey] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Incrementing key forces the ScrollView to remount and reset to top
+      setInstanceKey(prev => prev + 1);
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   useEffect(() => {
     const backAction = () => {
       if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
@@ -534,7 +544,7 @@ const AboutUs = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1434A4" />
-      <ScreenScroll contentContainerStyle={styles.scrollViewContent}>
+      <ScreenScroll key={instanceKey} contentContainerStyle={styles.scrollViewContent}>
         <LinearGradient
           colors={['#A0F0D1', '#B0E5FF']}
           start={{ x: 0, y: 0 }}

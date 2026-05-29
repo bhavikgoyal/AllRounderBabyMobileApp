@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,6 +14,7 @@ import {
   useColorScheme,
   Alert,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { format } from 'date-fns';
 import getOrderByUserId from './services/GetOrder';
@@ -220,6 +221,7 @@ const MyOrders = ({ navigation, route }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isFirstLoadDone, setIsFirstLoadDone] = useState(false);
 
 
 
@@ -241,6 +243,7 @@ const MyOrders = ({ navigation, route }) => {
         if (!userId) {
           setError('User not signed in');
           setOrders([]);
+          setIsFirstLoadDone(true);
           setLoading(false);
           return;
         }
@@ -263,6 +266,7 @@ const MyOrders = ({ navigation, route }) => {
               referenceId: p.referenceId || null,
               paymentId: p.razorpayPaymentId || null,
               paymentMethod: p.paymentMethod || null,
+              items: Array.isArray(p.items) ? p.items : [],
               amount,
               orderDateRaw,
               placedOn: orderDateRaw ? new Date(orderDateRaw) : new Date(),
@@ -276,8 +280,11 @@ const MyOrders = ({ navigation, route }) => {
         }
       } catch (e) {
         setError(e.message || 'Failed to load orders');
-        setOrders([]);
+        if (!isFirstLoadDone) {
+          setOrders([]);
+        }
       } finally {
+        setIsFirstLoadDone(true);
         setLoading(false);
       }
     }
@@ -285,10 +292,23 @@ const MyOrders = ({ navigation, route }) => {
     loadOrders();
   }, [route]);
 
+  const filteredOrders = useMemo(() => {
+    if (!query) return orders;
+    const q = query.toLowerCase();
+    return orders.filter((o) => {
+      if ((o.id || '').toLowerCase().includes(q)) return true;
+      if ((o.referenceId || '').toLowerCase().includes(q)) return true;
+      if ((o.paymentId || '').toLowerCase().includes(q)) return true;
+      if (Array.isArray(o.items) && o.items.some((i) => (i && i.name ? String(i.name).toLowerCase().includes(q) : false))) return true;
+      return false;
+    });
+  }, [orders, query]);
+
+
   useEffect(() => {
     const backAction = () => {
       if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
-        navigation.goBack();
+        navigation.navigate('My Profile');
         return true;
       }
       if (route && route.params && route.params.origin) {
@@ -298,9 +318,16 @@ const MyOrders = ({ navigation, route }) => {
       return false;
     };
 
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-    return () => backHandler.remove();
-  }, [navigation]);
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => {
+      backHandler.remove();
+      StatusBar.setHidden(false);
+    };
+  }, [navigation, route]);
 
 
   const OrderCard = ({ order }) => {
@@ -425,23 +452,27 @@ const MyOrders = ({ navigation, route }) => {
             </View>
 
             <View style={styles.ordersList}>
-              {loading && <Text style={{ color: theme.textSecondary, marginBottom: 8 }}>Loading orders...</Text>}
+              {loading && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                  <ActivityIndicator size="small" color={theme.buttonBackground} style={{ marginRight: 8 }} />
+                  <Text style={{ color: theme.textSecondary }}>Loading orders...</Text>
+                </View>
+              )}
 
-              {!loading && orders.length === 0 && (
+              {!!error && (
+                <Text style={{ color: '#b00020', marginBottom: 10 }}>{error}</Text>
+              )}
+
+              {!loading && filteredOrders.length === 0 && (
                 <View style={styles.orderCard}>
                   <View style={{ alignItems: 'center', paddingVertical: 40 }}>
                     <Image source={{ uri: 'https://img.icons8.com/ios-glyphs/90/000000/box.png' }} style={{ width: 64, height: 64, marginBottom: 12, tintColor: theme.textSecondary }} />
-                    <Text style={{ color: theme.textSecondary }}>No orders found</Text>
+                    <Text style={{ color: theme.textSecondary }}>{isFirstLoadDone ? 'No orders found' : 'Preparing your orders...'}</Text>
                   </View>
                 </View>
               )}
 
-              {!loading && orders.length > 0 && orders.filter(o => {
-                if (!query) return true;
-                const q = query.toLowerCase();
-                if ((o.id || '').toLowerCase().includes(q)) return true;
-                return o.items.some(i => (i.name || '').toLowerCase().includes(q));
-              }).map(o => (
+              {!loading && filteredOrders.length > 0 && filteredOrders.map(o => (
                 <OrderCard key={o.id} order={o} />
               ))}
             </View>
