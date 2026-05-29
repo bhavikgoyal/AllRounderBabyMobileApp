@@ -94,19 +94,25 @@ const createGetHelpStyles = (theme) => StyleSheet.create({
   },
 });
 
-const GetHelp = ({ navigation }) => {
+const GetHelp = ({ navigation, route }) => {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkThemeColors : lightThemeColors;
   const styles = createGetHelpStyles(theme);
   const isFocused = useIsFocused();
   useEffect(() => {
     const backAction = () => {
-      navigation.navigate('My Profile');
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else if (route.params?.origin) {
+        navigation.navigate(route.params.origin);
+      } else {
+        navigation.goBack();
+      }
       return true;
     };
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
     return () => backHandler.remove();
-  }, [navigation]);
+  }, [navigation, route]);
 
   useEffect(() => {
     if (isFocused) {

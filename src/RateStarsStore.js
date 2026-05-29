@@ -11,7 +11,13 @@ const RateStarsStore = ({ navigation, route }) => {
 
   useEffect(() => {
     const backAction = () => {
-      navigation.navigate('My Profile');
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else if (route.params?.origin) {
+        navigation.navigate(route.params.origin);
+      } else {
+        navigation.goBack();
+      }
       return true;
     };
 
@@ -24,7 +30,7 @@ const RateStarsStore = ({ navigation, route }) => {
       backHandler.remove();
       StatusBar.setHidden(false);
     };
-  }, [navigation]);
+  }, [navigation, route]);
 
   return (
     <View style={[styles.container, backgroundStyle]}>

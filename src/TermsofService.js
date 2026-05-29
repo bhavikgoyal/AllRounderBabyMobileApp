@@ -1,31 +1,50 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, BackHandler, StatusBar, useColorScheme, useWindowDimensions } from 'react-native';
 import ScreenScroll from './components/ScreenScroll';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
+
+const initialExpandedState = {
+  '1': true,
+  '2': false,
+  '3': false,
+  '4': false,
+  '5': false,
+  '6': false,
+  '7': false,
+  '8': false,
+  '9': false,
+  '10': false,
+  '11': false,
+};
 
 const TermsofService = ({ navigation, route }) => {
   const isDarkMode = useColorScheme() === 'dark';
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
-  const landscapeSection = { width: '100%', marginHorizontal: 0, paddingHorizontal: 8 };
-  const infoBoxLandscape = { width: '100%', maxWidth: undefined, marginHorizontal: 0, paddingHorizontal: 12 };
-  if (isLandscape) {
-    try {
-      if (styles && styles.sectionContainer) {
-        Object.assign(styles.sectionContainer, { width: '100%', marginHorizontal: 0, paddingHorizontal: 8, alignSelf: 'stretch' });
-      }
-      if (styles && styles.infoBox) {
-        Object.assign(styles.infoBox, { width: '100%', maxWidth: undefined, marginHorizontal: 0, paddingHorizontal: 12, alignSelf: 'stretch' });
-      }
-    } catch (e) {
-    }
-  }
+  const [instanceKey, setInstanceKey] = useState(0);
+  const [expandedSections, setExpandedSections] = useState(initialExpandedState);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setExpandedSections(initialExpandedState);
+      setInstanceKey(prev => prev + 1);
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  const dynamicSectionContainerStyle = isLandscape ? { width: '100%', marginHorizontal: 0, paddingHorizontal: 8, alignSelf: 'stretch' } : {};
+
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#2a3144' : Colors.white,
   };
   useEffect(() => {
     const backAction = () => {
-      navigation.navigate('My Profile');
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else if (route.params?.origin) {
+        navigation.navigate(route.params.origin);
+      }
       return true;
     };
 
@@ -36,30 +55,18 @@ const TermsofService = ({ navigation, route }) => {
 
     return () => {
       backHandler.remove();
-      StatusBar.setHidden(false);
     };
-  }, [navigation]);
-  const [expandedSections, setExpandedSections] = React.useState({
-    '1': true,
-    '2': false,
-    '3': false,
-    '4': false,
-    '5': false,
-    '6': false,
-    '7': false,
-    '8': false,
-    '9': false,
-    '10': false,
-    '11': false,
-  });
+  }, [navigation, route]);
+
   const toggleSection = (id) => {
     setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
   };
   return (
     <View style={[styles.container, backgroundStyle]}>
-      <ScreenScroll contentContainerStyle={styles.scrollContainer}>
+      <ScreenScroll key={instanceKey} contentContainerStyle={styles.scrollContainer}>
         <View style={[
           styles.sectionContainer,
+          dynamicSectionContainerStyle,
           { backgroundColor: isDarkMode ? '#282c34' : '#ffffff' },
           { borderColor: isDarkMode ? '#444' : '#e0e0e0' }
         ]}>
@@ -71,7 +78,7 @@ const TermsofService = ({ navigation, route }) => {
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('1')}>
               <Text style={styles.sectionHeader}>
-                1.  Introduction And Acceptance Of Terms
+                1.  Introduction and Acceptance of Terms
               </Text>
             </TouchableOpacity>
             {expandedSections['1'] && (
@@ -151,7 +158,7 @@ const TermsofService = ({ navigation, route }) => {
           </View>
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('2')}>
-              <Text style={styles.sectionHeader}>2. Eligibility, Accounts And Access Control</Text>
+              <Text style={styles.sectionHeader}>2. Eligibility, Accounts and Access Control</Text>
             </TouchableOpacity>
             {expandedSections['2'] && (
               <>
@@ -267,7 +274,7 @@ const TermsofService = ({ navigation, route }) => {
           </View>
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('3')}>
-              <Text style={styles.sectionHeader}>3. Payments, Pricing And Refund</Text>
+              <Text style={styles.sectionHeader}>3. Payments, Pricing and Refund</Text>
             </TouchableOpacity>
             {expandedSections['3'] && (
               <>
@@ -342,7 +349,7 @@ const TermsofService = ({ navigation, route }) => {
           </View>
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('4')}>
-              <Text style={styles.sectionHeader}>4. Rewards, Reffrral And Feedback Program</Text>
+              <Text style={styles.sectionHeader}>4. Rewards, Referral and Feedback Program</Text>
             </TouchableOpacity>
             {expandedSections['4'] && (
               <>
@@ -556,7 +563,7 @@ const TermsofService = ({ navigation, route }) => {
           </View>
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('5')}>
-              <Text style={styles.sectionHeader}>5. Content, Intellectual Property And Usage Restrictions</Text>
+              <Text style={styles.sectionHeader}>5. Content, Intellectual Property and Usage Restrictions</Text>
             </TouchableOpacity>
             {expandedSections['5'] && (
               <>
@@ -636,7 +643,7 @@ const TermsofService = ({ navigation, route }) => {
           </View>
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('6')}>
-              <Text style={styles.sectionHeader}>6. Disclaimers And Limmitation Of Liability</Text>
+              <Text style={styles.sectionHeader}>6. Disclaimers and Limitation of Liability</Text>
             </TouchableOpacity>
             {expandedSections['6'] && (
               <>
@@ -718,7 +725,7 @@ const TermsofService = ({ navigation, route }) => {
           </View>
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('7')}>
-              <Text style={styles.sectionHeader}>7. Privacy, Data And User Information</Text>
+              <Text style={styles.sectionHeader}>7. Privacy, Data and User Information</Text>
             </TouchableOpacity>
             {expandedSections['7'] && (
               <>
@@ -810,7 +817,7 @@ const TermsofService = ({ navigation, route }) => {
           </View>
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('8')}>
-              <Text style={styles.sectionHeader}>8. Termination, Suspension And User Actions</Text>
+              <Text style={styles.sectionHeader}>8. Termination, Suspension and User Actions</Text>
             </TouchableOpacity>
             {expandedSections['8'] && (
               <>
@@ -875,7 +882,7 @@ const TermsofService = ({ navigation, route }) => {
           </View>
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('9')}>
-              <Text style={styles.sectionHeader}>9. Governing Law And Dispute Resolution</Text>
+              <Text style={styles.sectionHeader}>9. Governing Law and Dispute Resolution</Text>
             </TouchableOpacity>
             {expandedSections['9'] && (
               <>

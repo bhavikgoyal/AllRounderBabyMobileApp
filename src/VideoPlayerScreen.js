@@ -6,6 +6,7 @@ import { useRoute, useNavigation, useFocusEffect, } from "@react-navigation/nati
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "./config/api";
 
+
 const VideoPlayerScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
@@ -410,8 +411,19 @@ const VideoPlayerScreen = () => {
                   <Text style={styles.seekArrow}>↺</Text>
                   <Text style={styles.seekLabel}>10</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={togglePlayPause} style={styles.playButton} activeOpacity={0.7}>
-                  <Text style={styles.playIcon}>{isPlaying ? '❚❚' : '▶'}</Text>
+                <TouchableOpacity
+                  onPress={togglePlayPause}
+                  style={styles.playButton}
+                  activeOpacity={0.7}
+                >
+                  <Image
+                    source={
+                      isPlaying
+                        ? require('../img/pause_icon_001.png')
+                        : require('../img/play_icon_001.png')
+                    }
+                    style={styles.playIcon}
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => seekRelative(10)} style={styles.seekButton} activeOpacity={0.7}>
                   <Text style={styles.seekArrow}>↻</Text>
@@ -576,19 +588,21 @@ const styles = StyleSheet.create({
     marginTop: -2,
     fontWeight: '600',
   },
-  playButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  // playButton: {
+  //   width: 50,
+  //   height: 50,
+  //   borderRadius: 20,
+  //   backgroundColor: 'rgba(255,255,255,0.18)',
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  // },
+
   playIcon: {
-    color: '#fff',
-    fontSize: 35,
-    textAlign: 'center',
-    includeFontPadding: false,
+    width: 28,
+    height: 28,
+    resizeMode: 'contain',
+    tintColor: '#fff',
+    marginLeft: 2,
   },
   bottomBar: {
     marginLeft: 10,

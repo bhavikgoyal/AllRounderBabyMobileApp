@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { StatusBar } from 'react-native';
-import { StyleSheet, Text, View, TouchableOpacity, Image, useColorScheme, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, useColorScheme, Alert, ActivityIndicator } from 'react-native';
 import ScreenScroll from './components/ScreenScroll';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
@@ -74,6 +74,7 @@ const Profile = ({ navigation, route }) => {
     const isDarkMode = useColorScheme() === 'dark';
     const theme = isDarkMode ? AppColors.dark : AppColors.light;
     const isFocused = useIsFocused();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
     useEffect(() => {
         if (isFocused) {
             StatusBar.setBarStyle('light-content');
@@ -86,6 +87,8 @@ const Profile = ({ navigation, route }) => {
             {
                 text: "OK",
                 onPress: async () => {
+                    navigation.setParams({ hideFooter: true });
+                    setIsLoggingOut(true);
                     try {
                         const token = await AsyncStorage.getItem('token');
                         const userId = await AsyncStorage.getItem('userId');
@@ -137,6 +140,8 @@ const Profile = ({ navigation, route }) => {
                         console.error('Error during logout process:', error);
                         Alert.alert("Logout Error", "An unexpected error occurred during logout. Clearing local session as a fallback.");
                         await clearLocalSessionAndNavigate();
+                    } finally {
+                        setIsLoggingOut(false);
                     }
                 },
             }
@@ -339,6 +344,18 @@ const Profile = ({ navigation, route }) => {
                     </View>
                 </ScreenScroll>
             </View>
+            {isLoggingOut && (
+                <View style={{
+                    ...StyleSheet.absoluteFillObject,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 9999
+                }}>
+                    <ActivityIndicator size="large" color={theme.primary} />
+                    <Text style={{ color: '#fff', marginTop: 10, fontWeight: '600' }}>Logging out...</Text>
+                </View>
+            )}
         </View>
     );
 };

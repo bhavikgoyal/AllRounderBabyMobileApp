@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,35 +14,47 @@ import {
 import ScreenScroll from './components/ScreenScroll';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 
-
+const initialExpandedState = {
+  '1': true,
+  '2': false,
+  '3': false,
+  '4': false,
+  '5': false,
+  '6': false,
+  '7': false,
+  '8': false,
+  '9': false,
+  '10': false,
+  '11': false,
+  '12': false,
+};
 
 const PrivacyPolicy = ({ navigation, route }) => {
   const isDarkMode = useColorScheme() === 'dark';
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#2a3144' : Colors.white,
   };
-  const { width, height } = useWindowDimensions();
-  const isLandscape = width > height;
+  const [instanceKey, setInstanceKey] = useState(0);
+  const [expandedSections, setExpandedSections] = useState(initialExpandedState);
 
-  const [expandedSections, setExpandedSections] = React.useState({
-    '1': true,
-    '2': false,
-    '3': false,
-    '4': false,
-    '5': false,
-    '6': false,
-    '7': false,
-    '8': false,
-    '9': false,
-    '10': false,
-    '11': false,
-    '12': false,
-  });
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setExpandedSections(initialExpandedState);
+      setInstanceKey(prev => prev + 1);
+    });
+    return unsubscribe;
+  }, [navigation]);
 
 
   useEffect(() => {
     const backAction = () => {
-      navigation.navigate('My Profile');
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else if (route.params?.origin) {
+        navigation.navigate(route.params.origin);
+      } else {
+        navigation.goBack();
+      }
       return true;
     };
 
@@ -55,7 +67,7 @@ const PrivacyPolicy = ({ navigation, route }) => {
       backHandler.remove();
       StatusBar.setHidden(false);
     };
-  }, [navigation]);
+  }, [navigation, route]);
 
   const toggleSection = (id) => {
     setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
@@ -63,7 +75,7 @@ const PrivacyPolicy = ({ navigation, route }) => {
 
   return (
     <View style={[styles.container, backgroundStyle]}>
-      <ScreenScroll contentContainerStyle={styles.scrollContainer}>
+      <ScreenScroll key={instanceKey} contentContainerStyle={styles.scrollContainer}>
         <View style={[
           styles.sectionContainer,
           { backgroundColor: isDarkMode ? '#282c34' : '#ffffff' },
