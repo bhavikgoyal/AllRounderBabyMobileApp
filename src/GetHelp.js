@@ -11,6 +11,7 @@ import {
   StatusBar,
   SafeAreaView,
   Platform,
+  BackHandler,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -98,6 +99,15 @@ const GetHelp = ({ navigation }) => {
   const theme = colorScheme === 'dark' ? darkThemeColors : lightThemeColors;
   const styles = createGetHelpStyles(theme);
   const isFocused = useIsFocused();
+  useEffect(() => {
+    const backAction = () => {
+      navigation.navigate('My Profile');
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [navigation]);
+
   useEffect(() => {
     if (isFocused) {
       StatusBar.setBarStyle('light-content');

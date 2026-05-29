@@ -16,10 +16,7 @@ const AppVersion = ({ navigation }) => {
 
   useEffect(() => {
     const backAction = () => {
-      if (navigation.canGoBack()) {
-        navigation.navigate('My Profile');
-      } else {
-      }
+      navigation.navigate('My Profile');
       return true;
     };
 
