@@ -48,14 +48,15 @@ const PrivacyPolicy = ({ navigation, route }) => {
 
   useEffect(() => {
     const backAction = () => {
-      if (navigation.canGoBack()) {
-        navigation.goBack();
-      } else if (route.params?.origin) {
-        navigation.navigate(route.params.origin);
-      } else {
-        navigation.goBack();
+      if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
+        navigation.navigate('My Profile');
+        return true;
       }
-      return true;
+      if (route && route.params && route.params.origin) {
+        navigation.navigate(route.params.origin);
+        return true;
+      }
+      return false;
     };
 
     const backHandler = BackHandler.addEventListener(

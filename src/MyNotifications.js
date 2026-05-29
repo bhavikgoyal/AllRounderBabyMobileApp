@@ -37,7 +37,7 @@ const dark = {
 
 const popupDark = { bg: '#333', text: '#fff', allow: '#63B3ED', deny: '#ccc' };
 
-const NotificationSettings = ({ navigation }) => {
+const NotificationSettings = ({ navigation, route }) => {
   const mode = useColorScheme();
   const theme = mode === 'dark' ? dark : light;
   const popupTheme = mode === 'dark' ? popupDark : popupLight;
@@ -90,19 +90,30 @@ const NotificationSettings = ({ navigation }) => {
     };
   }, [checkNotificationPermission]);
 
+
   useEffect(() => {
     const backAction = () => {
-      if (navigation?.canGoBack()) {
-        navigation.goBack();
+      if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
+        navigation.navigate('My Profile');
+        return true;
+      }
+      if (route && route.params && route.params.origin) {
+        navigation.navigate(route.params.origin);
         return true;
       }
       return false;
     };
 
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
 
-    return () => backHandler.remove();
-  }, [navigation]);
+    return () => {
+      backHandler.remove();
+      StatusBar.setHidden(false);
+    };
+  }, [navigation, route]);
 
   const handleToggleNotifications = async (nextValue) => {
     try {
@@ -165,7 +176,12 @@ const NotificationSettings = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation?.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => {
+          const origin = route?.params?.origin;
+          if (origin) { navigation.navigate(origin); }
+          else if (navigation?.canGoBack()) { navigation.goBack(); }
+          else { navigation.navigate('My Profile'); }
+        }} style={styles.backButton}>
           <Image
             source={require('../img/arrowicon.png')}
             style={[styles.backIcon, { tintColor: theme.text }]}

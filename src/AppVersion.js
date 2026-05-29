@@ -4,7 +4,7 @@ import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 import DeviceInfo from 'react-native-device-info';
 
-const AppVersion = ({ navigation, route }) => {
+const AppVersion = ({ navigation }) => {
   const isDarkMode = useColorScheme() === 'dark';
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#1a202c' : '#f0f4f8',
@@ -17,11 +17,8 @@ const AppVersion = ({ navigation, route }) => {
   useEffect(() => {
     const backAction = () => {
       if (navigation.canGoBack()) {
-        navigation.goBack();
-      } else if (route.params?.origin) {
-        navigation.navigate(route.params.origin);
+        navigation.navigate('My Profile');
       } else {
-        navigation.goBack();
       }
       return true;
     };
@@ -35,7 +32,7 @@ const AppVersion = ({ navigation, route }) => {
       backHandler.remove();
       StatusBar.setHidden(false);
     };
-  }, [navigation, route]);
+  }, [navigation]);
 
 
   const [version, setVersion] = useState(DeviceInfo.getVersion());

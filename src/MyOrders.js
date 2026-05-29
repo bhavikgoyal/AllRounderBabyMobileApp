@@ -304,10 +304,11 @@ const MyOrders = ({ navigation, route }) => {
     });
   }, [orders, query]);
 
+
   useEffect(() => {
     const backAction = () => {
       if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
-        navigation.goBack();
+        navigation.navigate('My Profile');
         return true;
       }
       if (route && route.params && route.params.origin) {
@@ -317,9 +318,16 @@ const MyOrders = ({ navigation, route }) => {
       return false;
     };
 
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-    return () => backHandler.remove();
-  }, [navigation]);
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => {
+      backHandler.remove();
+      StatusBar.setHidden(false);
+    };
+  }, [navigation, route]);
 
 
   const OrderCard = ({ order }) => {

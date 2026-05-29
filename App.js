@@ -251,9 +251,7 @@ const App = () => {
     };
   }, []);
   const [initialRoute, setInitialRoute] = useState(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isLoggedInRef = React.useRef(false);
-  const [currentRouteParams, setCurrentRouteParams] = useState({});
   const colorScheme = useColorScheme();
   const currentThemeColors = colorScheme === 'dark' ? DarkThemeColors : LightThemeColors;
   const navigationTheme = colorScheme === 'dark' ? AppDarkTheme : AppLightTheme;
@@ -504,7 +502,6 @@ const App = () => {
           {
             text: "OK",
             onPress: async () => {
-              setIsLoggingOut(true);
               try {
                 const token = await AsyncStorage.getItem('token');
                 const userId = await AsyncStorage.getItem('userId');
@@ -530,8 +527,6 @@ const App = () => {
                 console.error('Error during logout process:', error);
                 Alert.alert("Logout Error", "Failed to log out. Please check your network connection and try again.");
                 clearLocalSessionAndNavigate();
-              } finally {
-                setIsLoggingOut(false);
               }
             }
           }
@@ -686,12 +681,6 @@ const App = () => {
             onStateChange={() => {
               try {
                 if (!navigationRef.isReady()) return;
-
-                const currentRoute = navigationRef.getCurrentRoute();
-                if (currentRoute) {
-                  setCurrentRouteParams(currentRoute.params || {});
-                }
-
                 const rootState = typeof navigationRef.getRootState === 'function' ? navigationRef.getRootState() : null;
 
                 if (rootState && rootState.routes && typeof rootState.index === 'number') {
@@ -744,7 +733,7 @@ const App = () => {
         {(() => {
           const guestFooterPages = ['Login', 'LoginPage', 'Splash', 'VideoPlayerScreen', 'TermsofServicewithoutLog', 'PrivacyPolicywithoutLog'];
           try {
-            if (isLoggingOut || initialRoute === 'Splash' || currentRouteParams?.hideFooter) return null;
+            if (initialRoute === 'Splash') return null;
             if (navigationRef && typeof navigationRef.isReady === 'function' && navigationRef.isReady()) {
               const rootState = navigationRef.getRootState && navigationRef.getRootState();
               if (rootState) {
@@ -768,18 +757,6 @@ const App = () => {
           }
           return !guestFooterPages.includes(activeFooter) ? <FooterBar /> : null;
         })()}
-        {isLoggingOut && (
-          <View style={{
-            ...StyleSheet.absoluteFillObject,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 99999
-          }}>
-            <ActivityIndicator size="large" color={currentThemeColors.primary} />
-            <Text style={{ color: '#fff', marginTop: 10, fontWeight: '600' }}>Logging out...</Text>
-          </View>
-        )}
       </SafeAreaProvider>
     </SafeAreaView>
   );

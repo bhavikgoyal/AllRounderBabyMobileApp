@@ -232,20 +232,18 @@ const Profile = ({ navigation, route }) => {
     };
 
     React.useEffect(() => {
+        if (!isFocused) return;
         const backAction = () => {
-            if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
+            if (navigation.canGoBack()) {
                 navigation.goBack();
-                return true;
+            } else {
+                navigation.navigate('Home');
             }
-            if (route && route.params && route.params.origin) {
-                navigation.navigate(route.params.origin);
-                return true;
-            }
-            return false;
+            return true;
         };
         const sub = require('react-native').BackHandler.addEventListener('hardwareBackPress', backAction);
         return () => sub.remove();
-    }, [navigation, route]);
+    }, [navigation, isFocused]);
     return (
 
 

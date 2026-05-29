@@ -100,25 +100,34 @@ const GetHelp = ({ navigation, route }) => {
   const styles = createGetHelpStyles(theme);
   const isFocused = useIsFocused();
   useEffect(() => {
-    const backAction = () => {
-      if (navigation.canGoBack()) {
-        navigation.goBack();
-      } else if (route.params?.origin) {
-        navigation.navigate(route.params.origin);
-      } else {
-        navigation.goBack();
-      }
-      return true;
-    };
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-    return () => backHandler.remove();
-  }, [navigation, route]);
-
-  useEffect(() => {
     if (isFocused) {
       StatusBar.setBarStyle('light-content');
     }
   }, [isFocused]);
+
+  useEffect(() => {
+    const backAction = () => {
+      if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
+        navigation.navigate('My Profile');
+        return true;
+      }
+      if (route && route.params && route.params.origin) {
+        navigation.navigate(route.params.origin);
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => {
+      backHandler.remove();
+      StatusBar.setHidden(false);
+    };
+  }, [navigation, route]);
   const handleEmailPress = () => {
     Linking.openURL('mailto:support@allrounderbaby.com').catch(err =>
       console.error('Failed to open mail app:', err)
