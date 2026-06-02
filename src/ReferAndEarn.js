@@ -106,21 +106,7 @@ const ReferAndEarn = ({ navigation }) => {
   const isDarkMode = useColorScheme() === 'dark';
 
   const isLandscape = windowWidth > windowHeight;
-  // Keep portrait sizes from styles; apply larger dimensions in landscape only
-  const landscapeThumbWidth = Math.max(120, Math.round(windowWidth * 0.82));
-  const landscapeThumbHeight = Math.max(420, Math.round(windowHeight * 0.85));
-  const imageLocalStyle = isLandscape
-    ? {
-      width: windowWidth - 40, // match horizontal margin of importantDetailsBox
-      height: Math.max(470, Math.round(windowHeight * 0.55)),
-      borderRadius: 8, // match importantDetailsBox
-      alignSelf: 'center',
-    }
-    : null;
-  const thumbnailWrapperLocal = isLandscape
-    ? { width: landscapeThumbWidth, height: landscapeThumbHeight, alignItems: 'center', justifyContent: 'center' }
-    : null;
-  const importantBoxLocal = isLandscape ? { minHeight: landscapeThumbHeight + 0 } : null;
+  const isTablet = windowWidth >= 600;
 
   const [code, setCode] = useState("Loading...");
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -258,7 +244,7 @@ const ReferAndEarn = ({ navigation }) => {
 
   const fetchReferEarnVideos = async (folderId) => {
     const netInfoState = await NetInfo.fetch();
-    if (!netInfoState.isInternetReachable) {
+    if (!netInfoState.isConnected) {
       Alert.alert(
         "No Internet Connection",
         "Please check your internet connection and try again."
@@ -304,7 +290,7 @@ const ReferAndEarn = ({ navigation }) => {
 
   const vdoCipher_api = async (videoId) => {
     const netInfoState = await NetInfo.fetch();
-    if (!netInfoState.isInternetReachable) {
+    if (!netInfoState.isConnected) {
       Alert.alert("No Internet Connection", "Please check your internet connection and try again.");
       return { error: true, message: "No internet connection" };
     }
@@ -404,7 +390,7 @@ const ReferAndEarn = ({ navigation }) => {
 
   const handleVideoPlayback = async (videoId, language, title, poster, stepParam) => {
     const netInfoState = await NetInfo.fetch();
-    if (!netInfoState.isInternetReachable) {
+    if (!netInfoState.isConnected) {
       Alert.alert("No Internet Connection", "Please check your internet connection and try again.");
       return;
     }
@@ -557,20 +543,47 @@ const ReferAndEarn = ({ navigation }) => {
     return videos;
   }, [referEarnVideos]);
 
-  // Compute responsive image size so it never gets cropped on different screens
+  // responsive sizing for REFERnEARN image to avoid cropping across devices
   const referImageSource = require('../img/REFERnEARN.png');
   const resolved = Image.resolveAssetSource(referImageSource) || {};
   const imgAspect = (resolved.width && resolved.height) ? (resolved.width / resolved.height) : (16 / 9);
-  const maxWidth = Math.min(windowWidth - 40, windowWidth);
-  let responsiveWidth = maxWidth;
-  let responsiveHeight = Math.round(responsiveWidth / imgAspect);
-  // limit height so it doesn't push too far on small screens
-  const maxHeight = Math.round(windowHeight * 0.75);
-  if (responsiveHeight > maxHeight) {
-    responsiveHeight = maxHeight;
-    responsiveWidth = Math.round(responsiveHeight * imgAspect);
+  
+  // Calculate dimensions based on device type and orientation
+  const horizontalMargin = isTablet ? 40 : 20;
+  const containerPadding = isTablet ? 20 : 10;
+  const referMaxWidth = windowWidth - (horizontalMargin * 2) - (containerPadding * 2);
+  
+  let referWidth = referMaxWidth;
+  let referHeight = Math.round(referWidth / imgAspect);
+  
+  // Adjust max height based on orientation and device type
+  let maxHeightPercentage = 0.3; // default for portrait mobile
+  if (isLandscape) {
+    maxHeightPercentage = isTablet ? 0.5 : 0.4;
+  } else {
+    maxHeightPercentage = isTablet ? 0.35 : 0.3;
   }
-  const responsiveImageStyle = { width: responsiveWidth, height: responsiveHeight, borderRadius: 8 };
+  
+  const referMaxHeight = Math.round(windowHeight * maxHeightPercentage);
+  if (referHeight > referMaxHeight) {
+    referHeight = referMaxHeight;
+    referWidth = Math.round(referHeight * imgAspect);
+  }
+  
+  const responsiveImageStyle = { 
+    width: referWidth, 
+    height: referHeight, 
+    borderRadius: isTablet ? 8 : 5 
+  };
+  
+  const thumbnailWrapperLocal = {
+    width: referWidth,
+    height: referHeight,
+    alignItems: 'center',
+    justifyContent: 'center'
+  };
+  
+  const importantBoxLocal = isLandscape ? { minHeight: referHeight + 40 } : null;
 
   const handleThumbnailClickForReferAndEarn = () => {
     if (playableReferEarnVideos.length > 0) {
@@ -596,11 +609,10 @@ const ReferAndEarn = ({ navigation }) => {
       <ScreenScroll contentContainerStyle={styles.scrollViewContent}>
         <LinearGradient
           colors={['#FFF8E5', '#FFFDEB']}
-          style={[styles.importantDetailsBox, { marginTop: 10, color: isDarkMode ? '#fff' : '#003366' }]}>
+          style={[styles.importantDetailsBox, { marginTop: 10, marginBottom: isTablet ? 8 : 5,   minHeight: isTablet ? 150 : 110, color: isDarkMode ? '#fff' : '#003366' }]}>
           <Text style={styles.gradientTitleText}>You earn ₹3,000 / $30 every time</Text>
           <Text style={styles.gradientTitleText}>Refer a friend & they get 10% OFF</Text>
         </LinearGradient>
-        <View style={styles.sectionDivider} />
         <View style={styles.importantDetailsBox}>
           <Text style={[styles.referralCodeLabel, { color: isDarkMode ? '#fff' : '#1434a4' }]}>Your Referral Code</Text>
           <View style={styles.referralCodeDisplay}>
@@ -622,14 +634,11 @@ const ReferAndEarn = ({ navigation }) => {
             </TouchableOpacity> */}
           </View>
         </View>
-        <View style={styles.sectionDivider} />
-        {isLandscape && (
-          <View style={{ height: 20 }} />
-        )}
-        <View style={[styles.importantDetailsBox, { padding: 0, marginTop: 10 },]}>
+        <View style={[styles.sectionDivider, { marginVertical: isTablet ? 12 : 8 }]} />
+        <View style={[styles.importantDetailsBox, importantBoxLocal, { padding: isTablet ? 20 : 10, marginVertical: 3, marginTop: isTablet ? 8 : 5 }]}>
           <TouchableOpacity onPress={handleThumbnailClickForReferAndEarn} activeOpacity={0.9} style={{ alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-            <View style={[styles.thumbnailWrapper, thumbnailWrapperLocal]}>
-              <Image source={referImageSource} style={[ /* keep existing styles for landscape, but prefer responsive */ responsiveImageStyle, imageLocalStyle]} resizeMode="contain" />
+            <View style={thumbnailWrapperLocal}>
+              <Image source={referImageSource} style={responsiveImageStyle} resizeMode="contain" />
               <Animated.View
                 pointerEvents="none"
                 style={[
@@ -653,12 +662,9 @@ const ReferAndEarn = ({ navigation }) => {
             </View>
           </TouchableOpacity>
         </View>
+        <View style={[styles.sectionDivider, { marginVertical: isTablet ? 12 : 8 }]} />
 
-        {isLandscape && (
-          <View style={{ height: 30 }} />
-        )}
-
-        <View style={[styles.importantDetailsBox, { marginTop: 20 }]}>
+        <View style={styles.importantDetailsBox}>
           <Text style={[styles.contentHeader, { color: isDarkMode ? '#fff' : '#1434a4' }]}>How to Refer & Earn?</Text>
           <Text style={styles.listItem}>
             <Text style={styles.boldText}>1.</Text>
@@ -675,7 +681,7 @@ const ReferAndEarn = ({ navigation }) => {
             <Text>Earn INR ₹3,000 / USD $30 every time your referral makes a verified purchase!</Text>
           </Text>
         </View>
-        <View style={styles.sectionDivider} />
+        <View style={[styles.sectionDivider, { marginVertical: isTablet ? 12 : 8 }]} />
 
         <View style={styles.importantDetailsBox}>
           <Text style={[styles.sectionHeader, { color: isDarkMode ? '#fff' : '#1434a4' }]}>Important Details</Text>
@@ -691,7 +697,7 @@ const ReferAndEarn = ({ navigation }) => {
 
         {showDetails && (
           <View style={styles.sectionLinkDivider}>
-            <View style={styles.sectionDivider} />
+            <View style={[styles.sectionDivider, { marginTop: isTablet ? 12 : 8, marginBottom: isTablet ? 8 : 5 }]} />
 
             <View style={styles.importantDetailsBox}>
 
@@ -902,27 +908,35 @@ const ReferAndEarn = ({ navigation }) => {
   );
 };
 
-const createReferAndEarnStyles = (theme, windowWidth = 360, windowHeight = 640) => StyleSheet.create({
+const createReferAndEarnStyles = (theme, windowWidth = 360, windowHeight = 640) => {
+  const isTablet = windowWidth >= 600;
+  const contentPadding = isTablet ? 25 : 15;
+  const horizontalMargin = isTablet ? 40 : 20;
+  const baseFontSize = isTablet ? 18 : 16;
+  const titleFontSize = isTablet ? 24 : 20;
+  const headerFontSize = isTablet ? 22 : 18;
+  
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.screenBackground,
   },
   Thumbnail: {
-    fontSize: 17,
+    fontSize: baseFontSize + 1,
   },
   sectionHeader: {
     marginHorizontal: 0,
     marginTop: 0,
-    marginBottom: 12,
-    fontSize: 20,
+    marginBottom: isTablet ? 16 : 12,
+    fontSize: titleFontSize,
     fontWeight: '600',
   },
   importantDetailsBox: {
-    marginHorizontal: 20,
+    marginHorizontal: horizontalMargin,
     marginTop: 0,
-    padding: 15,
+    padding: contentPadding,
     backgroundColor: theme.cardBackground,
-    borderRadius: 8,
+    borderRadius: isTablet ? 12 : 8,
     borderWidth: theme.elevation === 0 ? 1 : 0,
     borderColor: theme.borderColor,
     elevation: theme.elevation / 2,
@@ -942,47 +956,46 @@ const createReferAndEarnStyles = (theme, windowWidth = 360, windowHeight = 640) 
     marginBottom: 15,
   },
   detailPoint: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: baseFontSize - 1,
+    lineHeight: isTablet ? 26 : 22,
     color: theme.textSecondary,
-    // marginBottom: 10,
-    marginHorizontal: 10,
+    marginHorizontal: isTablet ? 15 : 10,
   },
   scrollViewContent: {
     flexGrow: 1,
-    paddingBottom: 20,
+    paddingBottom: isTablet ? 30 : 20,
   },
   gradientTitleText: {
-    fontSize: 17,
+    fontSize: headerFontSize - 1,
     textAlign: 'center',
     marginHorizontal: 0,
     marginTop: 0,
     marginBottom: 0,
     fontWeight: '600',
     color: '#1A202C',
-    lineHeight: 24,
+    lineHeight: isTablet ? 28 : 24,
   },
   sectionDivider: {
     height: 1,
     backgroundColor: theme.borderColor,
-    marginHorizontal: 20,
-    marginVertical: 15,
+    marginHorizontal: horizontalMargin,
+    marginVertical: isTablet ? 12 : 8,
   },
   referralCodeLabel: {
     textAlign: 'center',
     fontWeight: '600',
-    fontSize: 18,
+    fontSize: titleFontSize,
     marginTop: 0,
-    marginBottom: 10,
+    marginBottom: isTablet ? 15 : 10,
   },
   referralCodeDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 0,
+    marginVertical: isTablet ? 10 : 0,
   },
   referralCodeText: {
-    fontSize: 18,
+    fontSize: titleFontSize + 2,
     fontWeight: 'bold',
     color: theme.textSuccess,
     borderBottomWidth: 2,
@@ -992,27 +1005,26 @@ const createReferAndEarnStyles = (theme, windowWidth = 360, windowHeight = 640) 
     marginRight: 15,
   },
   copyIcon: {
-    width: 24,
-    height: 24,
+    width: isTablet ? 28 : 24,
+    height: isTablet ? 28 : 24,
     tintColor: theme.iconColor,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginHorizontal: 20,
-    marginVertical: 10,
+    marginHorizontal: isTablet ? 40 : 20,
+    marginVertical: isTablet ? 15 : 10,
   },
   primaryButton: {
     flex: 1,
     backgroundColor: theme.primaryAction,
-    paddingVertical: 8,
-    borderRadius: 8,
-    height: 35,
+    paddingVertical: isTablet ? 12 : 8,
+    borderRadius: isTablet ? 10 : 8,
+    height: isTablet ? 45 : 35,
     alignItems: 'center',
     marginHorizontal: 5,
     elevation: theme.elevation / 2,
     shadowColor: theme.bottomNavShadowColor,
-
     shadowOffset: {
       width: 0,
       height: 2
@@ -1023,7 +1035,7 @@ const createReferAndEarnStyles = (theme, windowWidth = 360, windowHeight = 640) 
   buttonTextPrimary: {
     color: theme.primaryActionText,
     fontWeight: '600',
-    fontSize: 12,
+    fontSize: baseFontSize - 2,
   },
   lastUpdatedText: {
     textAlign: 'center',
@@ -1032,28 +1044,27 @@ const createReferAndEarnStyles = (theme, windowWidth = 360, windowHeight = 640) 
     marginBottom: 20,
   },
   contentParagraph: {
-    marginHorizontal: 20,
-    fontSize: 15,
-    lineHeight: 22,
+    marginHorizontal: horizontalMargin,
+    fontSize: baseFontSize - 1,
+    lineHeight: isTablet ? 26 : 22,
     color: theme.textSecondary,
-    marginBottom: 10,
+    marginBottom: isTablet ? 15 : 10,
   },
   contentHeader: {
     marginHorizontal: 0,
     marginTop: 0,
-    marginBottom: 12,
-    fontSize: 20,
+    marginBottom: isTablet ? 16 : 12,
+    fontSize: titleFontSize,
     fontWeight: '600',
   },
   listItem: {
-    marginHorizontal: 20,
-    fontSize: 16,
-    lineHeight: 22,
+    marginHorizontal: isTablet ? 25 : 20,
+    fontSize: baseFontSize,
+    lineHeight: isTablet ? 26 : 22,
     color: theme.textSecondary,
-    // marginBottom: 8,
   },
   boldText: {
-    fontSize: 16,
+    fontSize: baseFontSize,
     fontWeight: '600',
     color: theme.textPrimary,
   },
@@ -1063,14 +1074,14 @@ const createReferAndEarnStyles = (theme, windowWidth = 360, windowHeight = 640) 
   },
   linkButton: {
     alignSelf: 'flex-end',
-    marginHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 20,
+    marginHorizontal: horizontalMargin,
+    marginTop: isTablet ? 15 : 10,
+    marginBottom: isTablet ? 30 : 20,
   },
   linkText: {
     color: theme.linkColor,
     textDecorationLine: 'underline',
-    fontSize: 15,
+    fontSize: baseFontSize - 1,
     fontWeight: '500',
   },
 
@@ -1207,6 +1218,7 @@ const createReferAndEarnStyles = (theme, windowWidth = 360, windowHeight = 640) 
   pulseShadow: { position: 'absolute', width: 80, height: 80, borderRadius: 40, left: '50%', top: '50%', zIndex: 2 },
   playButtonContainer: { position: 'absolute', left: '50%', top: '50%', zIndex: 3, transform: [{ translateX: -30 }, { translateY: -30 }] },
   playButtonCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
-  playButtonText: { color: '#1e90ff', fontSize: 26, marginLeft: 3, fontWeight: '600', marginBottom: 5, },
+  playButtonText: { color: '#1e90ff', fontSize: 26, marginLeft: 3, fontWeight: '600', marginBottom: 5, marginTop: isTablet ? 3 : 3 },
 });
+};
 export default ReferAndEarn;

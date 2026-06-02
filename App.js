@@ -1,5 +1,6 @@
 import { PermissionsAndroid, Linking } from "react-native";
 import RNScreenshotPrevent from "react-native-screenshot-prevent";
+import SplashScreen from "react-native-splash-screen";
 import React, { useEffect, useState, memo, useCallback, useMemo } from 'react';
 import './src/utils/disableConsole';
 import { View, Image, StyleSheet, SafeAreaView, Text, useColorScheme, Alert, ActivityIndicator, BackHandler, TouchableOpacity, Dimensions, Platform, StatusBar, useWindowDimensions } from 'react-native';
@@ -9,7 +10,7 @@ import { createDrawerNavigator, DrawerContentScrollView, DrawerItem } from '@rea
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import SplashScreen from './SplashScreen';
+import VideoSplashScreen from './SplashScreen';
 import messaging from '@react-native-firebase/messaging';
 import {
   requestPushNotifications,
@@ -225,12 +226,23 @@ export const CustomDrawerContent = memo(({ theme, handleLogout, ...props }) => {
 });
 
 const App = () => {
+  console.log('App mounted');
+//  K
+  // Fallback: if initialRoute hasn't been determined within a few seconds,
+  // set it to 'Login' so the app UI appears and we can debug further.
   useEffect(() => {
-    RNScreenshotPrevent.enabled(true);
-    return () => {
-      RNScreenshotPrevent.enabled(false);
-    };
-  }, []);
+    const fallback = setTimeout(() => {
+      try {
+        if (!initialRoute) {
+          console.log('initialRoute fallback: setting to Login to avoid stuck launch screen');
+          setInitialRoute('Login');
+        }
+      } catch (e) {
+        console.warn('fallback initialRoute error', e);
+      }
+    }, 6000);
+    return () => clearTimeout(fallback);
+  }, [initialRoute]);
   useEffect(() => {
     let unsubscribeForeground = null;
     (async () => {
@@ -258,6 +270,7 @@ const App = () => {
   const styles = createAppStyles(currentThemeColors);
   const [activeFooter, setActiveFooter] = useState('Home');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const prevDrawerOpenRef = React.useRef(false);
 
@@ -502,16 +515,19 @@ const App = () => {
           {
             text: "OK",
             onPress: async () => {
+              setIsLoggingOut(true);
               try {
                 const token = await AsyncStorage.getItem('token');
                 const userId = await AsyncStorage.getItem('userId');
                 const deviceKey = await AsyncStorage.getItem('deviceKey');
                 if (!userId) {
                   clearLocalSessionAndNavigate();
+                  setIsLoggingOut(false);
                   return;
                 }
                 if (!deviceKey) {
                   clearLocalSessionAndNavigate();
+                  setIsLoggingOut(false);
                   return;
                 }
                 const endpoint = `${url}Login/LogoutMobileUser?userid=${encodeURIComponent(userId)}&deviceKey=${encodeURIComponent(deviceKey)}`;
@@ -527,6 +543,8 @@ const App = () => {
                 console.error('Error during logout process:', error);
                 Alert.alert("Logout Error", "Failed to log out. Please check your network connection and try again.");
                 clearLocalSessionAndNavigate();
+              } finally {
+                setIsLoggingOut(false);
               }
             }
           }
@@ -724,7 +742,7 @@ const App = () => {
             }}
           >
             {initialRoute === 'Splash' ? (
-              <SplashScreen onVideoEnd={handleVideoEnd} />
+              <VideoSplashScreen onVideoEnd={handleVideoEnd} />
             ) : (
               renderDrawerNavigator(initialRoute)
             )}
@@ -757,6 +775,37 @@ const App = () => {
           }
           return !guestFooterPages.includes(activeFooter) ? <FooterBar /> : null;
         })()}
+        {isLoggingOut && (
+          <View style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999
+          }}>
+            <View style={{
+              backgroundColor: currentThemeColors.background,
+              padding: 30,
+              borderRadius: 10,
+              alignItems: 'center',
+              minWidth: 150
+            }}>
+              <ActivityIndicator size="large" color={currentThemeColors.primary} />
+              <Text style={{ 
+                marginTop: 15, 
+                fontSize: 16, 
+                color: currentThemeColors.text,
+                fontWeight: '500'
+              }}>
+                Logging out...
+              </Text>
+            </View>
+          </View>
+        )}
       </SafeAreaProvider>
     </SafeAreaView>
   );

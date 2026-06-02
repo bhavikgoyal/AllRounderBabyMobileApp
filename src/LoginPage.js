@@ -169,7 +169,7 @@ const LoginPage = ({ navigation }) => {
 
         try {
             const netInfo = await NetInfo.fetch();
-            if (!netInfo.isInternetReachable) {
+            if (!netInfo.isConnected) {
                 Alert.alert("No Connection", "Please check your internet.");
                 return;
             }
