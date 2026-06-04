@@ -84,7 +84,6 @@ const createMyOrdersStyles = (theme) => StyleSheet.create({
   backIcon: {
     width: 24,
     height: 24,
-    transform: [{ rotate: '180deg' }],
   },
   sectionTitle: {
     fontSize: 20,
@@ -447,7 +446,7 @@ const MyOrders = ({ navigation, route }) => {
             <View style={styles.headerRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
-                  <Image source={require('../img/arrowicon.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
+                  <Image source={require('../img/backBtn.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
                 </TouchableOpacity>
                 <Text style={[styles.sectionTitle]}>My Orders</Text>
               </View>

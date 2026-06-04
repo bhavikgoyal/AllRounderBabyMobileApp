@@ -206,7 +206,7 @@ const NotificationSettings = ({ navigation, route }) => {
           try { navigation.navigate('My Profile'); } catch (e) { }
         }} style={styles.backButton}>
           <Image
-            source={require('../img/arrowicon.png')}
+            source={require('../img/backBtn.png')}
             style={[styles.backIcon, { tintColor: theme.text }]}
           />
         </TouchableOpacity>
@@ -307,7 +307,6 @@ const styles = StyleSheet.create({
   backIcon: {
     width: 24,
     height: 24,
-    transform: [{ rotate: '180deg' }],
   },
   title: { fontSize: 20, fontWeight: 'bold' },
   subtitle: { marginTop: 15, marginBottom: 8, fontSize: 13 },

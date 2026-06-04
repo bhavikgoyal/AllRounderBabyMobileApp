@@ -7,6 +7,7 @@ import {
   Image,
   BackHandler,
   StatusBar,
+  Platform,
   useColorScheme,
   useWindowDimensions,
 
@@ -34,6 +35,9 @@ const PrivacyPolicy = ({ navigation, route }) => {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#2a3144' : Colors.white,
   };
+  const theme = isDarkMode
+    ? { cardBackground: '#282c34', cardBorder: '#444', textPrimary: '#ffffff' }
+    : { cardBackground: '#ffffff', cardBorder: '#e0e0e0', textPrimary: '#1434a4' };
   const [instanceKey, setInstanceKey] = useState(0);
   const [expandedSections, setExpandedSections] = useState(initialExpandedState);
 
@@ -79,17 +83,17 @@ const PrivacyPolicy = ({ navigation, route }) => {
       <ScreenScroll key={instanceKey} contentContainerStyle={styles.scrollContainer}>
         <View style={[
           styles.sectionContainer,
-          { backgroundColor: isDarkMode ? '#282c34' : '#ffffff' },
-          { borderColor: isDarkMode ? '#444' : '#e0e0e0' }
+          { backgroundColor: theme.cardBackground },
+          { borderColor: theme.cardBorder }
         ]}>
 
 
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, marginTop: Platform.OS === 'ios' ? 18 : 18 }}>
             <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
-              <Image source={require('../img/arrowicon.png')} style={[styles.backIcon, { tintColor: isDarkMode ? '#fff' : '#1434a4' }]} />
+              <Image source={require('../img/backBtn.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
             </TouchableOpacity>
             <Text style={[
-              styles.pageTitle, { color: isDarkMode ? '#fff' : '#1434a4', }
+              styles.pageTitle, { color: theme.textPrimary }
             ]}>Privacy Policy</Text>
           </View>
           <View style={styles.section}>
@@ -2315,7 +2319,6 @@ const styles = StyleSheet.create({
     height: 24,
     fontSize: 25,
     color: '#1434a4',
-    transform: [{ rotate: '180deg' }],
   },
 
 });

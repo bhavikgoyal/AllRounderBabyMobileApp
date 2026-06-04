@@ -179,8 +179,6 @@ const createMyReferralsStyles = (theme) => StyleSheet.create({
     width: 24,
     height: 24,
     fontSize: 25,
-    color: '#1434a4',
-    transform: [{ rotate: '180deg' }],
   },
 });
 
@@ -285,7 +283,7 @@ const MyReferrals = ({ navigation, route }) => {
 
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, marginTop: Platform.OS === 'ios' ? 18 : 18 }}>
           <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
-            <Image source={require('../img/arrowicon.png')} style={[styles.backIcon, { tintColor: isDarkMode ? '#fff' : '#1434a4' }]} />
+            <Image source={require('../img/backBtn.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
           </TouchableOpacity>
           <Text style={styles.title}>My Referrals</Text>
         </View>
@@ -293,27 +291,27 @@ const MyReferrals = ({ navigation, route }) => {
         <View style={styles.statsCard}>
           <View style={styles.statItemm}>
             <Text style={styles.statValue}>{referrals.length}</Text>
-            <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Total Referrals</Text>
+            <Text style={[styles.statLabel, { fontWeight: '900', color: theme.textPrimary }]}>Total Referrals</Text>
             <Text style={styles.statCaption}>your referral code used</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{completedCount}</Text>
-            <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Completed</Text>
+            <Text style={[styles.statLabel, { fontWeight: '900', color: theme.textPrimary }]}>Completed</Text>
             <Text style={styles.statCaption}>Payout initiated</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{pendingCount}</Text>
-            <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Pending</Text>
+            <Text style={[styles.statLabel, { fontWeight: '900', color: theme.textPrimary }]}>Pending</Text>
             <Text style={styles.statCaption}>Payout pending</Text>
           </View>
         </View>
         <Text style={styles.listHeader}>Referral History</Text>
         <View style={styles.listContainer}>
           {loading && referrals.length === 0 ? (
-            <ActivityIndicator size="large" color="#1434A4" style={{ marginTop: 30 }} />
+            <ActivityIndicator size="large" color={theme.buttonBackground} style={{ marginTop: 30 }} />
           ) : loading && referrals.length > 0 ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <ActivityIndicator size="small" color="#1434A4" style={{ marginRight: 8 }} />
+              <ActivityIndicator size="small" color={theme.buttonBackground} style={{ marginRight: 8 }} />
               <Text style={[styles.referralDate, { color: theme.textSecondary }]}>Refreshing referrals...</Text>
             </View>
           ) : referrals.length === 0 ? (

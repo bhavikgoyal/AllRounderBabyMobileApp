@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, BackHandler, StatusBar, useColorScheme, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, BackHandler, StatusBar, useColorScheme, useWindowDimensions, Platform } from 'react-native';
 import ScreenScroll from './components/ScreenScroll';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 
@@ -23,6 +23,9 @@ const TermsofService = ({ navigation, route }) => {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#2a3144' : Colors.white,
   };
+  const theme = isDarkMode
+    ? { textPrimary: '#ffffff', cardBackground: '#282c34', cardBorder: '#444' }
+    : { textPrimary: '#1434a4', cardBackground: '#ffffff', cardBorder: '#e0e0e0' };
   useEffect(() => {
     const backAction = () => {
       if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
@@ -72,7 +75,7 @@ const TermsofService = ({ navigation, route }) => {
         ]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, marginTop: Platform.OS === 'ios' ? 18 : 18 }}>
             <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
-              <Image source={require('../img/arrowicon.png')} style={[styles.backIcon, { tintColor: isDarkMode ? '#fff' : '#1434a4' }]} />
+              <Image source={require('../img/backBtn.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
             </TouchableOpacity>
             <Text style={[styles.pageTitle, { color: isDarkMode ? '#fff' : '#1434a4' }]}>Terms of Service</Text>
           </View>
@@ -1072,7 +1075,6 @@ const styles = StyleSheet.create({
     height: 24,
     fontSize: 25,
     color: '#1434a4',
-    transform: [{ rotate: '180deg' }],
   },
   backButton: {
     bottom: 8,

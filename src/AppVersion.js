@@ -82,7 +82,7 @@ const AppVersion = ({ navigation }) => {
     <>
       <View style={[styles.header]}>
         <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={[styles.backButton,]}>
-          <Image source={require('../img/arrowicon.png')} style={[styles.backIcon, backgroundStyle, { tintColor: isDarkMode ? '#fff' : '#1434a4' }]} />
+          <Image source={require('../img/backBtn.png')} style={[styles.backIcon, backgroundStyle, { tintColor: isDarkMode ? '#fff' : '#1434a4' }]} />
         </TouchableOpacity>
       </View>
       <View style={[styles.container]}>
@@ -132,7 +132,6 @@ const styles = StyleSheet.create({
     height: 24,
     fontSize: 25,
     color: '#1434a4',
-    transform: [{ rotate: '180deg' }],
   },
   logo: {
     width: 250,

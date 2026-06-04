@@ -57,7 +57,6 @@ const createGetHelpStyles = (theme) => StyleSheet.create({
   backIcon: {
     width: 24,
     height: 24,
-    transform: [{ rotate: '180deg' }],
   },
   sectionDivider: {
     height: 1,
@@ -143,7 +142,7 @@ const GetHelp = ({ navigation, route }) => {
       <StatusBar barStyle="light-content" backgroundColor="#1434A4" />
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 15, marginTop: Platform.OS === 'ios' ? 40 : 25 }}>
         <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
-          <Image source={require('../img/arrowicon.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
+          <Image source={require('../img/backBtn.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
         </TouchableOpacity>
         <Text style={[styles.title, { marginTop: 0 }]}>Customer Support 💕</Text>
       </View>
