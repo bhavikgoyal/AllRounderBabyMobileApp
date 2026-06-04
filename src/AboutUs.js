@@ -85,7 +85,7 @@ const createCashbackConditionsStyles = (theme, windowWidth = 360, windowHeight =
     },
     sectionHeader: {
       marginHorizontal: 20,
-      marginTop: 0,
+      marginTop: 8,
       marginBottom: 10,
       fontSize: 24,
       fontWeight: '700',
@@ -157,7 +157,7 @@ const createCashbackConditionsStyles = (theme, windowWidth = 360, windowHeight =
       marginBottom: 0,
     },
     TitleText: {
-      marginTop: 0,
+      marginTop: 8,
       marginHorizontal: 0,
       marginBottom: 12,
       fontSize: 22,
@@ -184,8 +184,8 @@ const createCashbackConditionsStyles = (theme, windowWidth = 360, windowHeight =
       color: '#0147AB',
     },
     sectionContainer: {
-      padding: 10,
-      marginVertical: 0,
+
+
       borderRadius: 12,
     },
     emailLink: {
@@ -664,13 +664,14 @@ const AboutUs = ({ navigation, route }) => {
           style={[
             styles.sectionContainer,
             { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
-
+            { marginTop: 20 }
           ]}
         >
           <View style={styles.sectionHeaderFlex}>
             <Text style={[
               styles.TitleText,
-              { color: isDarkMode ? '#fff' : '#1434a4' }
+              { color: isDarkMode ? '#fff' : '#1434a4' },
+
             ]}>
               Our Vision
             </Text>
@@ -700,7 +701,7 @@ const AboutUs = ({ navigation, route }) => {
           style={[
             styles.sectionContainer,
             { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
-
+            { marginTop: 20 }
           ]}
         >
           <View style={styles.sectionHeaderFlex}>
@@ -743,7 +744,7 @@ const AboutUs = ({ navigation, route }) => {
           styles.sectionContainer,
           { backgroundColor: isDarkMode ? '#282c34' : '#ffffff' },
           { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
-
+          { marginTop: 20 }
         ]}>
           <Text style={[
             styles.sectionHeader,
@@ -780,6 +781,7 @@ const AboutUs = ({ navigation, route }) => {
           style={[
             styles.sectionContainer,
             { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
+            { marginTop: 20 }
           ]}
         >
           <Text style={[
@@ -801,6 +803,7 @@ const AboutUs = ({ navigation, route }) => {
           style={[
             styles.sectionContainer,
             { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
+            { marginTop: 20 }
           ]}
         >
           <Text style={[
@@ -854,7 +857,8 @@ const AboutUs = ({ navigation, route }) => {
             styles.sectionContainer,
             { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
             { marginBottom: 30 },
-            { padding: isTablet ? 10 : 5 }
+            { padding: isTablet ? 10 : 5 },
+            { marginTop: 20 }
           ]}
         >
 
@@ -873,7 +877,7 @@ const AboutUs = ({ navigation, route }) => {
           </View>
           <Text style={[styles.introParagraph, { textAlign: 'center', fontSize: 12, lineHeight: 15, marginBottom: 5, fontStyle: 'italic' }]}>Courtesy: Shubha Nayak with the late Dr. A.P.J. Abdul Kalam</Text>
           <Text style={[styles.introParagraph, { textAlign: 'center', fontSize: 12, lineHeight: 15, fontStyle: 'italic' }]}>(President of India, 2002–2007), Chennai (2013) (Personal Archive)</Text>
-          <Text style={[styles.introParagraph, { marginBottom: 35 }]}><Text style={{ fontWeight: 'bold' }}>Shubha Nayak </Text>is the Founder and CEO of <Text style={{ fontWeight: 'bold' }}>Sarvashine Allrounder Baby Solutions Pvt. Ltd., </Text>the company behind AllrounderBaby.com. An alumna of <Text style={{ fontWeight: 'bold' }}>NIT </Text>
+          <Text style={[styles.introParagraph, { marginBottom: 20 }]}><Text style={{ fontWeight: 'bold' }}>Shubha Nayak </Text>is the Founder and CEO of <Text style={{ fontWeight: 'bold' }}>Sarvashine Allrounder Baby Solutions Pvt. Ltd., </Text>the company behind AllrounderBaby.com. An alumna of <Text style={{ fontWeight: 'bold' }}>NIT </Text>
             (National Institute of Technology -Raipur, India) and <Text style={{ fontWeight: 'bold' }}>BITS Pilani </Text>(Birla Institute of Technology & Science, India) with a background in <Text style={{ fontWeight: 'bold' }}>Biotechnology, </Text> Shubha began her career at Sankara Nethralaya’s Vision Research Foundation, where she had the honor of meeting
             <Text style={{ fontWeight: 'bold' }}>Dr. A.P.J. Abdul Kalam — </Text>a moment that inspired her lifelong commitment to <Text style={{ fontWeight: 'bold' }}>research and impact. </Text>After working in the healthcare domain at <Text style={{ fontWeight: 'bold' }}>IBM India Pvt. Ltd., </Text>Shubha’s journey into
             <Text style={{ fontWeight: 'bold' }}> parenthood </Text>led her to deep research on<Text style={{ fontWeight: 'bold' }}>  early childhood development </Text>
