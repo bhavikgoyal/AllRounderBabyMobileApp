@@ -621,7 +621,7 @@ const App = () => {
                   padding: 5,
                 }}
               >
-                <Image source={require('./img/arrowicon.png')} style={{ width: 24, height: 24, tintColor: '#FFFFFF' }} />
+                <Image source={require('./img/backBtn.png')} style={{ width: 24, height: 24, tintColor: '#FFFFFF' }} />
               </TouchableOpacity>
             ) : undefined,
           })}

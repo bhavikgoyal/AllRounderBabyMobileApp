@@ -21,6 +21,12 @@ class MainApplication : Application(), ReactApplication {
             PackageList(this).packages.apply {
               // Packages that cannot be autolinked yet can be added manually here, for example:
               // add(MyReactNativePackage())
+              // Add security package for screen protection
+              try {
+                add(SecurityPackage())
+              } catch (e: Exception) {
+                // ignore if class not present during some CI or build steps
+              }
             }
 
         override fun getJSMainModuleName(): String = "index"
