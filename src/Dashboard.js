@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { StatusBar, useWindowDimensions } from 'react-native';
-import { StyleSheet, ScrollView, View, FlatList, Image, Animated, Text, TouchableOpacity, Alert, ActivityIndicator, Pressable, useColorScheme, Platform, ToastAndroid, BackHandler, findNodeHandle } from 'react-native';
+import { StyleSheet, ScrollView, View, FlatList, Image, Animated, Text, TouchableOpacity, Alert, ActivityIndicator, Pressable, useColorScheme, Platform, BackHandler } from 'react-native';
 import { CommonActions, useIsFocused } from '@react-navigation/native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -86,7 +86,6 @@ const VideoStepList = ({ groups, completedSteps, onStepPress, isDarkMode, stepRe
                         onPress={onStepPress}
                         isCompleted={completedSteps[`step${group.stepNumber}`] ?? false}
                         isLocked={isLocked}
-                        removeClippedSubviews={true}
                         isDarkMode={isDarkMode}
                         previousDisplay={previousStep?.displayStepNumber ?? previousStep?.apiStepNumber ?? previousStep?.stepNumber}
                     />
@@ -97,7 +96,7 @@ const VideoStepList = ({ groups, completedSteps, onStepPress, isDarkMode, stepRe
 };
 
 const LevelModal = ({ levelName, children, onClose, isDarkMode, scrollRef, isLandscape, contentWidth }) => (
-    <View style={styles.modalLikeContainer}>
+    <View style={styles.modalLikeContainer} collapsable={false}>
         <Pressable
             style={[
                 styles.fullScreenPressable,
@@ -110,7 +109,9 @@ const LevelModal = ({ levelName, children, onClose, isDarkMode, scrollRef, isLan
                     styles.modalLikeContentBox,
                     isLandscape ? { width: '70%', marginTop: 8, maxHeight: '96%' } : { width: contentWidth, marginTop: 8, maxHeight: '96%' }
                 ]}
-                onPress={() => { }}
+                onPress={(e) => {
+                    if (e) e.stopPropagation();
+                }}
             >
                 <View style={[styles.modalContents, { backgroundColor: isDarkMode ? '#2a3144' : Colors.white }]}>
                     <View style={styles.modalHeader}>
@@ -124,7 +125,7 @@ const LevelModal = ({ levelName, children, onClose, isDarkMode, scrollRef, isLan
                         style={styles.modalScrollView}
                         contentContainerStyle={styles.modalScrollViewContent}
                         nestedScrollEnabled={true}
-                        removeClippedSubviews={true}
+                        removeClippedSubviews={Platform.OS === 'android'}
                         scrollEventThrottle={16}
                         decelerationRate="fast"
                         keyboardShouldPersistTaps="handled" >
@@ -202,6 +203,7 @@ const Dashboard = ({ navigation }) => {
     const [topicCompletionTimes, setTopicCompletionTimes] = useState({});
     const [unlockedStepsThreshold, setUnlockedStepsThreshold] = useState(0);
     const [lastViewedRequest, setLastViewedRequest] = useState(null);
+    const [maxStepPerLevel, setMaxStepPerLevel] = useState({ foundation: 0, middle: 0, advanced: 0 });
     const dataLoadedRef = useRef(false);
 
     const [levelToUnlock, setLevelToUnlock] = useState(null);
@@ -224,6 +226,9 @@ const Dashboard = ({ navigation }) => {
     const levelModalScrollRef = useRef(null);
 
     useEffect(() => {
+        // Only register BackHandler on Android - iOS doesn't have hardware back button
+        if (Platform.OS !== 'android') return;
+
         const onBackPress = () => {
             if (!isFocused) return false;
             if (isModalVisible) {
@@ -255,11 +260,8 @@ const Dashboard = ({ navigation }) => {
             }
 
             lastBackPressed.current = now;
-            if (Platform.OS === 'android') {
-                ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
-            } else {
-                Alert.alert('', 'Press back again to exit');
-            }
+            const ToastAndroid = require('react-native').ToastAndroid;
+            ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
             return true;
         };
 
@@ -402,7 +404,7 @@ const Dashboard = ({ navigation }) => {
             handleLevelPress(levelToUnlock, true);
             setLevelToUnlock(null);
         }
-    }, [videoData, masterConfig]);
+    }, [levelToUnlock]);
 
     useEffect(() => {
         if (!lastViewedRequest) {
@@ -415,7 +417,7 @@ const Dashboard = ({ navigation }) => {
         }
 
         if (!activeLevel) {
-            handleLevelPress(lastViewedRequest.level);
+            handleLevelPress(lastViewedRequest.level, true); // Skip prerequisite check for Last Viewed
             return;
         }
 
@@ -435,29 +437,25 @@ const Dashboard = ({ navigation }) => {
             const scrollRef = levelModalScrollRef.current;
 
             if (stepRef && scrollRef) {
-                const scrollNode = findNodeHandle(scrollRef) || (scrollRef.getInnerViewNode && scrollRef.getInnerViewNode());
-
                 try {
-                    stepRef.measureLayout(
-                        scrollNode,
-                        (x, y) => {
-                            if (scrollRef && typeof scrollRef.scrollTo === 'function') {
-                                scrollRef.scrollTo({
-                                    y: Math.max(y - 20, 0),
-                                    animated: true,
-                                });
+                    // iOS: Use measure() directly - measureLayout causes warnings
+                    // Android: Can use measureLayout but measure() works fine too
+                    if (stepRef.measure && typeof stepRef.measure === 'function') {
+                        stepRef.measure((x, y, width, height, pageX, pageY) => {
+                            try {
+                                if (scrollRef && typeof scrollRef.scrollTo === 'function') {
+                                    scrollRef.scrollTo({ y: Math.max(pageY - 20, 0), animated: true });
+                                }
+                            } catch (e) {
+                                console.warn('Failed to scroll to step:', e);
                             }
                             setLastViewedRequest(null);
-                        },
-                        (err) => {
-                            if (scrollRef && typeof scrollRef.scrollTo === 'function') {
-                                scrollRef.scrollTo({ y: 0, animated: true });
-                            }
-                            setLastViewedRequest(null);
-                        }
-                    );
+                        });
+                    } else {
+                        setLastViewedRequest(null);
+                    }
                 } catch (e) {
-                    console.warn('measureLayout threw', e);
+                    console.warn('Step scroll error:', e);
                     if (scrollRef && typeof scrollRef.scrollTo === 'function') {
                         scrollRef.scrollTo({ y: 0, animated: true });
                     }
@@ -484,6 +482,7 @@ const Dashboard = ({ navigation }) => {
 
     const handleLastViewedPress = async () => {
         try {
+            debugger;
             if (unlockedStepsThreshold && Number.isFinite(unlockedStepsThreshold) && unlockedStepsThreshold > 0) {
                 const resolvedCategory = getCategoryFromStep(unlockedStepsThreshold);
                 if (resolvedCategory && masterConfig[resolvedCategory]) {
@@ -542,6 +541,7 @@ const Dashboard = ({ navigation }) => {
                     loadMiddleLevelCompletionTime(),
                     loadAdvancedLevelCompletionTime(),
                     loadTopicCompletionTimes(),
+                    loadMaxStepPerLevel(),
                 ]);
 
                 if (storedToken && storedUserId) {
@@ -778,6 +778,31 @@ const Dashboard = ({ navigation }) => {
         }
     };
 
+    const loadMaxStepPerLevel = async () => {
+        try {
+            const savedData = await AsyncStorage.getItem('maxStepPerLevel');
+            if (savedData) {
+                const parsed = JSON.parse(savedData);
+                setMaxStepPerLevel(parsed);
+            }
+        } catch (error) {
+            console.error("Failed to load max step per level from storage", error);
+        }
+    };
+
+    const updateMaxStepPerLevel = async (level, stepNumber) => {
+        try {
+            const newMaxSteps = { ...maxStepPerLevel };
+            if (stepNumber > (newMaxSteps[level] || 0)) {
+                newMaxSteps[level] = stepNumber;
+                setMaxStepPerLevel(newMaxSteps);
+                await AsyncStorage.setItem('maxStepPerLevel', JSON.stringify(newMaxSteps));
+            }
+        } catch (error) {
+            console.error("Failed to save max step per level:", error);
+        }
+    };
+
     const saveCompletedStep = async (stepKey) => {
         try {
             const newCompletedSteps = { ...completedSteps, [stepKey]: true };
@@ -898,6 +923,7 @@ const Dashboard = ({ navigation }) => {
 
     const showToast = (message) => {
         if (Platform.OS === 'android') {
+            const ToastAndroid = require('react-native').ToastAndroid;
             ToastAndroid.show(message, ToastAndroid.LONG);
         } else {
             Alert.alert('', message);
@@ -1003,25 +1029,13 @@ const Dashboard = ({ navigation }) => {
                 const scrollRef = levelModalScrollRef.current;
 
                 if (categoryRef && scrollRef) {
-                    const scrollNode = findNodeHandle(scrollRef);
-                    if (typeof categoryRef.measureLayout === 'function') {
-                        categoryRef.measureLayout(
-                            scrollNode,
-                            (x, y) => {
-                                try {
-                                    scrollRef.scrollTo({ y: Math.max(y - 10, 0), animated: true });
-                                } catch (e) {
-                                    console.warn('Failed to scroll to category:', e);
-                                }
-                            },
-                            (err) => console.log('Scroll measurement failed', err)
-                        );
-                    } else if (categoryRef.measure) {
+                    // Use measure() for all platforms - works reliably on both iOS and Android
+                    if (categoryRef.measure && typeof categoryRef.measure === 'function') {
                         categoryRef.measure((x, y, width, height, pageX, pageY) => {
                             try {
                                 scrollRef.scrollTo({ y: Math.max(pageY - 10, 0), animated: true });
                             } catch (e) {
-                                console.warn('Failed to scroll to category (measure):', e);
+                                console.warn('Failed to scroll to category:', e);
                             }
                         });
                     }
@@ -1193,6 +1207,15 @@ const Dashboard = ({ navigation }) => {
             } catch (err) {
                 console.error('Failed to save last viewed info:', err);
             }
+
+            // Update max step per level (for Foundation, Middle, and Advanced levels only)
+            if (step !== 1001 && step !== 1002 && openCategory) {
+                const level = getLevelForCategory(openCategory);
+                if (level && (level === 'foundation' || level === 'middle' || level === 'advanced')) {
+                    await updateMaxStepPerLevel(level, step);
+                }
+            }
+
             if (openCategory) {
                 const category = masterConfig[openCategory];
                 const allSteps = category.finalGroupedData.map(g => `step${g.stepNumber}`);
@@ -1296,7 +1319,7 @@ const Dashboard = ({ navigation }) => {
         }
     };
 
-    const handleLevelPress = async (level) => {
+    const handleLevelPress = async (level, skipPrerequisiteCheck = false) => {
         const deviceKey = await AsyncStorage.getItem('deviceKey');
         if (!dataLoaded) {
             Alert.alert("Loading...", "Please wait until your progress is fully loaded.");
@@ -1385,9 +1408,18 @@ const Dashboard = ({ navigation }) => {
                 } catch (error) { console.error("Could not check foundation lock time", error); }
             }
             setActiveLevel(level);
+
+            // Auto-scroll to max step for Foundation level if not coming from Last Viewed
+            if (!skipPrerequisiteCheck && maxStepPerLevel.foundation > 0) {
+                const resolvedCategory = getCategoryFromStep(maxStepPerLevel.foundation);
+                if (resolvedCategory && masterConfig[resolvedCategory]) {
+                    setLastViewedRequest({ level: 'foundation', category: resolvedCategory, step: maxStepPerLevel.foundation });
+                }
+            }
         }
         if (level === 'middle') {
-            const foundationComplete = await checkAndLoadPrerequisites(foundationKeys, 'Foundation');
+            // Skip prerequisite check if coming from Last Viewed
+            const foundationComplete = skipPrerequisiteCheck ? true : await checkAndLoadPrerequisites(foundationKeys, 'Foundation');
             if (foundationComplete) {
                 await loadLevelVideos(middleKeys);
                 const StepOfAdvance = "84";
@@ -1409,18 +1441,35 @@ const Dashboard = ({ navigation }) => {
                     } catch (error) { console.error("Could not check foundation lock time", error); }
                 }
                 setActiveLevel(level);
+
+                // Auto-scroll to max step for Middle level if not coming from Last Viewed
+                if (!skipPrerequisiteCheck && maxStepPerLevel.middle > 0) {
+                    const resolvedCategory = getCategoryFromStep(maxStepPerLevel.middle);
+                    if (resolvedCategory && masterConfig[resolvedCategory]) {
+                        setLastViewedRequest({ level: 'middle', category: resolvedCategory, step: maxStepPerLevel.middle });
+                    }
+                }
             }
             return;
         }
         if (level === 'advanced') {
-            const foundationComplete = await checkAndLoadPrerequisites(foundationKeys, 'Foundation');
+            // Skip prerequisite checks if coming from Last Viewed
+            const foundationComplete = skipPrerequisiteCheck ? true : await checkAndLoadPrerequisites(foundationKeys, 'Foundation');
             if (!foundationComplete) {
                 return;
             }
-            const middleComplete = await checkAndLoadPrerequisites(middleKeys, 'Middle');
+            const middleComplete = skipPrerequisiteCheck ? true : await checkAndLoadPrerequisites(middleKeys, 'Middle');
             if (middleComplete) {
                 await loadLevelVideos(advancedKeys);
                 setActiveLevel(level);
+
+                // Auto-scroll to max step for Advanced level if not coming from Last Viewed
+                if (!skipPrerequisiteCheck && maxStepPerLevel.advanced > 0) {
+                    const resolvedCategory = getCategoryFromStep(maxStepPerLevel.advanced);
+                    if (resolvedCategory && masterConfig[resolvedCategory]) {
+                        setLastViewedRequest({ level: 'advanced', category: resolvedCategory, step: maxStepPerLevel.advanced });
+                    }
+                }
             }
         }
     };
@@ -1501,11 +1550,12 @@ const Dashboard = ({ navigation }) => {
     // Render the UI even when loading; show an overlay loader instead of replacing the UI.
 
     const isLandscape = windowWidth > windowHeight;
+    const isTablet = windowWidth >= 600;
     const portraitContentWidth = Math.max(280, Math.round(windowWidth * 0.9));
 
     const imageStyle = isLandscape
-        ? { width: Math.max(120, Math.round(windowWidth * 0.8)), height: Math.max(480, Math.round(windowHeight * 0.72)), resizeMode: 'center', borderRadius: 5 }
-        : { width: portraitContentWidth, height: 250, resizeMode: 'center', borderRadius: 5, alignSelf: 'center' };
+        ? { width: Math.max(120, Math.round(windowWidth * 0.8)), height: Math.max(isTablet ? 700 : 480, Math.round(windowHeight * (isTablet ? 0.90 : 0.72))), resizeMode: 'center', borderRadius: 5 }
+        : { width: portraitContentWidth, height: isTablet ? 500 : 250, resizeMode: 'center', borderRadius: 5, alignSelf: 'center' };
 
     const portraitNestedHeight = Math.max(150, Math.round(portraitContentWidth * 0.6));
     const imagenestedStyle = isLandscape

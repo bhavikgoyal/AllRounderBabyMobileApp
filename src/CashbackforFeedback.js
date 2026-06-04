@@ -73,58 +73,67 @@ const darkThemeColors = {
 
 const url = BASE_URL;
 
-const createCashbackStyles = (theme, windowWidth = 360) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.screenBackground },
-  scrollViewContent: { flexGrow: 1, paddingBottom: 20 },
-  gradientHeaderText: { fontSize: 17, textAlign: 'center', fontWeight: '600', color: '#1A202C', lineHeight: 24 },
-  gradientHeaderSubText: { fontWeight: '400' },
-  Thumbnail: { fontSize: 16, lineHeight: 24 },
-  introParagraph: { marginHorizontal: 0, fontSize: 15, lineHeight: 22, color: theme.textSecondary, marginBottom: 5 },
-  sectionHeader: { marginHorizontal: 0, marginTop: 0, marginBottom: 12, fontSize: 20, fontWeight: '600' },
+const createCashbackStyles = (theme, windowWidth = 360) => {
+  const isTablet = windowWidth >= 600;
+  const contentPadding = isTablet ? 25 : 15;
+  const horizontalMargin = isTablet ? 40 : 20;
+  const baseFontSize = isTablet ? 18 : 16;
+  const titleFontSize = isTablet ? 24 : 20;
+  const headerFontSize = isTablet ? 22 : 18;
+
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.screenBackground },
+    scrollViewContent: { flexGrow: 1, paddingBottom: isTablet ? 30 : 20 },
+    gradientHeaderText: { fontSize: headerFontSize - 1, textAlign: 'center', fontWeight: '600', color: '#1A202C', lineHeight: isTablet ? 28 : 24 },
+    gradientHeaderSubText: { fontWeight: '400' },
+    Thumbnail: { fontSize: baseFontSize, lineHeight: isTablet ? 28 : 24 },
+    introParagraph: { marginHorizontal: 0, fontSize: baseFontSize - 1, lineHeight: isTablet ? 26 : 22, color: theme.textSecondary, marginBottom: isTablet ? 8 : 5 },
+    sectionHeader: { marginHorizontal: 0, marginTop: 0, marginBottom: isTablet ? 16 : 12, fontSize: titleFontSize, fontWeight: '600' },
 
 
-  importantDetailsBox: {
-    marginHorizontal: 20,
-    marginTop: 0,
-    padding: 15,
-    backgroundColor: theme.cardBackground,
-    borderRadius: 8,
-    borderWidth: theme.elevation === 0 ? 1 : 0,
-    borderColor: theme.borderColor,
-    elevation: theme.elevation / 2,
-    shadowColor: theme.bottomNavShadowColor,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-  },
-  sectionDivider: { height: 1, backgroundColor: theme.borderColor, marginHorizontal: 20, marginVertical: 20 },
-  listItem: { marginHorizontal: 10, fontSize: 16, lineHeight: 22, color: theme.textSecondary, },
-  detailPoint: { fontSize: 15, lineHeight: 22, color: theme.textSecondary, marginBottom: 10, marginHorizontal: 10 },
-  emphasisText: { fontWeight: '600', color: theme.textPrimary, fontSize: 16 },
-  emphasisTexts: { fontWeight: '800', color: theme.textPrimary },
-  sectionLinkDivider: { marginHorizontal: 0 },
-  image: { width: Math.max(150, windowWidth - 40), height: 200, borderRadius: 5, alignSelf: 'center' },
-  thumbnailWrapper: { width: Math.max(120, windowWidth - 70), height: 180, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  subListItem: { marginHorizontal: 10, fontSize: 15, lineHeight: 20, color: theme.textSecondary, marginBottom: 6 },
-  finalCallToAction: { fontSize: 16, textAlign: 'center', color: theme.textPrimary, fontWeight: '600' },
-  linkButton: { alignSelf: 'flex-end', marginHorizontal: 20, marginTop: 15, marginBottom: 20 },
-  linkText: { color: theme.linkColor, textDecorationLine: 'underline', fontSize: 15, fontWeight: '500' },
-  modalLikeContainer: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
-  modalContent: { backgroundColor: theme.cardBackground, borderRadius: 10, padding: 20, width: '90%', maxWidth: 380 },
-  modalContentMainDiv: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 0 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', color: theme.accentColor },
-  modalContentClose: { fontSize: 16, fontWeight: 'bold', color: theme.textMutedClose },
-  borderLine: { borderBottomWidth: 1, borderBottomColor: theme.borderColorD, marginVertical: 10 },
-  modalText: { fontSize: 16, textAlign: 'center', marginBottom: 20, color: theme.textPrimaryModal },
-  modalButtons: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-  modalButton: { backgroundColor: theme.accentColorbg, paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8, width: '45%', alignItems: 'center' },
-  modalButtonText: { color: theme.cardBackgroundText, fontSize: 16, fontWeight: 'bold' },
-  disabledButton: { backgroundColor: theme.textMuted },
-  pulseShadow: { position: 'absolute', width: 80, height: 80, borderRadius: 40, left: '50%', top: '50%', zIndex: 2 },
-  playButtonContainer: { position: 'absolute', left: '50%', top: '50%', zIndex: 3, transform: [{ translateX: -30 }, { translateY: -30 }] },
-  playButtonCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
-  playButtonText: { color: '#1e90ff', fontSize: 26, marginLeft: 3, fontWeight: '600', marginBottom: 5, },
-});
+    importantDetailsBox: {
+      marginHorizontal: horizontalMargin,
+      marginTop: 0,
+      padding: contentPadding,
+      backgroundColor: theme.cardBackground,
+      borderRadius: isTablet ? 12 : 8,
+      borderWidth: theme.elevation === 0 ? 1 : 0,
+      borderColor: theme.borderColor,
+      elevation: theme.elevation / 2,
+      shadowColor: theme.bottomNavShadowColor,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+    },
+    sectionDivider: { height: 1, backgroundColor: theme.borderColor, marginHorizontal: horizontalMargin, marginVertical: isTablet ? 12 : 8 },
+    listItem: { marginHorizontal: isTablet ? 15 : 10, fontSize: baseFontSize, lineHeight: isTablet ? 26 : 22, color: theme.textSecondary, },
+    detailPoint: { fontSize: baseFontSize - 1, lineHeight: isTablet ? 26 : 22, color: theme.textSecondary, marginBottom: isTablet ? 15 : 10, marginHorizontal: isTablet ? 15 : 10 },
+    emphasisText: { fontWeight: '600', color: theme.textPrimary, fontSize: baseFontSize },
+    emphasisTexts: { fontWeight: '800', color: theme.textPrimary },
+    sectionLinkDivider: { marginHorizontal: 0 },
+    image: { width: Math.max(150, windowWidth - 40), height: 200, borderRadius: isTablet ? 8 : 5, alignSelf: 'center' },
+    thumbnailWrapper: { width: Math.max(120, windowWidth - 70), height: 180, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+    subListItem: { marginHorizontal: isTablet ? 15 : 10, fontSize: baseFontSize - 1, lineHeight: isTablet ? 24 : 20, color: theme.textSecondary, marginBottom: isTablet ? 10 : 6 },
+    finalCallToAction: { fontSize: baseFontSize, textAlign: 'center', color: theme.textPrimary, fontWeight: '600' },
+    linkButton: { alignSelf: 'flex-end', marginHorizontal: horizontalMargin, marginTop: isTablet ? 20 : 15, marginBottom: isTablet ? 30 : 20 },
+    linkText: { color: theme.linkColor, textDecorationLine: 'underline', fontSize: baseFontSize - 1, fontWeight: '500' },
+    modalLikeContainer: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: horizontalMargin },
+    modalContent: { backgroundColor: theme.cardBackground, borderRadius: isTablet ? 12 : 10, padding: isTablet ? 25 : 20, width: '90%', maxWidth: isTablet ? 450 : 380 },
+    modalContentMainDiv: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 0 },
+    modalTitle: { fontSize: headerFontSize, fontWeight: 'bold', color: theme.accentColor },
+    modalContentClose: { fontSize: baseFontSize, fontWeight: 'bold', color: theme.textMutedClose },
+    borderLine: { borderBottomWidth: 1, borderBottomColor: theme.borderColorD, marginVertical: isTablet ? 15 : 10 },
+    modalText: { fontSize: baseFontSize, textAlign: 'center', marginBottom: isTablet ? 25 : 20, color: theme.textPrimaryModal },
+    modalButtons: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+    modalButton: { backgroundColor: theme.accentColorbg, paddingVertical: isTablet ? 14 : 12, paddingHorizontal: isTablet ? 24 : 20, borderRadius: isTablet ? 10 : 8, width: '45%', alignItems: 'center' },
+    modalButtonText: { color: theme.cardBackgroundText, fontSize: baseFontSize, fontWeight: 'bold' },
+    disabledButton: { backgroundColor: theme.textMuted },
+    pulseShadow: { position: 'absolute', width: 80, height: 80, borderRadius: 40, left: '50%', top: '50%', zIndex: 2 },
+    playButtonContainer: { position: 'absolute', left: '50%', top: '50%', zIndex: 3, transform: [{ translateX: -30 }, { translateY: -30 }] },
+    playButtonCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
+    playButtonText: { color: '#1e90ff', fontSize: 26, marginLeft: 3, fontWeight: '600', marginBottom: 5, marginTop: isTablet ? 3 : 3 },
+  });
+};
 
 const CashbackforFeedback = () => {
   const navigation = useNavigation();
@@ -135,35 +144,49 @@ const CashbackforFeedback = () => {
   const styles = useMemo(() => createCashbackStyles(theme, windowWidth), [theme, windowWidth]);
 
   const isLandscape = windowWidth > windowHeight;
-  // Keep portrait sizes from styles; apply larger dimensions in landscape only
-  const landscapeThumbWidth = Math.max(120, Math.round(windowWidth * 0.82));
-  const landscapeThumbHeight = Math.max(420, Math.round(windowHeight * 0.85));
-  const imageLocalStyle = isLandscape
-    ? {
-      width: windowWidth - 40, // match horizontal margin of importantDetailsBox
-      height: Math.max(450, Math.round(windowHeight * 0.55)),
-      borderRadius: 8, // match importantDetailsBox
-      alignSelf: 'center',
-    }
-    : null;
-  const thumbnailWrapperLocal = isLandscape
-    ? { width: landscapeThumbWidth, height: landscapeThumbHeight, alignItems: 'center', justifyContent: 'center' }
-    : null;
-  const importantBoxLocal = isLandscape ? { minHeight: landscapeThumbHeight + 0 } : null;
+  const isTablet = windowWidth >= 600;
 
   // responsive sizing for CASHBACK image to avoid cropping across devices
   const cashbackImageSource = require('../img/CASHBACK.png');
   const cashbackResolved = Image.resolveAssetSource(cashbackImageSource) || {};
   const cashbackAspect = (cashbackResolved.width && cashbackResolved.height) ? (cashbackResolved.width / cashbackResolved.height) : (16 / 9);
-  const cbMaxWidth = Math.min(windowWidth - 40, windowWidth);
+
+  // Calculate dimensions based on device type and orientation
+  const horizontalMargin = isTablet ? 40 : 20;
+  const containerPadding = isTablet ? 20 : 10;
+  const cbMaxWidth = windowWidth - (horizontalMargin * 2) - (containerPadding * 2);
+
   let cbWidth = cbMaxWidth;
   let cbHeight = Math.round(cbWidth / cashbackAspect);
-  const cbMaxHeight = Math.round(windowHeight * 0.75);
+
+  // Adjust max height based on orientation and device type
+  let maxHeightPercentage = 0.3; // default for portrait mobile
+  if (isLandscape) {
+    maxHeightPercentage = isTablet ? 0.5 : 0.4;
+  } else {
+    maxHeightPercentage = isTablet ? 0.35 : 0.3;
+  }
+
+  const cbMaxHeight = Math.round(windowHeight * maxHeightPercentage);
   if (cbHeight > cbMaxHeight) {
     cbHeight = cbMaxHeight;
     cbWidth = Math.round(cbHeight * cashbackAspect);
   }
-  const responsiveCashbackStyle = { width: cbWidth, height: cbHeight, borderRadius: 8 };
+
+  const responsiveCashbackStyle = {
+    width: cbWidth,
+    height: cbHeight,
+    borderRadius: isTablet ? 8 : 5
+  };
+
+  const thumbnailWrapperLocal = {
+    width: cbWidth,
+    height: cbHeight,
+    alignItems: 'center',
+    justifyContent: 'center'
+  };
+
+  const importantBoxLocal = isLandscape ? { minHeight: cbHeight + 40 } : null;
   const [token, setToken] = useState(null);
   const [userId, setUserID] = useState(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
@@ -231,7 +254,7 @@ const CashbackforFeedback = () => {
 
   const fetchCashbackVideos = async (folderId) => {
     const netInfoState = await NetInfo.fetch();
-    if (!netInfoState.isInternetReachable) {
+    if (!netInfoState.isConnected) {
       Alert.alert("No Internet Connection", "Please check your internet connection and try again.");
       return;
     }
@@ -293,7 +316,7 @@ const CashbackforFeedback = () => {
 
   const handleVideoPlayback = async (videoId, language, title, poster, stepParam) => {
     const netInfoState = await NetInfo.fetch();
-    if (!netInfoState.isInternetReachable) {
+    if (!netInfoState.isConnected) {
       Alert.alert("No Internet Connection", "Please check your internet connection and try again.");
       return;
     }
@@ -449,22 +472,51 @@ const CashbackforFeedback = () => {
     <View style={styles.container}>
       <StatusBar barStyle={theme.statusBarContent} backgroundColor={theme.screenBackground} />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <LinearGradient
+
+        {isTablet ? <LinearGradient
           colors={['#FFF8E5', '#FFFDEB']}
-          style={[styles.importantDetailsBox, { marginTop: 10, marginBottom: 10 }]}>
-          <Text style={styles.gradientHeaderText}>You get ₹1,000 / $10 Cashback </Text>
-          <Text style={styles.gradientHeaderText}>
+          style={[
+            styles.importantDetailsBox,
+            {
+              marginTop: 10,
+              marginBottom: isTablet ? 8 : 5,
+              paddingVertical: isTablet ? 25 : 18,
+              minHeight: isTablet ? 150 : 120,
+
+            },
+
+          ]}>
+          <Text style={[styles.gradientHeaderText, { lineHeight: isTablet ? 28 : 26 }]}>You get ₹1,000 / $10 Cashback </Text>
+          <Text style={[styles.gradientHeaderText, { lineHeight: isTablet ? 28 : 26 }]}>
             <Text style={styles.gradientHeaderSubText}>for your genuine</Text> Feedback!
           </Text>
-        </LinearGradient>
-        <View style={styles.sectionDivider} />
-        {isLandscape && (
-          <View style={{ height: 15 }} />
-        )}
-        <View style={[styles.importantDetailsBox, importantBoxLocal, { padding: 0, marginVertical: 3 }]}>
+
+        </LinearGradient> : <View style={[styles.importantDetailsBox, { marginTop: isTablet ? 10 : 12 }]}>
+          <LinearGradient
+            colors={['#FFF8E5', '#FFFDEB']}
+            style={[
+              styles.importantDetailsBox,
+              {
+                marginTop: 5,
+                marginBottom: isTablet ? 8 : 5,
+                paddingVertical: isTablet ? 25 : 18,
+                minHeight: isTablet ? 150 : 120,
+
+              },
+
+            ]}>
+            <Text style={[styles.gradientHeaderText, { lineHeight: isTablet ? 28 : 26 }]}>You get ₹1,000 / $10 Cashback </Text>
+            <Text style={[styles.gradientHeaderText, { lineHeight: isTablet ? 28 : 26 }]}>
+              <Text style={styles.gradientHeaderSubText}>for your genuine</Text> Feedback!
+            </Text>
+
+          </LinearGradient>
+        </View>}
+
+        <View style={[styles.importantDetailsBox, importantBoxLocal, { padding: isTablet ? 20 : 10, marginVertical: 3, marginTop: isTablet ? 8 : 5 }]}>
           <TouchableOpacity onPress={handleThumbnailClick} activeOpacity={0.9} style={{ alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-            <View style={[styles.thumbnailWrapper, thumbnailWrapperLocal]}>
-              <Image source={cashbackImageSource} style={[responsiveCashbackStyle, styles.image, imageLocalStyle]} resizeMode="contain" />
+            <View style={thumbnailWrapperLocal}>
+              <Image source={cashbackImageSource} style={responsiveCashbackStyle} resizeMode="contain" />
               <Animated.View
                 pointerEvents="none"
                 style={[
@@ -488,10 +540,7 @@ const CashbackforFeedback = () => {
             </View>
           </TouchableOpacity>
         </View>
-        {isLandscape && (
-          <View style={{ height: 15 }} />
-        )}
-        <View style={styles.sectionDivider} />
+        <View style={[styles.sectionDivider, { marginVertical: isTablet ? 12 : 8 }]} />
 
         <View style={styles.importantDetailsBox}>
           <Text style={[styles.sectionHeader, { color: theme.accentColor }]}>How It Works?</Text>
@@ -510,7 +559,7 @@ const CashbackforFeedback = () => {
             Get INR ₹1,000 / USD $10 cashback upon approval
           </Text>
         </View>
-        <View style={styles.sectionDivider} />
+        <View style={[styles.sectionDivider, { marginVertical: isTablet ? 12 : 8 }]} />
 
         <View style={styles.importantDetailsBox}>
           <Text style={[styles.sectionHeader, { color: theme.accentColor }]}>Important Details</Text>
@@ -521,7 +570,7 @@ const CashbackforFeedback = () => {
 
         {showDetails && (
           <View style={styles.sectionLinkDivider} >
-            <View style={styles.sectionDivider} />
+            <View style={[styles.sectionDivider, { marginTop: isTablet ? 12 : 8, marginBottom: isTablet ? 8 : 5 }]} />
             <View style={styles.importantDetailsBox}>
               <Text style={[
                 styles.sectionHeader,

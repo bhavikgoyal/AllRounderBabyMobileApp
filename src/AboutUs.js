@@ -16,6 +16,7 @@ import {
   StatusBar,
   useColorScheme,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import ScreenScroll from './components/ScreenScroll';
 import LinearGradient from 'react-native-linear-gradient';
@@ -43,302 +44,348 @@ const darkThemeColors = {
   statusBarContent: 'light-content',
 };
 
-const createCashbackConditionsStyles = (theme) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.screenBackground,
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-    paddingBottom: 30,
-    marginTop: 5,
-  },
-  headerTitle: {
-    fontSize: 17,
-    textAlign: 'center',
-    marginHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 10,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    lineHeight: 24,
-  },
-  sectionDivider: {
-    height: 1,
-    backgroundColor: theme.borderColor,
-    marginHorizontal: 20,
-    marginVertical: 15,
-  },
-  introParagraph: {
-    marginHorizontal: 20,
-    fontSize: 15,
-    lineHeight: 22,
-    color: theme.textSecondary,
-    marginBottom: 20,
-    textAlign: 'justify',
-  },
-  sectionHeader: {
-    marginHorizontal: 20,
-    marginTop: 0,
-    marginBottom: 10,
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'justify',
-  },
-  listItem: {
-    marginHorizontal: 20,
-    fontSize: 15,
-    lineHeight: 22,
-    color: theme.textSecondary,
-    marginBottom: 10,
-    textAlign: 'left',
-  },
-  subListItem: {
-    marginLeft: 35,
-    marginRight: 20,
-    fontSize: 15,
-    lineHeight: 22,
-    color: theme.textSecondary,
-    marginBottom: 8,
-    textAlign: 'left',
-  },
-  emphasisText: {
-    fontWeight: '600',
-    color: theme.textPrimary,
-  },
-  highlightText: {
-    color: theme.accentColor,
-    fontWeight: '600',
-  },
-  finalCallToAction: {
-    marginHorizontal: 20,
-    marginTop: 25,
-    marginBottom: 15,
-    fontSize: 15,
-    lineHeight: 22,
-    color: theme.textSecondary,
-    textAlign: 'center',
-  },
-  logo: {
-    marginVertical: 10,
-    width: '100%',
-    height: 180,
-    resizeMode: 'contain',
-    borderRadius: 14,
-  },
-  sectionlogo: {
-    padding: 10,
-    marginHorizontal: 16,
-    position: 'relative',
-    width: '92%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  pulseShadow: { position: 'absolute', width: 80, height: 80, borderRadius: 40, left: '50%', top: '50%', zIndex: 2 },
-  playButtonContainer: { position: 'absolute', left: '50%', top: '50%', zIndex: 3, transform: [{ translateX: -30 }, { translateY: -30 }] },
-  playButtonCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
-  playButtonText: { color: '#1e90ff', fontSize: 26, marginLeft: 3, fontWeight: '600', marginBottom: 5 },
-  Titlelogo: {
-    marginTop: 2,
-    width: 25,
-    height: 25,
-    padding: 10,
-    resizeMode: 'contain',
-    marginBottom: 0,
-  },
-  TitleText: {
-    marginTop: 0,
-    marginHorizontal: 0,
-    marginBottom: 12,
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  sectionHeaderFlex: {
-    marginHorizontal: 20,
-    flexDirection: 'row',
-  },
-  sectionBg1: {
-    marginTop: 10,
-    paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  abouts: {
-    fontSize: 28,
-    color: '#003366',
-    fontWeight: '700',
-  },
-  aboutsSpan: {
-    color: '#0147AB',
-  },
-  sectionContainer: {
-    padding: 10,
-    marginVertical: 0,
-    borderRadius: 12,
-  },
-  emailLink: {
-    textDecorationLine: 'underline',
-    color: '#0d6efd',
-    fontSize: 15,
-  },
-  footerContainer: {
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-  },
-  footerImageWrapper: {
-    width: '92%',
-    borderRadius: 12,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    marginTop: 6,
-    marginBottom: 10,
-  },
-  footerImage: {
-    width: '100%',
-    height: 280,
-    resizeMode: 'cover',
-  },
-  footerCaption: {
-    fontSize: 14,
-    color: '#555',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  footerHeadline: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#003366',
-    textAlign: 'center',
-    marginVertical: 8,
-  },
-  footerLogo: {
-    width: 220,
-    height: 80,
-    resizeMode: 'contain',
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  footerTaglineRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  footerTaglineLeft: {
-    color: '#d9534f',
-    fontStyle: 'italic',
-    marginRight: 6,
-    fontWeight: '600',
-  },
-  footerTaglineRight: {
-    color: '#2e8b57',
-    fontStyle: 'italic',
-    fontWeight: '600',
-  },
-  footerLinksRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  footerLinkText: {
-    color: '#2563eb',
-    textDecorationLine: 'none',
-    marginHorizontal: 8,
-    fontSize: 13,
-  },
-  footerCopyright: {
-    fontSize: 14,
-    color: '#777',
-    textAlign: 'center',
-    marginTop: 6,
-    marginBottom: 6,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  modalContainer: { width: '80%', backgroundColor: '#fff', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20, borderRadius: 10, alignItems: 'center' },
-  modalHeader: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 0,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: 'rgba(20, 52, 164, 1)',
-    alignSelf: 'flex-start',
-    paddingBottom: 6,
-    // borderBottomWidth: 3,
-    // borderBottomColor: '#0b4bd6',
-    marginBottom: 6,
-  },
-  modalClose: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#777',
-    position: 'relative',
-    bottom: 5,
-  },
-  modalBodyText: {
-    color: '#333',
-    fontSize: 16,
-    marginBottom: 20, textAlign: 'center'
-  },
-  modalButtonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  modalButton: {
-    flex: 0,
-    width: 100,
-    marginHorizontal: 8,
-    backgroundColor: '#1434a4',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  modalButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  borderLine: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    width: "100%",
-    marginBottom: 15,
-  },
-});
+const createCashbackConditionsStyles = (theme, windowWidth = 360, windowHeight = 640) => {
+  const isTablet = windowWidth >= 600;
+  const horizontalMargin = isTablet ? 40 : 20;
+  const baseFontSize = isTablet ? 18 : 16;
+
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.screenBackground,
+    },
+    scrollViewContent: {
+      flexGrow: 1,
+      paddingBottom: 30,
+      marginTop: 5,
+    },
+    headerTitle: {
+      fontSize: 17,
+      textAlign: 'center',
+      marginHorizontal: 20,
+      marginTop: 20,
+      marginBottom: 10,
+      fontWeight: '600',
+      color: theme.textPrimary,
+      lineHeight: 24,
+    },
+    sectionDivider: {
+      height: 1,
+      backgroundColor: theme.borderColor,
+      marginHorizontal: horizontalMargin,
+      marginVertical: isTablet ? 12 : 8,
+    },
+    introParagraph: {
+      marginHorizontal: 20,
+      fontSize: 15,
+      lineHeight: 22,
+      color: theme.textSecondary,
+      marginBottom: 20,
+      textAlign: 'justify',
+    },
+    sectionHeader: {
+      marginHorizontal: 20,
+      marginTop: 0,
+      marginBottom: 10,
+      fontSize: 24,
+      fontWeight: '700',
+      textAlign: 'justify',
+    },
+    listItem: {
+      marginHorizontal: 20,
+      fontSize: 15,
+      lineHeight: 22,
+      color: theme.textSecondary,
+      marginBottom: 10,
+      textAlign: 'left',
+    },
+    subListItem: {
+      marginLeft: 35,
+      marginRight: 20,
+      fontSize: 15,
+      lineHeight: 22,
+      color: theme.textSecondary,
+      marginBottom: 8,
+      textAlign: 'left',
+    },
+    emphasisText: {
+      fontWeight: '600',
+      color: theme.textPrimary,
+    },
+    highlightText: {
+      color: theme.accentColor,
+      fontWeight: '600',
+    },
+    finalCallToAction: {
+      marginHorizontal: 20,
+      marginTop: 25,
+      marginBottom: 15,
+      fontSize: 15,
+      lineHeight: 22,
+      color: theme.textSecondary,
+      textAlign: 'center',
+    },
+    logo: {
+      width: '100%',
+      height: '100%',
+      resizeMode: 'contain',
+    },
+    sectionlogo: {
+      padding: isTablet ? 20 : 10,
+      marginHorizontal: horizontalMargin,
+      marginVertical: 3,
+      marginTop: isTablet ? 8 : 5,
+      position: 'relative',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: isTablet ? 12 : 8,
+      backgroundColor: '#FFFFFF',
+      borderWidth: 0,
+      borderColor: theme.borderColor,
+      overflow: 'hidden',
+    },
+    pulseShadow: { position: 'absolute', width: 80, height: 80, borderRadius: 40, left: '50%', top: '50%', zIndex: 2 },
+    playButtonContainer: { position: 'absolute', left: '50%', top: '50%', zIndex: 3, transform: [{ translateX: -30 }, { translateY: -30 }] },
+    playButtonCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
+    playButtonText: { color: '#1e90ff', fontSize: 26, marginLeft: 3, fontWeight: '600', marginBottom: 5, marginTop: isTablet ? 3 : 3 },
+    Titlelogo: {
+      marginTop: 2,
+      width: 25,
+      height: 25,
+      padding: 10,
+      resizeMode: 'contain',
+      marginBottom: 0,
+    },
+    TitleText: {
+      marginTop: 0,
+      marginHorizontal: 0,
+      marginBottom: 12,
+      fontSize: 22,
+      fontWeight: '700',
+    },
+    sectionHeaderFlex: {
+      marginHorizontal: 20,
+      flexDirection: 'row',
+    },
+    sectionBg1: {
+      marginTop: 10,
+      marginBottom: isTablet ? 8 : 5,
+      paddingVertical: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    abouts: {
+      fontSize: 28,
+      color: '#003366',
+      fontWeight: '700',
+      marginBottom: 35,
+    },
+    aboutsSpan: {
+      color: '#0147AB',
+    },
+    sectionContainer: {
+      padding: 10,
+      marginVertical: 0,
+      borderRadius: 12,
+    },
+    emailLink: {
+      textDecorationLine: 'underline',
+      color: '#0d6efd',
+      fontSize: 15,
+    },
+    footerContainer: {
+      paddingVertical: 18,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+
+    },
+    footerImageWrapper: {
+      width: '92%',
+      borderRadius: 12,
+      overflow: 'hidden',
+      alignItems: 'center',
+      justifyContent: 'center',
+
+
+    },
+    footerImage: {
+      width: '100%',
+      height: 400,
+      resizeMode: 'contain',
+    },
+    footerCaption: {
+      fontSize: 14,
+      color: '#555',
+      fontStyle: 'italic',
+      textAlign: 'center',
+      marginTop: 8,
+      marginBottom: 12,
+    },
+    footerHeadline: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: '#003366',
+      textAlign: 'center',
+      marginVertical: 8,
+    },
+    footerLogo: {
+      width: 220,
+      height: 80,
+      resizeMode: 'contain',
+      marginTop: 8,
+      marginBottom: 8,
+    },
+    footerTaglineRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    footerTaglineLeft: {
+      color: '#d9534f',
+      fontStyle: 'italic',
+      marginRight: 6,
+      fontWeight: '600',
+    },
+    footerTaglineRight: {
+      color: '#2e8b57',
+      fontStyle: 'italic',
+      fontWeight: '600',
+    },
+    footerLinksRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    footerLinkText: {
+      color: '#2563eb',
+      textDecorationLine: 'none',
+      marginHorizontal: 8,
+      fontSize: 13,
+    },
+    footerCopyright: {
+      fontSize: 14,
+      color: '#777',
+      textAlign: 'center',
+      marginTop: 6,
+      marginBottom: 6,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 20,
+    },
+    modalContainer: { width: '80%', backgroundColor: '#fff', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20, borderRadius: 10, alignItems: 'center' },
+    modalHeader: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 0,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: 'rgba(20, 52, 164, 1)',
+      alignSelf: 'flex-start',
+      paddingBottom: 6,
+      // borderBottomWidth: 3,
+      // borderBottomColor: '#0b4bd6',
+      marginBottom: 6,
+    },
+    modalClose: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: '#777',
+      position: 'relative',
+      bottom: 5,
+    },
+    modalBodyText: {
+      color: '#333',
+      fontSize: 16,
+      marginBottom: 20, textAlign: 'center'
+    },
+    modalButtonsRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      width: '100%',
+    },
+    modalButton: {
+      flex: 0,
+      width: 100,
+      marginHorizontal: 8,
+      backgroundColor: '#1434a4',
+      paddingVertical: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+    },
+    modalButtonText: {
+      color: '#fff',
+      fontWeight: '600',
+      fontSize: 16,
+    },
+    borderLine: {
+      borderBottomWidth: 1,
+      borderBottomColor: '#ccc',
+      width: "100%",
+      marginBottom: 15,
+    },
+  });
+};
 
 const AboutUs = ({ navigation, route }) => {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkThemeColors : lightThemeColors;
-  const styles = createCashbackConditionsStyles(theme);
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const styles = useMemo(() => createCashbackConditionsStyles(theme, windowWidth, windowHeight), [theme, windowWidth, windowHeight]);
   const isDarkMode = useColorScheme() === 'dark';
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const REFER_EARN_FOLDER_ID = '9ebe21e5639c440c930ba642a07d0a0b';
+
+  const isLandscape = windowWidth > windowHeight;
+  const isTablet = windowWidth >= 600;
+
+  // responsive sizing for aboutusimg.png to avoid cropping across devices
+  const aboutImageSource = require('../img/aboutusimg.png');
+  const aboutResolved = Image.resolveAssetSource(aboutImageSource) || {};
+  const aboutAspect = (aboutResolved.width && aboutResolved.height) ? (aboutResolved.width / aboutResolved.height) : (16 / 9);
+
+  // Calculate dimensions based on device type and orientation
+  const horizontalMargin = isTablet ? 40 : 20;
+  const containerPadding = isTablet ? 20 : 10;
+  const aboutMaxWidth = windowWidth - (horizontalMargin * 2) - (containerPadding * 2);
+
+  let aboutWidth = aboutMaxWidth;
+  let aboutHeight = Math.round(aboutWidth / aboutAspect);
+
+  // Adjust max height based on orientation and device type
+  let maxHeightPercentage = 0.3; // default for portrait mobile
+  if (isLandscape) {
+    maxHeightPercentage = isTablet ? 0.5 : 0.4;
+  } else {
+    maxHeightPercentage = isTablet ? 0.35 : 0.3;
+  }
+
+  const aboutMaxHeight = Math.round(windowHeight * maxHeightPercentage);
+  if (aboutHeight > aboutMaxHeight) {
+    aboutHeight = aboutMaxHeight;
+    aboutWidth = Math.round(aboutHeight * aboutAspect);
+  }
+
+  const responsiveAboutImageStyle = {
+    width: aboutWidth,
+    height: aboutHeight,
+  };
 
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
   const [referEarnVideos, setReferEarnVideos] = useState({});
@@ -391,7 +438,7 @@ const AboutUs = ({ navigation, route }) => {
 
   const fetchReferEarnVideos = async () => {
     const netInfoState = await NetInfo.fetch();
-    if (!netInfoState.isInternetReachable) {
+    if (!netInfoState.isConnected) {
       Alert.alert('No Internet', 'Please check your internet connection.');
       return null;
     }
@@ -461,7 +508,7 @@ const AboutUs = ({ navigation, route }) => {
 
   const vdoCipher_api = async (videoId, tokenToUse) => {
     const netInfoState = await NetInfo.fetch();
-    if (!netInfoState.isInternetReachable) {
+    if (!netInfoState.isConnected) {
       return { error: true, message: 'No internet' };
     }
     setIsVideoLoading(true);
@@ -486,7 +533,7 @@ const AboutUs = ({ navigation, route }) => {
 
   const handleVideoPlayback = async (videoId, language, title, poster) => {
     const netInfoState = await NetInfo.fetch();
-    if (!netInfoState.isInternetReachable) {
+    if (!netInfoState.isConnected) {
       Alert.alert('No Internet Connection', 'Please check your internet connection and try again.');
       return;
     }
@@ -551,83 +598,39 @@ const AboutUs = ({ navigation, route }) => {
           end={{ x: 0, y: 1 }}
           style={styles.sectionBg1}
         >
-          <Text style={styles.abouts}>About <Text style={styles.aboutsSpan}>Us</Text> </Text>
+          <Text style={[styles.abouts, { marginBottom: isTablet ? 35 : 5 }]} >About <Text style={styles.aboutsSpan}>Us</Text> </Text>
         </LinearGradient>
-
-        <TouchableOpacity onPress={loadAndOpenModal} activeOpacity={0.9} style={styles.sectionlogo}>
-          <Image
-            source={require('../img/aboutusimg.png')}
-            style={styles.logo}
-            accessibilityLabel="App Logo"
-          />
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.pulseShadow,
-              {
-                backgroundColor: 'rgba(30,144,255,1)',
-                opacity: pulseAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.7, 0.4, 0] }),
-                transform: [
-                  { translateX: -40 },
-                  { translateY: -40 },
-                  { scale: pulseAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.36, 1.33] }) },
-                ],
-              },
-            ]}
-          />
-          <View pointerEvents="none" style={styles.playButtonContainer}>
-            <View style={[styles.playButtonCircle, { backgroundColor: isDarkMode ? '#fff' : '#fff' }]}>
-              <Text style={styles.playButtonText}>▶</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        {/* Inline modal that matches the Refer & Earn language selector design */}
-        <Modal visible={isAboutModalVisible} transparent animationType="fade" onRequestClose={() => setIsAboutModalVisible(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Language</Text>
-                <Pressable onPress={() => setIsAboutModalVisible(false)}>
-                  <Text style={styles.modalClose}>✕</Text>
-                </Pressable>
-              </View>
-              <View style={styles.borderLine} />
-              <Text style={styles.modalBodyText}>In which language would you like to watch this video?</Text>
-              {isVideoLoading && <ActivityIndicator size="small" color="#0b4bd6" style={{ marginBottom: 10 }} />}
-              <View style={styles.modalButtonsRow}>
-                <TouchableOpacity
-                  style={styles.modalButton}
-                  onPress={async () => {
-                    setIsAboutModalVisible(false);
-                    const youtubeHindi = 'https://www.youtube.com/watch?v=2puDfTtzl00';
-                    try {
-                      await Linking.openURL(youtubeHindi);
-                    } catch (err) {
-                      Alert.alert('Unable to open', 'Could not open YouTube link.');
-                    }
-                  }}
-                >
-                  <Text style={styles.modalButtonText}>Hindi</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.modalButton}
-                  onPress={async () => {
-                    setIsAboutModalVisible(false);
-                    const youtubeEnglish = 'https://www.youtube.com/watch?v=TLJ5kiQJTGU';
-                    try {
-                      await Linking.openURL(youtubeEnglish);
-                    } catch (err) {
-                      Alert.alert('Unable to open', 'Could not open YouTube link.');
-                    }
-                  }}
-                >
-                  <Text style={styles.modalButtonText}>English</Text>
-                </TouchableOpacity>
+        <View style={[styles.sectionlogo, { width: aboutWidth + (isTablet ? 40 : 20), height: aboutHeight + (isTablet ? 40 : 20) }]}>
+          <TouchableOpacity onPress={loadAndOpenModal} activeOpacity={0.9} style={{ alignItems: 'center', justifyContent: 'center', position: 'relative', width: aboutWidth, height: aboutHeight }}>
+            <Image
+              source={aboutImageSource}
+              style={responsiveAboutImageStyle}
+              resizeMode="contain"
+              accessibilityLabel="App Logo"
+            />
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.pulseShadow,
+                {
+                  backgroundColor: 'rgba(30,144,255,1)',
+                  opacity: pulseAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.7, 0.4, 0] }),
+                  transform: [
+                    { translateX: -40 },
+                    { translateY: -40 },
+                    { scale: pulseAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.36, 1.33] }) },
+                  ],
+                },
+              ]}
+            />
+            <View pointerEvents="none" style={styles.playButtonContainer}>
+              <View style={[styles.playButtonCircle, { backgroundColor: isDarkMode ? '#fff' : '#fff' }]}>
+                <Text style={styles.playButtonText}>▶</Text>
               </View>
             </View>
-          </View>
-        </Modal>
+          </TouchableOpacity>
+        </View>
+        <View style={[styles.sectionDivider, { marginVertical: isTablet ? 12 : 8 }]} />
         <View style={[
           styles.sectionContainer,
           { backgroundColor: isDarkMode ? '#282c34' : '#ffffff' },
@@ -661,7 +664,7 @@ const AboutUs = ({ navigation, route }) => {
           style={[
             styles.sectionContainer,
             { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
-            { marginBottom: 30 }
+
           ]}
         >
           <View style={styles.sectionHeaderFlex}>
@@ -672,7 +675,7 @@ const AboutUs = ({ navigation, route }) => {
               Our Vision
             </Text>
           </View>
-          <Text style={[styles.introParagraph, { marginBottom: 10 }]}>
+          <Text style={[styles.introParagraph]}>
             At<Text style={{ fontWeight: 'bold' }}> SarvaShine Allrounder Baby Solutions Pvt. Ltd., </Text> our vision is to be the <Text style={{ fontWeight: 'bold' }}>world’s most trusted and happiness-driven </Text>
             early childhood development platform. We aim to redefine parenting globally by combining <Text style={{ fontWeight: 'bold' }}>innovation, science, and empathy </Text>to make holistic child development
             <Text style={{ fontWeight: 'bold' }}>accessible and effective </Text>for every family.
@@ -697,7 +700,7 @@ const AboutUs = ({ navigation, route }) => {
           style={[
             styles.sectionContainer,
             { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
-            { marginBottom: 30 }
+
           ]}
         >
           <View style={styles.sectionHeaderFlex}>
@@ -733,14 +736,14 @@ const AboutUs = ({ navigation, route }) => {
             <Text style={{ color: 'green', fontWeight: 'bold', }}>✔ </Text>Offering <Text style={{ fontWeight: 'bold' }}>financially rewarding programs </Text>such as <Text style={{ fontWeight: 'bold' }}>Refer & Earn </Text>and <Text style={{ fontWeight: 'bold' }}>Cashback for Feedback, </Text>helping parents save while actively participating in our community.
             {'\n'}
             {'\n'}
-            Our goal is to empower parents with <Text style={{ fontWeight: 'bold' }}>practical tools, clear guidance, and financial support </Text>so they can raise <Text style={{ fontWeight: 'bold' }}>intelligent, emotionally strong, and well-rounded children, </Text>making parenting <Text style={{ fontWeight: 'bold' }}>joyful, effective, and stress-free.</Text>
+            Our goal is to empower parents with <Text style={{ fontWeight: 'bold', marginBottom: 30 }}>practical tools, clear guidance, and financial support </Text>so they can raise <Text style={{ fontWeight: 'bold' }}>intelligent, emotionally strong, and well-rounded children, </Text>making parenting <Text style={{ fontWeight: 'bold' }}>joyful, effective, and stress-free.</Text>
           </Text>
         </LinearGradient>
         <View style={[
           styles.sectionContainer,
           { backgroundColor: isDarkMode ? '#282c34' : '#ffffff' },
           { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
-          { marginBottom: 30 }
+
         ]}>
           <Text style={[
             styles.sectionHeader,
@@ -777,7 +780,6 @@ const AboutUs = ({ navigation, route }) => {
           style={[
             styles.sectionContainer,
             { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
-            { marginBottom: 30 }
           ]}
         >
           <Text style={[
@@ -787,7 +789,7 @@ const AboutUs = ({ navigation, route }) => {
           <Text style={[styles.introParagraph, { marginBottom: 0 }]}>
             At <Text style={{ fontWeight: 'bold' }}>AllrounderBaby.com, </Text>we created the <Text style={{ fontWeight: 'bold' }}>Ultimate Result-Oriented Videos—step-by-step guides focused entirely on “how” to awaken all nine types of intelligence</Text>  in children aged <Text style={{ fontWeight: 'bold' }}>0–5 years.</Text>
           </Text>
-          <Text style={[styles.introParagraph, { marginBottom: 10 }]}>
+          <Text style={[styles.introParagraph, { marginBottom: 30 }]}>
             {'\n'}
             Our approach is <Text style={{ fontWeight: 'bold' }}>practical, simple, and powerful, </Text>designed to work for <Text style={{ fontWeight: 'bold' }}>every family worldwide,</Text> regardless of parenting style or lifestyle. These videos empower parents with <Text style={{ fontWeight: 'bold' }}>clear, actionable guidance, </Text>helping children grow into <Text style={{ fontWeight: 'bold' }}>happy, confident, and well-rounded individuals.</Text>
           </Text>
@@ -799,7 +801,6 @@ const AboutUs = ({ navigation, route }) => {
           style={[
             styles.sectionContainer,
             { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
-            { marginBottom: 30 }
           ]}
         >
           <Text style={[
@@ -841,7 +842,7 @@ const AboutUs = ({ navigation, route }) => {
           <Text style={[styles.introParagraph, { marginBottom: 20 }]}>
             {'\n'}
             Looking ahead, we aim to <Text style={{ fontWeight: 'bold' }}>empower parents, transform societies, </Text> and <Text style={{ fontWeight: 'bold' }}>help children thrive, </Text> making
-            <Text style={{ fontWeight: 'bold' }}>early childhood development accessible, actionable, and joyful </Text> for all families.
+            <Text style={{ fontWeight: 'bold', marginBottom: 30 }}>early childhood development accessible, actionable, and joyful </Text> for all families.
 
           </Text>
         </LinearGradient>
@@ -852,15 +853,16 @@ const AboutUs = ({ navigation, route }) => {
           style={[
             styles.sectionContainer,
             { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
-            { marginBottom: 30 }
+            { marginBottom: 30 },
+            { padding: isTablet ? 10 : 5 }
           ]}
         >
 
           <Text style={[
             styles.sectionHeader,
-            { color: isDarkMode ? '#fff' : '#1434a4' }
+            { color: isDarkMode ? '#fff' : '#1434a4', marginTop: 5 }
           ]}>About the Creator</Text>
-          <View style={styles.footerContainer}>
+          <View style={{ ...styles.footerContainer, marginBottom: isTablet ? 0 : -52, marginTop: isTablet ? 0 : -69 }}>
             <View style={styles.footerImageWrapper}>
               <Image
                 source={require('../img/newimg.jpeg')}
@@ -871,7 +873,7 @@ const AboutUs = ({ navigation, route }) => {
           </View>
           <Text style={[styles.introParagraph, { textAlign: 'center', fontSize: 12, lineHeight: 15, marginBottom: 5, fontStyle: 'italic' }]}>Courtesy: Shubha Nayak with the late Dr. A.P.J. Abdul Kalam</Text>
           <Text style={[styles.introParagraph, { textAlign: 'center', fontSize: 12, lineHeight: 15, fontStyle: 'italic' }]}>(President of India, 2002–2007), Chennai (2013) (Personal Archive)</Text>
-          <Text style={[styles.introParagraph, { marginBottom: 0 }]}><Text style={{ fontWeight: 'bold' }}>Shubha Nayak </Text>is the Founder and CEO of <Text style={{ fontWeight: 'bold' }}>Sarvashine Allrounder Baby Solutions Pvt. Ltd., </Text>the company behind AllrounderBaby.com. An alumna of <Text style={{ fontWeight: 'bold' }}>NIT </Text>
+          <Text style={[styles.introParagraph, { marginBottom: 35 }]}><Text style={{ fontWeight: 'bold' }}>Shubha Nayak </Text>is the Founder and CEO of <Text style={{ fontWeight: 'bold' }}>Sarvashine Allrounder Baby Solutions Pvt. Ltd., </Text>the company behind AllrounderBaby.com. An alumna of <Text style={{ fontWeight: 'bold' }}>NIT </Text>
             (National Institute of Technology -Raipur, India) and <Text style={{ fontWeight: 'bold' }}>BITS Pilani </Text>(Birla Institute of Technology & Science, India) with a background in <Text style={{ fontWeight: 'bold' }}>Biotechnology, </Text> Shubha began her career at Sankara Nethralaya’s Vision Research Foundation, where she had the honor of meeting
             <Text style={{ fontWeight: 'bold' }}>Dr. A.P.J. Abdul Kalam — </Text>a moment that inspired her lifelong commitment to <Text style={{ fontWeight: 'bold' }}>research and impact. </Text>After working in the healthcare domain at <Text style={{ fontWeight: 'bold' }}>IBM India Pvt. Ltd., </Text>Shubha’s journey into
             <Text style={{ fontWeight: 'bold' }}> parenthood </Text>led her to deep research on<Text style={{ fontWeight: 'bold' }}>  early childhood development </Text>
@@ -879,50 +881,52 @@ const AboutUs = ({ navigation, route }) => {
             a practical, research-backed program designed to help parents unlock their child’s <Text style={{ fontWeight: 'bold' }}>a practical, research-backed program designed to help parents unlock their child’s </Text>
           </Text>
         </LinearGradient>
-        {/* <LinearGradient
-          colors={['#FFFDE5', '#FFFFFF']}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={[
-            styles.sectionContainer,
-            { borderColor: isDarkMode ? '#444' : '#e0e0e0' },
-          ]}
-        >
-
-          <View style={styles.footerContainer}>
-            <View style={styles.footerImageWrapper}>
-              <Image
-                source={require('../img/Picture3.png')}
-                style={styles.footerImage}
-                accessibilityLabel="Baby image"
-              />
-            </View>
-            <Text style={styles.footerCaption}>Courtesy: Dishaan, 8 months old, son of Shubha Nayak (Personal Archive)</Text>
-
-            <Text style={styles.footerHeadline}>Give your child the gift of becoming an Allrounder!</Text>
-
-            <Image
-              source={require('../img/loginlogo.png')}
-              style={styles.footerLogo}
-              accessibilityLabel="AllrounderBaby logo"
-            />
-
-            <View style={styles.footerTaglineRow}>
-              <Text style={styles.footerTaglineLeft}>Start Early,</Text>
-              <Text style={styles.footerTaglineRight}>Shine Always!</Text>
-            </View>
-
-            <View style={styles.footerLinksRow}>
-              <Text style={styles.footerLinkText}>Privacy Policy</Text>
-              <Text style={{ color: '#9ca3af' }}>|</Text>
-              <Text style={styles.footerLinkText}>Terms of Service</Text>
-            </View>
-
-            <Text style={styles.footerCopyright}>© 2025 Sarvashine Allrounder Baby Solutions Pvt. Ltd. All rights reserved.</Text>
-          </View>
-
-        </LinearGradient> */}
       </ScreenScroll>
+      <Modal visible={isAboutModalVisible} transparent animationType="fade" onRequestClose={() => setIsAboutModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Language</Text>
+              <Pressable onPress={() => setIsAboutModalVisible(false)}>
+                <Text style={styles.modalClose}>✕</Text>
+              </Pressable>
+            </View>
+            <View style={styles.borderLine} />
+            <Text style={styles.modalBodyText}>In which language would you like to watch this video?</Text>
+            {isVideoLoading && <ActivityIndicator size="small" color="#0b4bd6" style={{ marginBottom: 10 }} />}
+            <View style={styles.modalButtonsRow}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={async () => {
+                  setIsAboutModalVisible(false);
+                  const youtubeHindi = 'https://www.youtube.com/watch?v=2puDfTtzl00';
+                  try {
+                    await Linking.openURL(youtubeHindi);
+                  } catch (err) {
+                    Alert.alert('Unable to open', 'Could not open YouTube link.');
+                  }
+                }}
+              >
+                <Text style={styles.modalButtonText}>Hindi</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={async () => {
+                  setIsAboutModalVisible(false);
+                  const youtubeEnglish = 'https://www.youtube.com/watch?v=TLJ5kiQJTGU';
+                  try {
+                    await Linking.openURL(youtubeEnglish);
+                  } catch (err) {
+                    Alert.alert('Unable to open', 'Could not open YouTube link.');
+                  }
+                }}
+              >
+                <Text style={styles.modalButtonText}>English</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

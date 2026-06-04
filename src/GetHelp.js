@@ -6,6 +6,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  Image,
   Linking,
   useColorScheme,
   StatusBar,
@@ -47,28 +48,32 @@ const createGetHelpStyles = (theme) => StyleSheet.create({
   title: {
     fontSize: 24,
     textAlign: 'center',
-    marginTop: Platform.OS === 'ios' ? 40 : 25,
-    marginBottom: 15,
     fontWeight: '600',
     color: theme.textPrimary,
+  },
+  backButton: {
+    padding: 5,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+    transform: [{ rotate: '180deg' }],
   },
   sectionDivider: {
     height: 1,
     backgroundColor: theme.borderColor,
     marginHorizontal: 20,
-    marginBottom: 25,
+    marginBottom: 15,
   },
   introText: {
     fontSize: 16,
     color: theme.textSecondary,
     lineHeight: 26,
     textAlign: 'left',
-    marginBottom: 30,
   },
   emailLinkButton: {
     alignSelf: 'flex-start',
     paddingVertical: 10,
-    marginBottom: 30,
   },
   emailTextWrapper: {
     flexDirection: 'row',
@@ -89,7 +94,6 @@ const createGetHelpStyles = (theme) => StyleSheet.create({
     fontSize: 16,
     color: theme.textSecondary,
     lineHeight: 26,
-    textAlign: 'center',
     marginTop: 20,
   },
 });
@@ -137,7 +141,12 @@ const GetHelp = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1434A4" />
-      <Text style={styles.title}>Customer Support 💕</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 15, marginTop: Platform.OS === 'ios' ? 40 : 25 }}>
+        <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
+          <Image source={require('../img/arrowicon.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
+        </TouchableOpacity>
+        <Text style={[styles.title, { marginTop: 0 }]}>Customer Support 💕</Text>
+      </View>
       <View style={styles.sectionDivider} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.introText}>

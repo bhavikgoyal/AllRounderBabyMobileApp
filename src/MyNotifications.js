@@ -14,6 +14,7 @@ import {
   BackHandler,
   ScrollView,
   useWindowDimensions,
+  StatusBar,
 } from 'react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 
@@ -59,6 +60,29 @@ const NotificationSettings = ({ navigation, route }) => {
     return null;
   }, []);
 
+  // Try to determine if we can go back by inspecting navigation state.
+  const safeGoBack = useCallback(() => {
+    try {
+      if (!navigation) return false;
+      // Prefer built-in canGoBack when available
+      if (typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
+        navigation.goBack();
+        return true;
+      }
+      // Fallback: inspect navigation state for route history
+      if (typeof navigation.getState === 'function') {
+        const st = navigation.getState();
+        if (st && Array.isArray(st.routes) && st.routes.length > 1) {
+          navigation.goBack();
+          return true;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+    return false;
+  }, [navigation]);
+
   const checkNotificationPermission = useCallback(async () => {
     try {
       if (!NOTIFICATION_PERMISSION) {
@@ -93,15 +117,17 @@ const NotificationSettings = ({ navigation, route }) => {
 
   useEffect(() => {
     const backAction = () => {
-      if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
-        navigation.navigate('My Profile');
+      // Try safe go back first
+      if (safeGoBack()) return true;
+      // If an origin param was provided, navigate to it
+      const origin = route?.params?.origin;
+      if (origin) {
+        try { navigation.navigate(origin); } catch (e) { }
         return true;
       }
-      if (route && route.params && route.params.origin) {
-        navigation.navigate(route.params.origin);
-        return true;
-      }
-      return false;
+      // Fallback to profile
+      try { navigation.navigate('My Profile'); } catch (e) { }
+      return true;
     };
 
     const backHandler = BackHandler.addEventListener(
@@ -177,10 +203,7 @@ const NotificationSettings = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => {
-          const origin = route?.params?.origin;
-          if (origin) { navigation.navigate(origin); }
-          else if (navigation?.canGoBack()) { navigation.goBack(); }
-          else { navigation.navigate('My Profile'); }
+          try { navigation.navigate('My Profile'); } catch (e) { }
         }} style={styles.backButton}>
           <Image
             source={require('../img/arrowicon.png')}
@@ -286,7 +309,7 @@ const styles = StyleSheet.create({
     height: 24,
     transform: [{ rotate: '180deg' }],
   },
-  title: { fontSize: 20, fontWeight: 'bold', marginLeft: 10 },
+  title: { fontSize: 20, fontWeight: 'bold' },
   subtitle: { marginTop: 15, marginBottom: 8, fontSize: 13 },
   card: {
     padding: 18,

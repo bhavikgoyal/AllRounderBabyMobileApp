@@ -5,6 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "update-versions": "node scripts/update-version-json.js",
     "lint": "eslint .",
     "start": "react-native start"
   },

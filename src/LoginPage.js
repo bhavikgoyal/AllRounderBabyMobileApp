@@ -169,7 +169,7 @@ const LoginPage = ({ navigation }) => {
 
         try {
             const netInfo = await NetInfo.fetch();
-            if (!netInfo.isInternetReachable) {
+            if (!netInfo.isConnected) {
                 Alert.alert("No Connection", "Please check your internet.");
                 return;
             }
@@ -319,7 +319,10 @@ const LoginPage = ({ navigation }) => {
                                 onChangeText={(t) => { setPassword(t); setPasswordError(''); }}
                             />
                         </Animated.View>
-                        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+                        <View style={styles.adminContactRowContainer}>
+                            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+                        </View>
+
 
                         {adminMessage ? (
                             <View style={styles.adminContactRowContainer}>

@@ -82,11 +82,16 @@ const PrivacyPolicy = ({ navigation, route }) => {
           { backgroundColor: isDarkMode ? '#282c34' : '#ffffff' },
           { borderColor: isDarkMode ? '#444' : '#e0e0e0' }
         ]}>
-          <Text style={[
-            styles.pageTitle,
-            { color: isDarkMode ? '#fff' : '#1434a4', marginBottom: 35 }
-          ]}>Privacy Policy</Text>
 
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, marginTop: Platform.OS === 'ios' ? 18 : 18 }}>
+            <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
+              <Image source={require('../img/arrowicon.png')} style={[styles.backIcon, { tintColor: isDarkMode ? '#fff' : '#1434a4' }]} />
+            </TouchableOpacity>
+            <Text style={[
+              styles.pageTitle, { color: isDarkMode ? '#fff' : '#1434a4', }
+            ]}>Privacy Policy</Text>
+          </View>
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('1')}>
               <Text style={styles.sectionHeader}>
@@ -2192,9 +2197,9 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 15,
-    marginTop: 20,
+    marginTop: -10,
     color: '#1434a4',
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     textAlign: 'center',
   },
   sectionHeader: {
@@ -2302,5 +2307,16 @@ const styles = StyleSheet.create({
     height: 200,
     backgroundColor: '#ddd',
   },
+  backButton: {
+    bottom: 11,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+    fontSize: 25,
+    color: '#1434a4',
+    transform: [{ rotate: '180deg' }],
+  },
+
 });
 export default PrivacyPolicy;

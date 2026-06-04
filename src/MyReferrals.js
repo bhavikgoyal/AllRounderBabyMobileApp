@@ -10,6 +10,7 @@ import {
   Platform,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -52,11 +53,11 @@ const createMyReferralsStyles = (theme) => StyleSheet.create({
     paddingHorizontal: 15,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+    marginLeft: 8,
+    marginBottom: 18,
     color: theme.textPrimary,
   },
 
@@ -171,7 +172,16 @@ const createMyReferralsStyles = (theme) => StyleSheet.create({
     fontWeight: '600',
     fontSize: 12,
   },
-
+  backButton: {
+    bottom: 6,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+    fontSize: 25,
+    color: '#1434a4',
+    transform: [{ rotate: '180deg' }],
+  },
 });
 
 const formatDate = (dateStr) => {
@@ -187,6 +197,7 @@ const formatDate = (dateStr) => {
 const MyReferrals = ({ navigation, route }) => {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkThemeColors : lightThemeColors;
+  const isDarkMode = colorScheme === 'dark';
   const styles = createMyReferralsStyles(theme);
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -271,7 +282,14 @@ const MyReferrals = ({ navigation, route }) => {
     <View style={styles.container}>
       <StatusBar barStyle={theme.statusBarContent} backgroundColor={theme.screenBackground} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.title}>My Referrals</Text>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, marginTop: Platform.OS === 'ios' ? 18 : 18 }}>
+          <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
+            <Image source={require('../img/arrowicon.png')} style={[styles.backIcon, { tintColor: isDarkMode ? '#fff' : '#1434a4' }]} />
+          </TouchableOpacity>
+          <Text style={styles.title}>My Referrals</Text>
+        </View>
+
         <View style={styles.statsCard}>
           <View style={styles.statItemm}>
             <Text style={styles.statValue}>{referrals.length}</Text>

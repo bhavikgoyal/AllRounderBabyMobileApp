@@ -1,5 +1,5 @@
 #import "AppDelegate.h"
-#import "RNSplashScreen.h" 
+#import "RNSplashScreen.h"
 #import <React/RCTBundleURLProvider.h>
 
 @implementation AppDelegate
@@ -7,13 +7,12 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   self.moduleName = @"allrounderbaby";
-  // You can add your custom initial props in the dictionary below.
-  // They will be passed down to the ViewController used by React Native.
+
   self.initialProps = @{};
-  [RNSplashScreen show];  // here
-    // or
-    //[RNSplashScreen showSplash:@"LaunchScreen" inRootView:rootView];
-   
+
+  // TEMPORARILY DISABLE FOR TESTING
+  // [RNSplashScreen show];
+
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
