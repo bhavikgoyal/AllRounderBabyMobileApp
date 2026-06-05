@@ -607,22 +607,15 @@ const ReferAndEarn = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle={theme.statusBarContent} backgroundColor={theme.screenBackground} />
       <ScreenScroll contentContainerStyle={styles.scrollViewContent}>
-        {isTablet ? <LinearGradient
-          colors={['#FFF8E5', '#FFFDEB']}
-          style={[styles.importantDetailsBox, { marginTop: 10, marginBottom: isTablet ? 18 : 8, minHeight: isTablet ? 150 : 110, color: isDarkMode ? '#fff' : '#003366' }]}>
-          <Text style={styles.gradientTitleText}>You earn ₹3,000 / $30 every time</Text>
-          <Text style={styles.gradientTitleText}>Refer a friend & they get 10% OFF</Text>
-
-        </LinearGradient> : <View style={[styles.importantDetailsBox, { marginTop: isTablet ? 10 : 12 }, { marginBottom: isTablet ? 10 : 12 }]}>
+        <View style={[styles.importantDetailsBox, { marginTop: isTablet ? 10 : 12, padding: isTablet ? 18 : 16, marginBottom: isTablet ? 12 : 10 }]}>
           <LinearGradient
-            colors={['#FFF8E5', '#FFFDEB']}
-            style={[styles.importantDetailsBox, { marginTop: 10, marginBottom: isTablet ? 8 : 8, minHeight: isTablet ? 150 : 110, color: isDarkMode ? '#fff' : '#003366' }]}>
-            <Text style={styles.gradientTitleText}>You earn ₹3,000 / $30 every time</Text>
-            <Text style={styles.gradientTitleText}>Refer a friend & they get 10% OFF</Text>
-
+            colors={['#FFF8E5', '#FFFDEB']}>
+            <View>
+              <Text style={[styles.gradientTitleText, { lineHeight: isTablet ? 26 : 26 }]}>You earn ₹3,000 / $30 every time</Text>
+              <Text style={[styles.gradientTitleText, { lineHeight: isTablet ? 26 : 26 }]}>Refer a friend & they get 10% OFF</Text>
+            </View>
           </LinearGradient>
-        </View>}
-
+        </View>
         <View style={styles.importantDetailsBox}>
           <Text style={[styles.referralCodeLabel, { color: isDarkMode ? '#fff' : '#1434a4' }]}>Your Referral Code</Text>
           <View style={styles.referralCodeDisplay}>

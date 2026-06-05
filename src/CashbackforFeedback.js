@@ -97,6 +97,7 @@ const createCashbackStyles = (theme, windowWidth = 360) => {
       padding: contentPadding,
       backgroundColor: theme.cardBackground,
       borderRadius: isTablet ? 12 : 8,
+      overflow: 'hidden',
       borderWidth: theme.elevation === 0 ? 1 : 0,
       borderColor: theme.borderColor,
       elevation: theme.elevation / 2,
@@ -473,45 +474,19 @@ const CashbackforFeedback = () => {
       <StatusBar barStyle={theme.statusBarContent} backgroundColor={theme.screenBackground} />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
 
-        {isTablet ? <LinearGradient
-          colors={['#FFF8E5', '#FFFDEB']}
-          style={[
-            styles.importantDetailsBox,
-            {
-              marginTop: 10,
-              marginBottom: isTablet ? 8 : 5,
-              paddingVertical: isTablet ? 25 : 18,
-              minHeight: isTablet ? 150 : 120,
-
-            },
-
-          ]}>
-          <Text style={[styles.gradientHeaderText, { lineHeight: isTablet ? 28 : 26 }]}>You get ₹1,000 / $10 Cashback </Text>
-          <Text style={[styles.gradientHeaderText, { lineHeight: isTablet ? 28 : 26 }]}>
-            <Text style={styles.gradientHeaderSubText}>for your genuine</Text> Feedback!
-          </Text>
-
-        </LinearGradient> : <View style={[styles.importantDetailsBox, { marginTop: isTablet ? 10 : 12 }]}>
+        {/* Card container with gradient header inside — matches iOS look on Android */}
+        <View style={[styles.importantDetailsBox, { marginTop: isTablet ? 10 : 12, padding: isTablet ? 18 : 16, marginBottom: isTablet ? 12 : 10 }]}>
           <LinearGradient
             colors={['#FFF8E5', '#FFFDEB']}
-            style={[
-              styles.importantDetailsBox,
-              {
-                marginTop: 5,
-                marginBottom: isTablet ? 8 : 5,
-                paddingVertical: isTablet ? 25 : 18,
-                minHeight: isTablet ? 150 : 120,
-
-              },
-
-            ]}>
-            <Text style={[styles.gradientHeaderText, { lineHeight: isTablet ? 28 : 26 }]}>You get ₹1,000 / $10 Cashback </Text>
-            <Text style={[styles.gradientHeaderText, { lineHeight: isTablet ? 28 : 26 }]}>
-              <Text style={styles.gradientHeaderSubText}>for your genuine</Text> Feedback!
-            </Text>
-
+          >
+            <View>
+              <Text style={[styles.gradientHeaderText, { lineHeight: isTablet ? 26 : 26 }]}>You get ₹1,000 / $10 Cashback </Text>
+              <Text style={[styles.gradientHeaderText, { lineHeight: isTablet ? 26 : 26 }]}>
+                <Text style={styles.gradientHeaderSubText}>for your genuine</Text> Feedback!
+              </Text>
+            </View>
           </LinearGradient>
-        </View>}
+        </View>
 
         <View style={[styles.importantDetailsBox, importantBoxLocal, { padding: isTablet ? 20 : 10, marginVertical: 3, marginTop: isTablet ? 8 : 5 }]}>
           <TouchableOpacity onPress={handleThumbnailClick} activeOpacity={0.9} style={{ alignItems: 'center', justifyContent: 'center', position: 'relative' }}>

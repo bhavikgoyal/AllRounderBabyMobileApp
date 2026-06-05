@@ -168,9 +168,11 @@ const createCashbackConditionsStyles = (theme, windowWidth = 360, windowHeight =
       flexDirection: 'row',
     },
     sectionBg1: {
+
+      display: 'flex',
+      flexDirection: "column",
       marginTop: 10,
-      marginBottom: isTablet ? 8 : 5,
-      paddingVertical: 18,
+
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -178,10 +180,9 @@ const createCashbackConditionsStyles = (theme, windowWidth = 360, windowHeight =
       fontSize: 28,
       color: '#003366',
       fontWeight: '700',
-      marginBottom: 35,
-    },
-    aboutsSpan: {
-      color: '#0147AB',
+      paddingTop: 20,
+      paddingBottom: 20,
+
     },
     sectionContainer: {
 
@@ -511,23 +512,32 @@ const AboutUs = ({ navigation, route }) => {
     if (!netInfoState.isConnected) {
       return { error: true, message: 'No internet' };
     }
+
     setIsVideoLoading(true);
-    if (!videoId) return { error: true, message: 'Missing videoId' };
+    if (!videoId) {
+      setIsVideoLoading(false);
+      return { error: true, message: 'Missing videoId' };
+    }
+
     try {
       const DETAILS_ENDPOINT = `${BASE_URL}Vdocipher/GetVDOCipher_VideosDetails?videoId=${videoId}`;
       const response = await fetch(DETAILS_ENDPOINT, {
         method: 'GET',
         headers: { Authorization: `Bearer ${tokenToUse}`, Accept: 'application/json' },
       });
+
       if (!response.ok) {
-        let errorData = {};
+        let errorData = null;
         try { errorData = await response.json(); } catch (e) { }
-        return { error: true, message: errorData.message || 'Failed to get video details' };
+        return { error: true, message: (errorData && (errorData.message || errorData.error)) || `HTTP ${response.status}` };
       }
+
       const videoDetails = await response.json();
       return videoDetails;
     } catch (err) {
       return { error: true, message: err.message };
+    } finally {
+      setIsVideoLoading(false);
     }
   };
 
@@ -598,8 +608,10 @@ const AboutUs = ({ navigation, route }) => {
           end={{ x: 0, y: 1 }}
           style={styles.sectionBg1}
         >
-          <Text style={[styles.abouts, { marginBottom: isTablet ? 35 : 5 }]} >About <Text style={styles.aboutsSpan}>Us</Text> </Text>
-        </LinearGradient>
+          <View>
+            <Text style={styles.abouts}>  About Us </Text>
+          </View>
+        </LinearGradient >
         <View style={[styles.sectionlogo, { width: aboutWidth + (isTablet ? 40 : 20), height: aboutHeight + (isTablet ? 40 : 20) }]}>
           <TouchableOpacity onPress={loadAndOpenModal} activeOpacity={0.9} style={{ alignItems: 'center', justifyContent: 'center', position: 'relative', width: aboutWidth, height: aboutHeight }}>
             <Image
@@ -885,7 +897,7 @@ const AboutUs = ({ navigation, route }) => {
             a practical, research-backed program designed to help parents unlock their child’s <Text style={{ fontWeight: 'bold' }}>a practical, research-backed program designed to help parents unlock their child’s </Text>
           </Text>
         </LinearGradient>
-      </ScreenScroll>
+      </ScreenScroll >
       <Modal visible={isAboutModalVisible} transparent animationType="fade" onRequestClose={() => setIsAboutModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
@@ -931,7 +943,7 @@ const AboutUs = ({ navigation, route }) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </View >
   );
 };
 export default AboutUs;
