@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo, } from "react";
-import { StyleSheet, Text, View, BackHandler, Alert, StatusBar, Platform, useWindowDimensions, TouchableOpacity, TouchableWithoutFeedback, Image, } from "react-native";
+import { StyleSheet, Text, View, BackHandler, Alert, StatusBar, Platform, useWindowDimensions, TouchableOpacity, TouchableWithoutFeedback, Image, ActivityIndicator, } from "react-native";
 import Orientation from 'react-native-orientation-locker';
 import { VdoPlayerView } from "vdocipher-rn-bridge";
 import { useRoute, useNavigation, useFocusEffect, } from "@react-navigation/native";
@@ -33,6 +33,14 @@ const VideoPlayerScreen = () => {
         latestCameFromRef.current = cameFrom;
     }, [cameFrom]);
     const videoId = VideoId;
+    const latestVideoIdRef = useRef(videoId);
+    const latestRouteParamsRef = useRef({
+        language,
+        step,
+        stage_name,
+        displayStep,
+        total_time,
+    });
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
     const isLandscape = screenWidth > screenHeight;
     const playerHeight = isLandscape ? screenHeight : Math.round((screenWidth * 9) / 16);
@@ -42,6 +50,7 @@ const VideoPlayerScreen = () => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isVideoReady, setIsVideoReady] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [videoCompleted, setVideoCompleted] = useState(false);
@@ -53,6 +62,8 @@ const VideoPlayerScreen = () => {
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [showSpeedMenu, setShowSpeedMenu] = useState(false);
     const progressBarWidthRef = useRef(0);
+    const firstProgressRef = useRef(false);
+    const videoReadyTimerRef = useRef(null);
     const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
     const formatTime = useCallback((sec) => {
         const s = Number(sec) || 0;
@@ -101,6 +112,7 @@ const VideoPlayerScreen = () => {
         if (!videoId) return;
         try {
             setIsLoading(true);
+            setIsVideoReady(false);
             setError(null);
             const [userId, token] = await Promise.all([
                 AsyncStorage.getItem("userId"),
@@ -129,11 +141,7 @@ const VideoPlayerScreen = () => {
                 throw new Error("Invalid video credentials");
             setCredentials({
                 otp: data.otp,
-                playbackInfo:
-                    Platform.OS === "android" &&
-                        typeof data.playbackInfo !== "string"
-                        ? JSON.stringify(data.playbackInfo)
-                        : data.playbackInfo,
+                playbackInfo: typeof data.playbackInfo === "string" ? data.playbackInfo : JSON.stringify(data.playbackInfo),
             });
         } catch (err) {
             setError({ message: err.message });
@@ -141,6 +149,28 @@ const VideoPlayerScreen = () => {
             setIsLoading(false);
         }
     }, [videoId]);
+
+    useEffect(() => {
+        if (videoReadyTimerRef.current) {
+            clearTimeout(videoReadyTimerRef.current);
+            videoReadyTimerRef.current = null;
+        }
+        if (credentials?.otp) {
+            // fallback: if player events don't fire, unstick loader after 2s
+            videoReadyTimerRef.current = setTimeout(() => {
+                if (!firstProgressRef.current && !isVideoReady) {
+                    setIsVideoReady(true);
+                }
+                videoReadyTimerRef.current = null;
+            }, 2000);
+        }
+        return () => {
+            if (videoReadyTimerRef.current) {
+                clearTimeout(videoReadyTimerRef.current);
+                videoReadyTimerRef.current = null;
+            }
+        };
+    }, [credentials?.otp, isVideoReady]);
     const toSeconds = useCallback((val) => {
         if (val == null) return 0;
         const n = Number(val);
@@ -148,6 +178,15 @@ const VideoPlayerScreen = () => {
         return n < 0 ? 0 : Math.floor(n);
     }, []);
     useEffect(() => {
+        latestVideoIdRef.current = videoId;
+        latestRouteParamsRef.current = {
+            language,
+            step,
+            stage_name,
+            displayStep,
+            total_time,
+        };
+        firstProgressRef.current = false;
         if (videoId) {
             progressSentRef.current = false;
             finishedSentRef.current = false;
@@ -164,7 +203,7 @@ const VideoPlayerScreen = () => {
             setIsFullscreen(false);
             fetchVideoCredentials();
         }
-    }, [videoId, fetchVideoCredentials]);
+    }, [videoId, fetchVideoCredentials, language, step, stage_name, displayStep, total_time]);
     useEffect(() => {
         return () => {
             try {
@@ -243,7 +282,15 @@ const VideoPlayerScreen = () => {
     );
     const updateProgress = useCallback(
         async (isFinished = false, overrideSeconds = null) => {
-            if (!videoId) return;
+            const currentVideoId = latestVideoIdRef.current;
+            if (!currentVideoId) return;
+            const {
+                language: curLanguage,
+                step: curStep,
+                stage_name: curStageName,
+                displayStep: curDisplayStep,
+                total_time: curTotalTime,
+            } = latestRouteParamsRef.current || {};
             try {
                 const [userId, token, deviceKey] = await Promise.all([
                     AsyncStorage.getItem("userId"),
@@ -254,20 +301,20 @@ const VideoPlayerScreen = () => {
                 const sendSecs = overrideSeconds != null
                     ? Math.floor(overrideSeconds)
                     : Math.floor(currentTimeRef.current);
-                const finishedThreshold = total_time ? Math.ceil(toSeconds(total_time) * 0.8) : sendSecs;
+                const finishedThreshold = curTotalTime ? Math.ceil(toSeconds(curTotalTime) * 0.8) : sendSecs;
                 const finished = sendSecs >= finishedThreshold ? 1 : 0;
                 const payload = {
                     User_id: userIdInt,
-                    video_id: videoId,
+                    video_id: currentVideoId,
                     last_watched_timestamp_seconds: sendSecs,
-                    Language: language,
+                    Language: curLanguage,
                     is_finished: finished,
-                    level_step: step,
+                    level_step: curStep,
                     total_views: 1,
-                    total_time: toSeconds(total_time),
+                    total_time: toSeconds(curTotalTime),
                     playback: "fgdfg",
                     otp: "dsg",
-                    stage_name: `${stage_name || ""} ${displayStep ?? step}`.trim(),
+                    stage_name: `${curStageName || ""} ${curDisplayStep ?? curStep}`.trim(),
                     DeviceKey: deviceKey,
                 };
                 const headers = {
@@ -290,7 +337,7 @@ const VideoPlayerScreen = () => {
             } catch (error) {
             }
         },
-        [videoId, currentTime, language, step, stage_name, displayStep, total_time]
+        [toSeconds]
     );
     const handleBack = useCallback(() => {
         if (playerRef.current) {
@@ -298,7 +345,7 @@ const VideoPlayerScreen = () => {
             playerRef.current.release?.();
         }
 
-        updateProgress().catch(() => { });
+        updateProgress(false, 0).catch(() => { });
         try { Orientation.lockToPortrait(); } catch (e) { }
 
         const target = latestCameFromRef.current;
@@ -315,8 +362,10 @@ const VideoPlayerScreen = () => {
 
     if (isLoading || !credentials?.otp) {
         return (
-            <View style={styles.center}>
-                <Text style={{ color: "#fff" }}>Loading video...</Text>
+            <View style={styles.container}>
+                <View style={styles.loaderOverlay} pointerEvents="auto">
+                    <ActivityIndicator size="large" color="#fff" />
+                </View>
             </View>
         );
     }
@@ -339,7 +388,7 @@ const VideoPlayerScreen = () => {
                     ref={playerRef}
                     showNativeControls={false}
                     playWhenReady={isPlaying}
-                    pointerEvents="none"
+
                     style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#000" }}
                     embedInfo={{
                         otp: credentials.otp,
@@ -350,6 +399,9 @@ const VideoPlayerScreen = () => {
                         if (e?.mediaInfo?.duration > 0) {
                             setDuration(Math.floor(e.mediaInfo.duration / 1000));
                         }
+                        try {
+                            if (!isVideoReady) setIsVideoReady(true);
+                        } catch (err) { }
                     }}
                     onPlayerStateChanged={(e) => {
                         if (e?.playerState === 'ended') {
@@ -361,6 +413,10 @@ const VideoPlayerScreen = () => {
                             const secs = Math.floor(p.currentTime / 1000);
                             setCurrentTime(secs);
                             currentTimeRef.current = secs;
+                            if (!firstProgressRef.current) {
+                                firstProgressRef.current = true;
+                                if (!isVideoReady) setIsVideoReady(true);
+                            }
                         }
                     }}
                     onMediaEnded={async () => {
@@ -387,6 +443,11 @@ const VideoPlayerScreen = () => {
                         Alert.alert("Playback Error", e?.errorDescription || "Video failed to load");
                     }}
                 />
+                {!isVideoReady && (
+                    <View style={styles.loaderOverlay} pointerEvents="auto">
+                        <ActivityIndicator size="large" color="#fff" />
+                    </View>
+                )}
                 <TouchableWithoutFeedback onPress={() => { if (!isLocked) setShowControls((s) => !s); }}>
                     <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
                 </TouchableWithoutFeedback>
@@ -692,6 +753,23 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '600',
         marginRight: 6,
+    },
+    loaderOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        zIndex: 999999999999,
+        elevation: 999999999,
+    },
+    loaderText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 export default VideoPlayerScreen;
