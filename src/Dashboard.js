@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { StatusBar, useWindowDimensions } from 'react-native';
-import { StyleSheet, ScrollView, View, FlatList, Image, Animated, Text, TouchableOpacity, Alert, ActivityIndicator, Pressable, useColorScheme, Platform, BackHandler } from 'react-native';
+import { StyleSheet, ScrollView, View, FlatList, Image, Animated, Text, TouchableOpacity, Alert, ActivityIndicator, Pressable, useColorScheme, Platform, ToastAndroid, BackHandler, findNodeHandle } from 'react-native';
 import { CommonActions, useIsFocused } from '@react-navigation/native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -86,6 +86,7 @@ const VideoStepList = ({ groups, completedSteps, onStepPress, isDarkMode, stepRe
                         onPress={onStepPress}
                         isCompleted={completedSteps[`step${group.stepNumber}`] ?? false}
                         isLocked={isLocked}
+                        removeClippedSubviews={true}
                         isDarkMode={isDarkMode}
                         previousDisplay={previousStep?.displayStepNumber ?? previousStep?.apiStepNumber ?? previousStep?.stepNumber}
                     />
@@ -96,7 +97,7 @@ const VideoStepList = ({ groups, completedSteps, onStepPress, isDarkMode, stepRe
 };
 
 const LevelModal = ({ levelName, children, onClose, isDarkMode, scrollRef, isLandscape, contentWidth }) => (
-    <View style={styles.modalLikeContainer} collapsable={false}>
+    <View style={styles.modalLikeContainer}>
         <Pressable
             style={[
                 styles.fullScreenPressable,
@@ -109,9 +110,7 @@ const LevelModal = ({ levelName, children, onClose, isDarkMode, scrollRef, isLan
                     styles.modalLikeContentBox,
                     isLandscape ? { width: '70%', marginTop: 8, maxHeight: '96%' } : { width: contentWidth, marginTop: 8, maxHeight: '96%' }
                 ]}
-                onPress={(e) => {
-                    if (e) e.stopPropagation();
-                }}
+                onPress={() => { }}
             >
                 <View style={[styles.modalContents, { backgroundColor: isDarkMode ? '#2a3144' : Colors.white }]}>
                     <View style={styles.modalHeader}>
@@ -125,7 +124,7 @@ const LevelModal = ({ levelName, children, onClose, isDarkMode, scrollRef, isLan
                         style={styles.modalScrollView}
                         contentContainerStyle={styles.modalScrollViewContent}
                         nestedScrollEnabled={true}
-                        removeClippedSubviews={Platform.OS === 'android'}
+                        removeClippedSubviews={true}
                         scrollEventThrottle={16}
                         decelerationRate="fast"
                         keyboardShouldPersistTaps="handled" >
@@ -203,7 +202,6 @@ const Dashboard = ({ navigation }) => {
     const [topicCompletionTimes, setTopicCompletionTimes] = useState({});
     const [unlockedStepsThreshold, setUnlockedStepsThreshold] = useState(0);
     const [lastViewedRequest, setLastViewedRequest] = useState(null);
-    const [maxStepPerLevel, setMaxStepPerLevel] = useState({ foundation: 0, middle: 0, advanced: 0 });
     const dataLoadedRef = useRef(false);
 
     const [levelToUnlock, setLevelToUnlock] = useState(null);
@@ -226,9 +224,6 @@ const Dashboard = ({ navigation }) => {
     const levelModalScrollRef = useRef(null);
 
     useEffect(() => {
-        // Only register BackHandler on Android - iOS doesn't have hardware back button
-        if (Platform.OS !== 'android') return;
-
         const onBackPress = () => {
             if (!isFocused) return false;
             if (isModalVisible) {
@@ -262,6 +257,7 @@ const Dashboard = ({ navigation }) => {
             lastBackPressed.current = now;
             const ToastAndroid = require('react-native').ToastAndroid;
             ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+
             return true;
         };
 
@@ -404,7 +400,7 @@ const Dashboard = ({ navigation }) => {
             handleLevelPress(levelToUnlock, true);
             setLevelToUnlock(null);
         }
-    }, [levelToUnlock]);
+    }, [videoData, masterConfig]);
 
     useEffect(() => {
         if (!lastViewedRequest) {
@@ -417,7 +413,7 @@ const Dashboard = ({ navigation }) => {
         }
 
         if (!activeLevel) {
-            handleLevelPress(lastViewedRequest.level, true); // Skip prerequisite check for Last Viewed
+            handleLevelPress(lastViewedRequest.level);
             return;
         }
 
@@ -482,7 +478,6 @@ const Dashboard = ({ navigation }) => {
 
     const handleLastViewedPress = async () => {
         try {
-            debugger;
             if (unlockedStepsThreshold && Number.isFinite(unlockedStepsThreshold) && unlockedStepsThreshold > 0) {
                 const resolvedCategory = getCategoryFromStep(unlockedStepsThreshold);
                 if (resolvedCategory && masterConfig[resolvedCategory]) {
@@ -541,7 +536,6 @@ const Dashboard = ({ navigation }) => {
                     loadMiddleLevelCompletionTime(),
                     loadAdvancedLevelCompletionTime(),
                     loadTopicCompletionTimes(),
-                    loadMaxStepPerLevel(),
                 ]);
 
                 if (storedToken && storedUserId) {
@@ -775,31 +769,6 @@ const Dashboard = ({ navigation }) => {
             }
         } catch (error) {
             console.error("Failed to load advanced level completion time from storage", error);
-        }
-    };
-
-    const loadMaxStepPerLevel = async () => {
-        try {
-            const savedData = await AsyncStorage.getItem('maxStepPerLevel');
-            if (savedData) {
-                const parsed = JSON.parse(savedData);
-                setMaxStepPerLevel(parsed);
-            }
-        } catch (error) {
-            console.error("Failed to load max step per level from storage", error);
-        }
-    };
-
-    const updateMaxStepPerLevel = async (level, stepNumber) => {
-        try {
-            const newMaxSteps = { ...maxStepPerLevel };
-            if (stepNumber > (newMaxSteps[level] || 0)) {
-                newMaxSteps[level] = stepNumber;
-                setMaxStepPerLevel(newMaxSteps);
-                await AsyncStorage.setItem('maxStepPerLevel', JSON.stringify(newMaxSteps));
-            }
-        } catch (error) {
-            console.error("Failed to save max step per level:", error);
         }
     };
 
@@ -1046,6 +1015,7 @@ const Dashboard = ({ navigation }) => {
         }, 300);
     };
 
+
     const handleDropdownItemClick = (stepNumber) => {
         const config = masterConfig[openCategory];
         if (!config) return;
@@ -1207,15 +1177,6 @@ const Dashboard = ({ navigation }) => {
             } catch (err) {
                 console.error('Failed to save last viewed info:', err);
             }
-
-            // Update max step per level (for Foundation, Middle, and Advanced levels only)
-            if (step !== 1001 && step !== 1002 && openCategory) {
-                const level = getLevelForCategory(openCategory);
-                if (level && (level === 'foundation' || level === 'middle' || level === 'advanced')) {
-                    await updateMaxStepPerLevel(level, step);
-                }
-            }
-
             if (openCategory) {
                 const category = masterConfig[openCategory];
                 const allSteps = category.finalGroupedData.map(g => `step${g.stepNumber}`);
@@ -1319,7 +1280,7 @@ const Dashboard = ({ navigation }) => {
         }
     };
 
-    const handleLevelPress = async (level, skipPrerequisiteCheck = false) => {
+    const handleLevelPress = async (level) => {
         const deviceKey = await AsyncStorage.getItem('deviceKey');
         if (!dataLoaded) {
             Alert.alert("Loading...", "Please wait until your progress is fully loaded.");
@@ -1408,18 +1369,9 @@ const Dashboard = ({ navigation }) => {
                 } catch (error) { console.error("Could not check foundation lock time", error); }
             }
             setActiveLevel(level);
-
-            // Auto-scroll to max step for Foundation level if not coming from Last Viewed
-            if (!skipPrerequisiteCheck && maxStepPerLevel.foundation > 0) {
-                const resolvedCategory = getCategoryFromStep(maxStepPerLevel.foundation);
-                if (resolvedCategory && masterConfig[resolvedCategory]) {
-                    setLastViewedRequest({ level: 'foundation', category: resolvedCategory, step: maxStepPerLevel.foundation });
-                }
-            }
         }
         if (level === 'middle') {
-            // Skip prerequisite check if coming from Last Viewed
-            const foundationComplete = skipPrerequisiteCheck ? true : await checkAndLoadPrerequisites(foundationKeys, 'Foundation');
+            const foundationComplete = await checkAndLoadPrerequisites(foundationKeys, 'Foundation');
             if (foundationComplete) {
                 await loadLevelVideos(middleKeys);
                 const StepOfAdvance = "84";
@@ -1441,35 +1393,18 @@ const Dashboard = ({ navigation }) => {
                     } catch (error) { console.error("Could not check foundation lock time", error); }
                 }
                 setActiveLevel(level);
-
-                // Auto-scroll to max step for Middle level if not coming from Last Viewed
-                if (!skipPrerequisiteCheck && maxStepPerLevel.middle > 0) {
-                    const resolvedCategory = getCategoryFromStep(maxStepPerLevel.middle);
-                    if (resolvedCategory && masterConfig[resolvedCategory]) {
-                        setLastViewedRequest({ level: 'middle', category: resolvedCategory, step: maxStepPerLevel.middle });
-                    }
-                }
             }
             return;
         }
         if (level === 'advanced') {
-            // Skip prerequisite checks if coming from Last Viewed
-            const foundationComplete = skipPrerequisiteCheck ? true : await checkAndLoadPrerequisites(foundationKeys, 'Foundation');
+            const foundationComplete = await checkAndLoadPrerequisites(foundationKeys, 'Foundation');
             if (!foundationComplete) {
                 return;
             }
-            const middleComplete = skipPrerequisiteCheck ? true : await checkAndLoadPrerequisites(middleKeys, 'Middle');
+            const middleComplete = await checkAndLoadPrerequisites(middleKeys, 'Middle');
             if (middleComplete) {
                 await loadLevelVideos(advancedKeys);
                 setActiveLevel(level);
-
-                // Auto-scroll to max step for Advanced level if not coming from Last Viewed
-                if (!skipPrerequisiteCheck && maxStepPerLevel.advanced > 0) {
-                    const resolvedCategory = getCategoryFromStep(maxStepPerLevel.advanced);
-                    if (resolvedCategory && masterConfig[resolvedCategory]) {
-                        setLastViewedRequest({ level: 'advanced', category: resolvedCategory, step: maxStepPerLevel.advanced });
-                    }
-                }
             }
         }
     };
@@ -1551,6 +1486,7 @@ const Dashboard = ({ navigation }) => {
 
     const isLandscape = windowWidth > windowHeight;
     const isTablet = windowWidth >= 600;
+
     const portraitContentWidth = Math.max(280, Math.round(windowWidth * 0.9));
 
     const imageStyle = isLandscape
