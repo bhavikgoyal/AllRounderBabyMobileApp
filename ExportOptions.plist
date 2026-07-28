@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- 
+    Export Options for iOS App Distribution
+    
+    Modify this file according to your distribution method:
+    - app-store: For App Store distribution
+    - ad-hoc: For Ad Hoc distribution (limited devices)
+    - enterprise: For Enterprise distribution
+    - development: For development builds
+    -->
+    
+    <!-- Distribution method: app-store, ad-hoc, enterprise, or development -->
+    <key>method</key>
+    <string>ad-hoc</string>
+    
+    <!-- Your Apple Developer Team ID (10-character string) -->
+    <key>teamID</key>
+    <string>sJ7N3XD6F83</string>
+    
+    <!-- Upload to App Store or TestFlight (only for app-store method) -->
+    <key>uploadBitcode</key>
+    <false/>
+    
+    <!-- Upload app symbols for crash reporting -->
+    <key>uploadSymbols</key>
+    <true/>
+    
+    <!-- Compile bitcode for App Store submission -->
+    <key>compileBitcode</key>
+    <false/>
+    
+    <!-- Code signing style: automatic or manual -->
+    <key>signingStyle</key>
+    <string>automatic</string>
+    
+    <!-- 
+    Provisioning profiles (optional, needed for manual signing)
+    Format: "com.example.app": "Provisioning Profile Name or UUID"
+    -->
+    <!--
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.yourcompany.allrounderbaby</key>
+        <string>YourProvisioningProfileName</string>
+    </dict>
+    -->
+    
+    <!-- 
+    Signing certificate (optional, for manual signing)
+    Examples:
+    - "iPhone Distribution"
+    - "iPhone Developer"
+    - "Apple Distribution"
+    -->
+    <!--
+    <key>signingCertificate</key>
+    <string>iPhone Distribution</string>
+    -->
+    
+    <!-- Thinning: Create app variants for specific devices -->
+    <key>thinning</key>
+    <string>&lt;none&gt;</string>
+    
+    <!-- Strip Swift symbols to reduce app size -->
+    <key>stripSwiftSymbols</key>
+    <true/>
+    
+    <!-- Include manifest for over-the-air installation -->
+    <key>manifest</key>
+    <dict>
+        <key>appURL</key>
+        <string>https://example.com/app.ipa</string>
+        <key>displayImageURL</key>
+        <string>https://example.com/icon-57x57.png</string>
+        <key>fullSizeImageURL</key>
+        <string>https://example.com/icon-512x512.png</string>
+    </dict>
+    
+</dict>
+</plist>

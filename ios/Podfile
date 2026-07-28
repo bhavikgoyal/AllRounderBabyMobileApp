@@ -17,18 +17,29 @@ end
 target 'allrounderbaby' do
   config = use_native_modules!
 
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'FirebaseCoreInternal', :modular_headers => true
+  pod 'React-RCTImage', :path => '../node_modules/react-native/Libraries/Image', :modular_headers => true
+
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  target 'allrounderbabyTests' do
-    inherit! :complete
-    # Pods for testing
-  end
+  # target 'allrounderbabyTests' do
+  #   inherit! :complete
+  #   # Pods for testing
+  # end
 
   post_install do |installer|
+    installer.pods_project.targets.each do |target|
+      if target.name == 'React-RCTImage'
+        target.build_configurations.each do |config|
+          config.build_settings['DEFINES_MODULE'] = 'YES'
+        end
+      end
+    end
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
       installer,

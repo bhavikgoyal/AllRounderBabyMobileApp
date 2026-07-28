@@ -78,6 +78,7 @@ const createMyEarningsStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.screenBackground,
+    position: 'relative',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -142,9 +143,8 @@ const createMyEarningsStyles = (theme) => StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: theme.textPrimary,
-    marginVertical: 15,
+    marginLeft: -5,
     textAlign: 'left',
-    marginLeft: 15,
   },
   totalEarningsCard: {
     backgroundColor: '#007bff',
@@ -274,6 +274,36 @@ const createMyEarningsStyles = (theme) => StyleSheet.create({
     marginHorizontal: 15,
     marginTop: 6,
     marginBottom: 8,
+  },
+  backButton: {
+    padding: 12,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  loadingBox: {
+    padding: 18,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: theme.cardBackground,
+    minWidth: 180,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: theme.newtextPrimary,
+    textAlign: 'center',
   },
 });
 const MyEarnings = ({ navigation, route }) => {
@@ -615,14 +645,13 @@ const MyEarnings = ({ navigation, route }) => {
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled">
           <>
-            {isLoading && (
-              <View style={{ paddingTop: 16, paddingBottom: 4 }}>
-                <ActivityIndicator size="small" color={theme.buttonBackground} />
-                <Text style={[styles.subText, { textAlign: 'center', marginTop: 8 }]}>Loading earnings details...</Text>
-              </View>
-            )}
             <View style={styles.card}>
-              <Text style={styles.earningsHeader}>My Earnings</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
+                  <Image source={require('../img/backBtn.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
+                </TouchableOpacity>
+                <Text style={[styles.earningsHeader]}>My Earnings</Text>
+              </View>
               {hasAnyError && (
                 <View style={styles.errorBanner}>
                   {!!authError && <Text style={styles.errorBannerText}>- {authError}</Text>}
@@ -863,6 +892,14 @@ const MyEarnings = ({ navigation, route }) => {
             </View>
           </>
         </ScrollView>
+        {isLoading && (
+          <View style={styles.loadingOverlay} pointerEvents="auto">
+            <View style={styles.loadingBox}>
+              <ActivityIndicator size="large" color={theme.buttonBackground} />
+              <Text style={styles.loadingText}>Loading earnings details...</Text>
+            </View>
+          </View>
+        )}
       </View>
     </KeyboardAvoidingView>
   );

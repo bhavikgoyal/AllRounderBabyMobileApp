@@ -7,6 +7,7 @@ import {
   Image,
   BackHandler,
   StatusBar,
+  Platform,
   useColorScheme,
   useWindowDimensions,
 
@@ -34,6 +35,9 @@ const PrivacyPolicy = ({ navigation, route }) => {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#2a3144' : Colors.white,
   };
+  const theme = isDarkMode
+    ? { cardBackground: '#282c34', cardBorder: '#444', textPrimary: '#ffffff' }
+    : { cardBackground: '#ffffff', cardBorder: '#e0e0e0', textPrimary: '#1434a4' };
   const [instanceKey, setInstanceKey] = useState(0);
   const [expandedSections, setExpandedSections] = useState(initialExpandedState);
 
@@ -79,14 +83,19 @@ const PrivacyPolicy = ({ navigation, route }) => {
       <ScreenScroll key={instanceKey} contentContainerStyle={styles.scrollContainer}>
         <View style={[
           styles.sectionContainer,
-          { backgroundColor: isDarkMode ? '#282c34' : '#ffffff' },
-          { borderColor: isDarkMode ? '#444' : '#e0e0e0' }
+          { backgroundColor: theme.cardBackground },
+          { borderColor: theme.cardBorder }
         ]}>
-          <Text style={[
-            styles.pageTitle,
-            { color: isDarkMode ? '#fff' : '#1434a4', marginBottom: 35 }
-          ]}>Privacy Policy</Text>
 
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, marginTop: Platform.OS === 'ios' ? 18 : 18 }}>
+            <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
+              <Image source={require('../img/backBtn.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
+            </TouchableOpacity>
+            <Text style={[
+              styles.pageTitle, { color: theme.textPrimary }
+            ]}>Privacy Policy</Text>
+          </View>
           <View style={styles.section}>
             <TouchableOpacity onPress={() => toggleSection('1')}>
               <Text style={styles.sectionHeader}>
@@ -2192,9 +2201,9 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 15,
-    marginTop: 20,
+    marginTop: -10,
     color: '#1434a4',
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     textAlign: 'center',
   },
   sectionHeader: {
@@ -2302,5 +2311,15 @@ const styles = StyleSheet.create({
     height: 200,
     backgroundColor: '#ddd',
   },
+  backButton: {
+    bottom: 11,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+    fontSize: 25,
+    color: '#1434a4',
+  },
+
 });
 export default PrivacyPolicy;

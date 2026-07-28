@@ -10,6 +10,7 @@ import {
   Platform,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -52,11 +53,11 @@ const createMyReferralsStyles = (theme) => StyleSheet.create({
     paddingHorizontal: 15,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+    marginLeft: 8,
+    marginBottom: 18,
     color: theme.textPrimary,
   },
 
@@ -171,7 +172,14 @@ const createMyReferralsStyles = (theme) => StyleSheet.create({
     fontWeight: '600',
     fontSize: 12,
   },
-
+  backButton: {
+    bottom: 6,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+    fontSize: 25,
+  },
 });
 
 const formatDate = (dateStr) => {
@@ -187,6 +195,7 @@ const formatDate = (dateStr) => {
 const MyReferrals = ({ navigation, route }) => {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkThemeColors : lightThemeColors;
+  const isDarkMode = colorScheme === 'dark';
   const styles = createMyReferralsStyles(theme);
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -271,31 +280,38 @@ const MyReferrals = ({ navigation, route }) => {
     <View style={styles.container}>
       <StatusBar barStyle={theme.statusBarContent} backgroundColor={theme.screenBackground} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.title}>My Referrals</Text>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15, marginTop: Platform.OS === 'ios' ? 18 : 18 }}>
+          <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
+            <Image source={require('../img/backBtn.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
+          </TouchableOpacity>
+          <Text style={styles.title}>My Referrals</Text>
+        </View>
+
         <View style={styles.statsCard}>
           <View style={styles.statItemm}>
             <Text style={styles.statValue}>{referrals.length}</Text>
-            <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Total Referrals</Text>
+            <Text style={[styles.statLabel, { fontWeight: '900', color: theme.textPrimary }]}>Total Referrals</Text>
             <Text style={styles.statCaption}>your referral code used</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{completedCount}</Text>
-            <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Completed</Text>
+            <Text style={[styles.statLabel, { fontWeight: '900', color: theme.textPrimary }]}>Completed</Text>
             <Text style={styles.statCaption}>Payout initiated</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{pendingCount}</Text>
-            <Text style={[styles.statLabel, { fontWeight: '900', color: '#000000' }]}>Pending</Text>
+            <Text style={[styles.statLabel, { fontWeight: '900', color: theme.textPrimary }]}>Pending</Text>
             <Text style={styles.statCaption}>Payout pending</Text>
           </View>
         </View>
         <Text style={styles.listHeader}>Referral History</Text>
         <View style={styles.listContainer}>
           {loading && referrals.length === 0 ? (
-            <ActivityIndicator size="large" color="#1434A4" style={{ marginTop: 30 }} />
+            <ActivityIndicator size="large" color={theme.buttonBackground} style={{ marginTop: 30 }} />
           ) : loading && referrals.length > 0 ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-              <ActivityIndicator size="small" color="#1434A4" style={{ marginRight: 8 }} />
+              <ActivityIndicator size="small" color={theme.buttonBackground} style={{ marginRight: 8 }} />
               <Text style={[styles.referralDate, { color: theme.textSecondary }]}>Refreshing referrals...</Text>
             </View>
           ) : referrals.length === 0 ? (

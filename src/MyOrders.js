@@ -78,11 +78,18 @@ const createMyOrdersStyles = (theme) => StyleSheet.create({
     marginTop: 20,
     marginBottom: 6,
   },
+  backButton: {
+    padding: 5,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+  },
   sectionTitle: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: 'bold',
     color: theme.textPrimary,
-    marginBottom: 6,
+
   },
   sectionSubtitle: {
     fontSize: 14,
@@ -437,7 +444,12 @@ const MyOrders = ({ navigation, route }) => {
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
           <View style={[{ paddingLeft: 8, paddingRight: 7 }]}>
             <View style={styles.headerRow}>
-              <Text style={styles.sectionTitle}>My Orders</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => { try { navigation.navigate('My Profile'); } catch (e) { } }} style={styles.backButton}>
+                  <Image source={require('../img/backBtn.png')} style={[styles.backIcon, { tintColor: theme.textPrimary }]} />
+                </TouchableOpacity>
+                <Text style={[styles.sectionTitle]}>My Orders</Text>
+              </View>
             </View>
 
             <View style={styles.searchRow}>

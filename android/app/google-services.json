@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "1077638417241",
-    "project_id": "allrounderbaby-8066b",
-    "storage_bucket": "allrounderbaby-8066b.firebasestorage.app"
+    "project_number": "213473218539",
+    "project_id": "allrounderbaby-5a466",
+    "storage_bucket": "allrounderbaby-5a466.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1077638417241:android:3a6b2b3c1ebbfd74a95a48",
+        "mobilesdk_app_id": "1:213473218539:android:282c091774e28a9d1993ae",
         "android_client_info": {
           "package_name": "com.allrounderbaby.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCmcVI7Zok-lVb49copqxtJ4rf8kp4fQas"
+          "current_key": "AIzaSyDrmqbjZBB-NrUzV4D_jB2cNBtwWVi0-1k"
         }
       ],
       "services": {
