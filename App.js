@@ -1,5 +1,4 @@
 import { PermissionsAndroid, Linking } from "react-native";
-import RNScreenshotPrevent from "react-native-screenshot-prevent";
 import SplashScreen from "react-native-splash-screen";
 import React, { useEffect, useState, memo, useCallback, useMemo } from 'react';
 import './src/utils/disableConsole';
