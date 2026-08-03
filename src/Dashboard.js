@@ -194,10 +194,12 @@ const Dashboard = ({ navigation }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [dataLoaded, setDataLoaded] = useState(false);
     const [isVideoLoading, setIsVideoLoading] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     const [completedSteps, setCompletedSteps] = useState({});
     const [openCategory, setOpenCategory] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeLevel, setActiveLevel] = useState(null);
+    const [ignoreNextPress, setIgnoreNextPress] = useState(false);
     const [selectedStepGroup, setSelectedStepGroup] = useState(null);
     const [topicCompletionTimes, setTopicCompletionTimes] = useState({});
     const [unlockedStepsThreshold, setUnlockedStepsThreshold] = useState(0);
@@ -478,6 +480,7 @@ const Dashboard = ({ navigation }) => {
 
     const handleLastViewedPress = async () => {
         try {
+            // showToast('Opening last viewed...');
             if (unlockedStepsThreshold && Number.isFinite(unlockedStepsThreshold) && unlockedStepsThreshold > 0) {
                 const resolvedCategory = getCategoryFromStep(unlockedStepsThreshold);
                 if (resolvedCategory && masterConfig[resolvedCategory]) {
@@ -497,7 +500,6 @@ const Dashboard = ({ navigation }) => {
 
             const lastViewed = JSON.parse(lastViewedJson);
             let { category, step } = lastViewed || {};
-            console.log("Last viewed data:", lastViewed);
             const stepNum = typeof step === 'number' ? step : (step ? Number(step) : NaN);
 
             if (!Number.isNaN(stepNum) && (stepNum === 1001 || stepNum === 1002)) {
@@ -522,6 +524,7 @@ const Dashboard = ({ navigation }) => {
             }
         } catch (error) {
             console.error("Failed to handle last viewed press:", error);
+            // showToast('Failed to open last viewed. Please try again.');
         }
     };
 
@@ -542,9 +545,7 @@ const Dashboard = ({ navigation }) => {
                     setToken(storedToken);
                     setUserID(storedUserId);
                     const verify = await AsyncStorage.getItem('fcmToken');
-                    console.log('dfsssssssssssssssssssssse:', verify),
-
-                        await fetchUserProgress(storedUserId, storedToken);
+                    await fetchUserProgress(storedUserId, storedToken);
                 } else {
                     setDataLoaded(true);
                 }
@@ -678,6 +679,7 @@ const Dashboard = ({ navigation }) => {
                             category: mappedCategory,
                             timestamp: new Date().toISOString()
                         };
+                        console.log('Saving last viewed info from server progress:', lastViewedObj);
                         await AsyncStorage.setItem('lastViewed', JSON.stringify(lastViewedObj));
                     } catch (err) {
                         console.error('Failed to save last viewed info from server progress:', err);
@@ -914,6 +916,7 @@ const Dashboard = ({ navigation }) => {
                 const allPrereqSteps = prereqConfig.finalGroupedData.map(g => `step${g.stepNumber}`);
                 const areAllPrereqsCompleted = allPrereqSteps.every(stepKey => completedSteps[stepKey]);
                 if (!areAllPrereqsCompleted) {
+                    console.log(`Prerequisite not met for ${categoryKey}. Required: ${config.prerequisiteCategory}`);
                     Alert.alert("Level Locked", `You must complete the "${prereqConfig.name}" stage before accessing this one.`);
                     return false;
                 }
@@ -964,6 +967,7 @@ const Dashboard = ({ navigation }) => {
     };
 
     const handleCategoryPress = async (categoryKey) => {
+        if (ignoreNextPress) return;
         if (!dataLoaded) {
             showToast("Loading progress data...");
             return;
@@ -999,12 +1003,31 @@ const Dashboard = ({ navigation }) => {
 
                 if (categoryRef && scrollRef) {
                     // Use measure() for all platforms - works reliably on both iOS and Android
-                    if (categoryRef.measure && typeof categoryRef.measure === 'function') {
-                        categoryRef.measure((x, y, width, height, pageX, pageY) => {
+                    const scrollNode = findNodeHandle(scrollRef);
+                    if (typeof categoryRef.measureLayout === 'function' && scrollNode) {
+                        // measureLayout gives coordinates relative to the scroll container
+                        categoryRef.measureLayout(scrollNode, (left, top) => {
                             try {
-                                scrollRef.scrollTo({ y: Math.max(pageY - 10, 0), animated: true });
+                                if (typeof top === 'number' && !Number.isNaN(top)) {
+                                    scrollRef.scrollTo({ y: Math.max(top - 10, 0), animated: true });
+                                }
                             } catch (e) {
-                                console.warn('Failed to scroll to category:', e);
+                                console.warn('Failed to scroll to category via measureLayout:', e);
+                            }
+                        }, (err) => {
+                            // fallback to measure when measureLayout fails
+                            try {
+                                if (categoryRef.measure && typeof categoryRef.measure === 'function') {
+                                    categoryRef.measure((x, y, width, height, pageX, pageY) => {
+                                        try {
+                                            scrollRef.scrollTo({ y: Math.max(pageY - 10, 0), animated: true });
+                                        } catch (e2) {
+                                            console.warn('Failed to scroll to category (fallback):', e2);
+                                        }
+                                    });
+                                }
+                            } catch (e2) {
+                                console.warn('Fallback scroll error:', e2);
                             }
                         });
                     }
@@ -1012,7 +1035,7 @@ const Dashboard = ({ navigation }) => {
             } catch (e) {
                 console.warn('Auto-scroll error:', e);
             }
-        }, 300);
+        }, 500);
     };
 
 
@@ -1029,9 +1052,12 @@ const Dashboard = ({ navigation }) => {
     };
 
     const handleVideo = async (videoId, step, language) => {
+        if (isProcessing) return;
+        setIsProcessing(true);
         const deviceKey = await AsyncStorage.getItem('deviceKey');
 
         if (!selectedStepGroup) {
+            setIsProcessing(false);
             return;
         }
         if (step !== 1001 && step !== 1002) {
@@ -1086,7 +1112,6 @@ const Dashboard = ({ navigation }) => {
             }
         }
 
-        setIsModalVisible(false);
         setIsVideoLoading(true);
         let total_time = 0;
         try {
@@ -1211,6 +1236,7 @@ const Dashboard = ({ navigation }) => {
                     }
                 }
             }
+            setIsModalVisible(false);
             navigation.navigate('VideoPlayerScreen', {
                 VideoId: videoId,
                 annotate: JSON.stringify(annotationObject),
@@ -1222,9 +1248,24 @@ const Dashboard = ({ navigation }) => {
                 stage_name: masterConfig[openCategory]?.name ?? 'Unknown'
             });
         } catch (err) {
-            Alert.alert("Error", err.message);
+            Alert.alert("Error", err?.message || 'An unexpected error occurred');
         } finally {
             setIsVideoLoading(false);
+            setIsProcessing(false);
+        }
+    };
+
+    const startVideo = async (lang) => {
+        if (isProcessing) return;
+        const video = lang === 'hindi' ? selectedStepGroup?.hindiVideo : selectedStepGroup?.englishVideo;
+        if (!video || !video.id) return;
+        try {
+            setIsProcessing(true);
+            await handleVideo(video.id, selectedStepGroup?.stepNumber, lang);
+        } catch (e) {
+            console.warn('startVideo error', e);
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -1412,6 +1453,11 @@ const Dashboard = ({ navigation }) => {
     const handleCloseModal = () => {
         setActiveLevel(null);
         setOpenCategory(null);
+        // Prevent the tap that closed the modal from also activating underlying buttons
+        setIgnoreNextPress(true);
+        setTimeout(() => setIgnoreNextPress(false), 300);
+        // Clear any pending last-viewed request to avoid immediately reopening the same level
+        setLastViewedRequest(null);
     };
 
     const renderLevelModal = () => {
@@ -1569,13 +1615,25 @@ const Dashboard = ({ navigation }) => {
                         <View style={styles.borderLine} />
                         <Text style={[styles.modalText, textColorModalPara]}>In which language would you like to watch this video?</Text>
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity style={[styles.modalButton, !selectedStepGroup.hindiVideo && styles.disabledButton]} onPress={() => handleVideo(selectedStepGroup.hindiVideo.id, selectedStepGroup.stepNumber, 'hindi')} disabled={!selectedStepGroup.hindiVideo}><Text style={styles.modalButtonText}>Hindi</Text></TouchableOpacity>
-                            <TouchableOpacity style={[styles.modalButton, !selectedStepGroup.englishVideo && styles.disabledButton]} onPress={() => handleVideo(selectedStepGroup.englishVideo.id, selectedStepGroup.stepNumber, 'english')} disabled={!selectedStepGroup.englishVideo}><Text style={styles.modalButtonText}>English</Text></TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, (isProcessing || !selectedStepGroup?.hindiVideo) && styles.disabledButton]}
+                                onPress={() => startVideo('hindi')}
+                                disabled={isProcessing || !selectedStepGroup?.hindiVideo}
+                            >
+                                <Text style={styles.modalButtonText}>Hindi</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, (isProcessing || !selectedStepGroup?.englishVideo) && styles.disabledButton]}
+                                onPress={() => startVideo('english')}
+                                disabled={isProcessing || !selectedStepGroup?.englishVideo}
+                            >
+                                <Text style={styles.modalButtonText}>English</Text>
+                            </TouchableOpacity>
                         </View>
                     </Pressable>
                 </View>
             )}
-            {(isVideoLoading || isLoading) && (
+            {(isVideoLoading || isLoading || isProcessing) && (
                 <View style={styles.modalLikeContainer} pointerEvents="auto">
                     <ActivityIndicator size="large" color="#FFFFFF" />
                     <Text style={styles.loadingText}>Loading...</Text>
@@ -1631,7 +1689,7 @@ const styles = StyleSheet.create({
     disabledButton: { backgroundColor: '#a0a0a0' },
     modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold', textAlign: 'center', },
     tabimage: { width: 25, height: 22 },
-    modalContentClose: { color: '#000', fontSize: 16, fontWeight: 'bold', },
+    modalContentClose: { color: '#000', fontSize: 20, fontWeight: 'bold', },
     modalContentMainDiv: { flexDirection: "row", justifyContent: "space-between", width: '100%', },
     borderLine: { borderBottomWidth: 1, borderBottomColor: "#ccc", width: "100%", marginBottom: 15 },
     loadingText: { marginTop: 10, color: '#FFFFFF', fontSize: 16, },
@@ -1639,7 +1697,7 @@ const styles = StyleSheet.create({
     modalHeader: { width: '100%', paddingVertical: 10, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(20, 52, 164, 1)', backgroundColor: 'rgba(20, 52, 164, 1)', },
     modalHeaderText: { fontSize: 18, fontWeight: 'bold', color: '#fff', },
     closeButton: { padding: 5 },
-    closeButtonText: { fontSize: 18, fontWeight: 'bold', color: '#fff', },
+    closeButtonText: { fontSize: 20, fontWeight: 'bold', color: '#fff', },
     modalScrollView: { flex: 1, width: '100%', },
     modalScrollViewContent: { paddingHorizontal: 5, paddingVertical: 10, },
     modalLikeContainer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 1000, },

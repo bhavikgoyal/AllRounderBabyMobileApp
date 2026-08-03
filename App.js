@@ -627,7 +627,7 @@ const App = () => {
         />
         <Drawer.Screen name="Cashback for Feedback" component={ChasCashbackforFeedback} options={{}} />
         <Drawer.Screen name="Refer and Earn" component={ReferAndEarn} options={{}} />
-        <Drawer.Screen name="VideoPlayerScreen" component={VideoPlayerScreen} options={{}} />
+        <Drawer.Screen name="VideoPlayerScreen" component={VideoPlayerScreen} options={{ swipeEnabled: false, gestureEnabled: false }} />
         <Drawer.Screen name="Referral History" component={ReferralHistory} options={{}} />
         <Drawer.Screen name="My Orders" component={MyOrders} options={{}} />
         <Drawer.Screen name="My Earnings" component={MyEarnings} options={{}} />
