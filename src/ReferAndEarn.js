@@ -602,6 +602,7 @@ const ReferAndEarn = ({ navigation }) => {
       // Alert.alert("Videos Not Available", "Refer & Earn videos could not be loaded. Please try again later.");
     }
   };
+  const isNavigatingRef = useRef(false);
 
   return (
     <View style={styles.container}>
@@ -842,8 +843,12 @@ const ReferAndEarn = ({ navigation }) => {
               <TouchableOpacity
                 style={[styles.modalButton, !selectedVideoGroup.hindiVideo && styles.disabledButton]}
                 onPress={() => {
+                  if (isNavigatingRef.current) return;
+                  isNavigatingRef.current = true;
                   setIsLanguageModalVisible(false);
-                  handleVideoPlayback(selectedVideoGroup.hindiVideo.id, 'hindi', 'Refer & Earn Video (Hindi)', null);
+                  handleVideoPlayback(selectedVideoGroup.hindiVideo.id, 'hindi', 'Refer & Earn Video (Hindi)', null).finally(() => {
+                    setTimeout(() => { isNavigatingRef.current = false; }, 600);
+                  });
                 }}
                 disabled={!selectedVideoGroup.hindiVideo}
               >
@@ -852,8 +857,12 @@ const ReferAndEarn = ({ navigation }) => {
               <TouchableOpacity
                 style={[styles.modalButton, !selectedVideoGroup.englishVideo && styles.disabledButton]}
                 onPress={() => {
+                  if (isNavigatingRef.current) return;
+                  isNavigatingRef.current = true;
                   setIsLanguageModalVisible(false);
-                  handleVideoPlayback(selectedVideoGroup.englishVideo.id, 'english', 'Refer & Earn Video (English)', null);
+                  handleVideoPlayback(selectedVideoGroup.englishVideo.id, 'english', 'Refer & Earn Video (English)', null).finally(() => {
+                    setTimeout(() => { isNavigatingRef.current = false; }, 600);
+                  });
                 }}
                 disabled={!selectedVideoGroup.englishVideo}
               >

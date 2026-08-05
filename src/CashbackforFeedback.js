@@ -195,6 +195,7 @@ const CashbackforFeedback = () => {
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [selectedVideoGroup, setSelectedVideoGroup] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
+  const isNavigatingRef = useRef(false);
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const CASHBACK_FOLDER_ID = "3b7737b5e34740318231b0f1c0797b34";
 
@@ -685,8 +686,12 @@ const CashbackforFeedback = () => {
               <TouchableOpacity
                 style={[styles.modalButton, !selectedVideoGroup.hindiVideo && styles.disabledButton]}
                 onPress={() => {
+                  if (isNavigatingRef.current) return;
+                  isNavigatingRef.current = true;
                   setIsLanguageModalVisible(false);
-                  handleVideoPlayback(selectedVideoGroup.hindiVideo.id, 'hindi', 'Cashback Video (Hindi)', null);
+                  handleVideoPlayback(selectedVideoGroup.hindiVideo.id, 'hindi', 'Cashback Video (Hindi)', null).finally(() => {
+                    setTimeout(() => { isNavigatingRef.current = false; }, 600);
+                  });
                 }}
                 disabled={!selectedVideoGroup.hindiVideo}
               >
@@ -695,8 +700,12 @@ const CashbackforFeedback = () => {
               <TouchableOpacity
                 style={[styles.modalButton, !selectedVideoGroup.englishVideo && styles.disabledButton]}
                 onPress={() => {
+                  if (isNavigatingRef.current) return;
+                  isNavigatingRef.current = true;
                   setIsLanguageModalVisible(false);
-                  handleVideoPlayback(selectedVideoGroup.englishVideo.id, 'english', 'Cashback Video (English)', null);
+                  handleVideoPlayback(selectedVideoGroup.englishVideo.id, 'english', 'Cashback Video (English)', null).finally(() => {
+                    setTimeout(() => { isNavigatingRef.current = false; }, 600);
+                  });
                 }}
                 disabled={!selectedVideoGroup.englishVideo}
               >

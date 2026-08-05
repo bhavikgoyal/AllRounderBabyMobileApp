@@ -393,6 +393,7 @@ const AboutUs = ({ navigation, route }) => {
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [selectedVideoGroup, setSelectedVideoGroup] = useState(null);
   const [instanceKey, setInstanceKey] = useState(0);
+  const isNavigatingRef = useRef(false);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -914,12 +915,16 @@ const AboutUs = ({ navigation, route }) => {
               <TouchableOpacity
                 style={styles.modalButton}
                 onPress={async () => {
+                  if (isNavigatingRef.current) return;
+                  isNavigatingRef.current = true;
                   setIsAboutModalVisible(false);
                   const youtubeHindi = 'https://www.youtube.com/watch?v=2puDfTtzl00';
                   try {
                     await Linking.openURL(youtubeHindi);
                   } catch (err) {
                     Alert.alert('Unable to open', 'Could not open YouTube link.');
+                  } finally {
+                    setTimeout(() => { isNavigatingRef.current = false; }, 600);
                   }
                 }}
               >
@@ -928,12 +933,16 @@ const AboutUs = ({ navigation, route }) => {
               <TouchableOpacity
                 style={styles.modalButton}
                 onPress={async () => {
+                  if (isNavigatingRef.current) return;
+                  isNavigatingRef.current = true;
                   setIsAboutModalVisible(false);
                   const youtubeEnglish = 'https://www.youtube.com/watch?v=TLJ5kiQJTGU';
                   try {
                     await Linking.openURL(youtubeEnglish);
                   } catch (err) {
                     Alert.alert('Unable to open', 'Could not open YouTube link.');
+                  } finally {
+                    setTimeout(() => { isNavigatingRef.current = false; }, 600);
                   }
                 }}
               >
