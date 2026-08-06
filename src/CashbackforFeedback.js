@@ -133,6 +133,7 @@ const createCashbackStyles = (theme, windowWidth = 360) => {
     playButtonContainer: { position: 'absolute', left: '50%', top: '50%', zIndex: 3, transform: [{ translateX: -30 }, { translateY: -30 }] },
     playButtonCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
     playButtonText: { color: '#1e90ff', fontSize: 26, marginLeft: 3, fontWeight: '600', marginBottom: 5, marginTop: isTablet ? 3 : 3 },
+    fullPageLoader: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 },
   });
 };
 
@@ -194,8 +195,9 @@ const CashbackforFeedback = () => {
   const [cashbackVideos, setCashbackVideos] = useState({});
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [selectedVideoGroup, setSelectedVideoGroup] = useState(null);
+  const [isLanguageButtonLoading, setIsLanguageButtonLoading] = useState(false); // <-- ADDED
+  const [languageButtonLoadingFor, setLanguageButtonLoadingFor] = useState(null); // 'hindi' | 'english' | null
   const [showDetails, setShowDetails] = useState(false);
-  const isNavigatingRef = useRef(false);
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const CASHBACK_FOLDER_ID = "3b7737b5e34740318231b0f1c0797b34";
 
@@ -684,36 +686,54 @@ const CashbackforFeedback = () => {
             <Text style={styles.modalText}>In which language would you like to watch this video?</Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={[styles.modalButton, !selectedVideoGroup.hindiVideo && styles.disabledButton]}
-                onPress={() => {
-                  if (isNavigatingRef.current) return;
-                  isNavigatingRef.current = true;
-                  setIsLanguageModalVisible(false);
-                  handleVideoPlayback(selectedVideoGroup.hindiVideo.id, 'hindi', 'Cashback Video (Hindi)', null).finally(() => {
-                    setTimeout(() => { isNavigatingRef.current = false; }, 600);
-                  });
+                style={[styles.modalButton, (!selectedVideoGroup.hindiVideo || isLanguageButtonLoading) && styles.disabledButton]}
+                onPress={async () => {
+                  if (isLanguageButtonLoading) return;
+                  setIsLanguageButtonLoading(true);
+                  setLanguageButtonLoadingFor('hindi');
+                  try {
+                    await handleVideoPlayback(selectedVideoGroup.hindiVideo.id, 'hindi', 'Cashback Video (Hindi)', null);
+                  } catch (e) {
+                    // preserve existing behavior: no additional handling
+                  } finally {
+                    setIsLanguageButtonLoading(false);
+                    setLanguageButtonLoadingFor(null);
+                    setIsLanguageModalVisible(false);
+                  }
                 }}
-                disabled={!selectedVideoGroup.hindiVideo}
+                disabled={!selectedVideoGroup.hindiVideo || isLanguageButtonLoading}
               >
                 <Text style={styles.modalButtonText}>Hindi</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, !selectedVideoGroup.englishVideo && styles.disabledButton]}
-                onPress={() => {
-                  if (isNavigatingRef.current) return;
-                  isNavigatingRef.current = true;
-                  setIsLanguageModalVisible(false);
-                  handleVideoPlayback(selectedVideoGroup.englishVideo.id, 'english', 'Cashback Video (English)', null).finally(() => {
-                    setTimeout(() => { isNavigatingRef.current = false; }, 600);
-                  });
+                style={[styles.modalButton, (!selectedVideoGroup.englishVideo || isLanguageButtonLoading) && styles.disabledButton]}
+                onPress={async () => {
+                  if (isLanguageButtonLoading) return;
+                  setIsLanguageButtonLoading(true);
+                  setLanguageButtonLoadingFor('english');
+                  try {
+                    await handleVideoPlayback(selectedVideoGroup.englishVideo.id, 'english', 'Cashback Video (English)', null);
+                  } catch (e) {
+                    // preserve existing behavior: no additional handling
+                  } finally {
+                    setIsLanguageButtonLoading(false);
+                    setLanguageButtonLoadingFor(null);
+                    setIsLanguageModalVisible(false);
+                  }
                 }}
-                disabled={!selectedVideoGroup.englishVideo}
+                disabled={!selectedVideoGroup.englishVideo || isLanguageButtonLoading}
               >
                 <Text style={styles.modalButtonText}>English</Text>
               </TouchableOpacity>
             </View>
           </View>
         </Pressable>
+      )}
+
+      {isLanguageButtonLoading && (
+        <View style={styles.fullPageLoader} pointerEvents="auto">
+          <ActivityIndicator size="large" color={theme.accentColorbg || '#fff'} />
+        </View>
       )}
     </View>
   );
