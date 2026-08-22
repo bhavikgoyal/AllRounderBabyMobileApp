@@ -6,6 +6,7 @@ import { View, Image, StyleSheet, SafeAreaView, Text, useColorScheme, Alert, Act
 import { NavigationContainer, DefaultTheme, DarkTheme, CommonActions, createNavigationContainerRef } from '@react-navigation/native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import NetworkProvider from './src/components/NetworkProvider';
+import SessionExpiredModal from './src/components/SessionExpiredModal';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -271,6 +272,8 @@ const App = () => {
   const [activeFooter, setActiveFooter] = useState('Home');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const isHandlingSessionInvalidation = React.useRef(false);
+  const [sessionModalVisible, setSessionModalVisible] = useState(false);
 
   const prevDrawerOpenRef = React.useRef(false);
 
@@ -467,6 +470,47 @@ const App = () => {
       Alert.alert('Local Session Error', 'Failed to clear local session data. Please restart the app.');
     }
   }, []);
+
+  const handleSessionInvalidation = useCallback(() => {
+    if (isHandlingSessionInvalidation.current) return;
+    isHandlingSessionInvalidation.current = true;
+    // show modal; modal's Logout button will call clearLocalSessionAndNavigate
+    setSessionModalVisible(true);
+  }, [clearLocalSessionAndNavigate]);
+
+  useEffect(() => {
+    // Monkey-patch global fetch to detect authenticated 401 responses.
+    const originalFetch = global.fetch;
+    global.fetch = async (input, init = {}) => {
+      try {
+        const response = await originalFetch(input, init);
+        try {
+          const status = response && response.status;
+          if (status === 401) {
+            // Determine if request had Authorization header or app currently has a token
+            const hasAuthHeader = init && init.headers && (
+              (init.headers['Authorization'] || init.headers['authorization'])
+            );
+            if (hasAuthHeader) {
+              handleSessionInvalidation();
+            } else {
+              // fallback: check current AsyncStorage token presence
+              try {
+                const t = await AsyncStorage.getItem('token');
+                if (t) handleSessionInvalidation();
+              } catch (e) { }
+            }
+          }
+        } catch (e) { }
+        return response;
+      } catch (err) {
+        // network errors: preserve original behavior
+        throw err;
+      }
+    };
+
+    return () => { global.fetch = originalFetch; };
+  }, [handleSessionInvalidation]);
 
   useEffect(() => {
     const onBackPress = () => {
@@ -833,6 +877,59 @@ const App = () => {
               </View>
             </View>
           )}
+          <SessionExpiredModal visible={sessionModalVisible} onLogout={async () => {
+            // Prevent re-entrancy: keep the guard set until cleanup completes
+            if (isHandlingSessionInvalidation.current !== true) {
+              isHandlingSessionInvalidation.current = true;
+            }
+            try {
+              setSessionModalVisible(false);
+
+              // Reuse existing Logout API logic from Profile.js
+              try {
+                const token = await AsyncStorage.getItem('token');
+                const userId = await AsyncStorage.getItem('userId');
+                const deviceId = await AsyncStorage.getItem('deviceKey');
+                console.log('SessionExpiredModal: initiating logout API', { userId, deviceId, hasToken: !!token });
+
+                if (userId && deviceId) {
+                  const controller = new AbortController();
+                  const timeoutId = setTimeout(() => controller.abort(), 15000);
+                  try {
+                    const logoutUrl = `${url}Login/LogoutMobileUser?userid=${encodeURIComponent(userId)}&deviceKey=${encodeURIComponent(deviceId)}`;
+                    console.log('SessionExpiredModal: calling logout endpoint', logoutUrl);
+                    // Call server logout; ignore result (we will cleanup locally regardless)
+                    const resp = await fetch(logoutUrl, {
+                      headers: {
+                        'Accept': 'application/json'
+                      },
+                      signal: controller.signal
+                    });
+                    console.log('SessionExpiredModal: logout response status', resp && resp.status);
+                    // optionally read to consume
+                    if (!resp.ok) {
+                      try { const txt = await resp.text(); console.log('SessionExpiredModal: logout response text', txt); } catch (e) { console.log('SessionExpiredModal: failed reading logout response text', e); }
+                    }
+                  } catch (e) {
+                    console.log('SessionExpiredModal: logout fetch error', e);
+                    // ignore network/abort errors — proceed to local cleanup
+                  } finally {
+                    clearTimeout(timeoutId);
+                  }
+                } else {
+                  console.log('SessionExpiredModal: missing userId or deviceId; skipping server logout');
+                }
+              } catch (e) {
+                // ignore errors retrieving storage — proceed to local cleanup
+              }
+
+              // Always perform local cleanup and navigate to Login
+              await clearLocalSessionAndNavigate();
+            } finally {
+              // ensure guard reset so future sessions can show modal if needed
+              try { isHandlingSessionInvalidation.current = false; } catch (e) { }
+            }
+          }} />
         </SafeAreaProvider>
       </SafeAreaView>
     </NetworkProvider>

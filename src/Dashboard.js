@@ -957,7 +957,7 @@ const Dashboard = ({ navigation }) => {
             return allVideos;
         } catch (error) {
             console.error('Error fetching videos in parallel:', error);
-            Alert.alert("API Error", `Could not load videos. Please check your connection and try again. Details: ${error.message}`);
+            //   Alert.alert("API Error", `Could not load videos. Please check your connection and try again. Details: ${error.message}`);
             return { rows: [] };
         }
 
@@ -1485,10 +1485,10 @@ const Dashboard = ({ navigation }) => {
                 if (!net.isConnected) {
                     Alert.alert('No Internet Connection', 'Please check your internet connection and try again.');
                 } else {
-                    Alert.alert("Video Data Error", `Not enough videos found for Introduction ${introType}.`);
+                    //  Alert.alert("Video Data Error", `Not enough videos found for Introduction ${introType}.`);
                 }
             } catch (e) {
-                Alert.alert("Video Data Error", `Not enough videos found for Introduction ${introType}.`);
+                //  Alert.alert("Video Data Error", `Not enough videos found for Introduction ${introType}.`);
             }
         }
     };

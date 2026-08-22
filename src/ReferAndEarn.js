@@ -275,7 +275,7 @@ const ReferAndEarn = ({ navigation }) => {
           errorData = { message: response.statusText };
         }
         const errMessage = typeof errorData?.message === 'string' ? errorData.message : String(response.statusText);
-        Alert.alert("API Error", `Failed to get video details: ${errMessage}`);
+        // Alert.alert("API Error", `Failed to get video details: ${errMessage}`);
         return null;
       }
       const videoDetails = await response.json();
@@ -364,7 +364,6 @@ const ReferAndEarn = ({ navigation }) => {
         console.error("handleRefrealcode: API Error Response:", errorData);
         const errMessage = typeof errorData?.message === 'string' ? errorData.message : String(response.statusText);
         const rawResp = typeof errorData?.rawResponse === 'string' ? errorData.rawResponse : 'N/A';
-        Alert.alert("API Error", `Failed to load user details: ${errMessage}. Raw response: ${rawResp}`);
         setCode("Error");
         return;
       }
@@ -545,12 +544,10 @@ const ReferAndEarn = ({ navigation }) => {
     return videos;
   }, [referEarnVideos]);
 
-  // responsive sizing for REFERnEARN image to avoid cropping across devices
   const referImageSource = require('../img/REFERnEARN.png');
   const resolved = Image.resolveAssetSource(referImageSource) || {};
   const imgAspect = (resolved.width && resolved.height) ? (resolved.width / resolved.height) : (16 / 9);
 
-  // Calculate dimensions based on device type and orientation
   const horizontalMargin = isTablet ? 40 : 20;
   const containerPadding = isTablet ? 20 : 10;
   const referMaxWidth = windowWidth - (horizontalMargin * 2) - (containerPadding * 2);
@@ -558,8 +555,7 @@ const ReferAndEarn = ({ navigation }) => {
   let referWidth = referMaxWidth;
   let referHeight = Math.round(referWidth / imgAspect);
 
-  // Adjust max height based on orientation and device type
-  let maxHeightPercentage = 0.3; // default for portrait mobile
+  let maxHeightPercentage = 0.3;
   if (isLandscape) {
     maxHeightPercentage = isTablet ? 0.5 : 0.4;
   } else {
