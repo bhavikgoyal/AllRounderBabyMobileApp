@@ -283,7 +283,7 @@ const ReferAndEarn = ({ navigation }) => {
       return videoDetails;
     } catch (error) {
       const errMsg = typeof error?.message === 'string' ? error.message : 'Unknown error';
-      Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
+      // Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
       return null;
     } finally {
       setIsVideoLoading(false);
@@ -298,7 +298,7 @@ const ReferAndEarn = ({ navigation }) => {
     }
     setIsVideoLoading(true);
     if (!videoId) {
-      Alert.alert("Error", "Missing video ID to play the video.");
+      //  Alert.alert("Error", "Missing video ID to play the video.");
       return { error: true, message: "Missing videoId" };
     }
     const DETAILS_ENDPOINT = `${url}Vdocipher/GetVDOCipher_VideosDetails?videoId=${videoId}`;
@@ -376,13 +376,13 @@ const ReferAndEarn = ({ navigation }) => {
           setCode("N/A");
         }
       } else {
-        Alert.alert("Data Error", "User data not found or format is invalid.");
+        // Alert.alert("Data Error", "User data not found or format is invalid.");
         setCode("N/A");
       }
     } catch (error) {
       console.error("handleRefrealcode: Network or unexpected error:", error);
       const errMsg = typeof error?.message === 'string' ? error.message : 'Unknown error';
-      Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
+      //Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
       setCode("Error");
     } finally {
       setIsLoading(false);
@@ -396,7 +396,7 @@ const ReferAndEarn = ({ navigation }) => {
       return;
     }
     if (!userId) {
-      Alert.alert("Authentication Error", "User ID not available for watermark. Please log in again.");
+      // Alert.alert("Authentication Error", "User ID not available for watermark. Please log in again.");
       setIsVideoLoading(false);
       return;
     }
@@ -495,17 +495,17 @@ const ReferAndEarn = ({ navigation }) => {
           } else if (detailsData && detailsData.message) {
             errMsg = String(detailsData.message);
           }
-          Alert.alert("Error", errMsg);
+          // Alert.alert("Error", errMsg);
           setIsVideoLoading(false);
         }
       } else {
-        Alert.alert("Error", "Video not found.");
+        //  Alert.alert("Error", "Video not found.");
         setIsVideoLoading(false);
       }
     }
     catch (err) {
       const errMsg = typeof err?.message === 'string' ? err.message : 'Unknown error';
-      Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
+      // Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
       setIsVideoLoading(false);
     }
   };
