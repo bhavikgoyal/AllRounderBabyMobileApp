@@ -300,7 +300,7 @@ const createCashbackConditionsStyles = (theme, windowWidth = 360, windowHeight =
       marginBottom: 6,
     },
     modalClose: {
-      fontSize: 16,
+      fontSize: 20,
       fontWeight: 'bold',
       color: '#777',
       position: 'relative',
@@ -316,6 +316,7 @@ const createCashbackConditionsStyles = (theme, windowWidth = 360, windowHeight =
       justifyContent: 'center',
       width: '100%',
     },
+    fullPageLoader: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 },
     modalButton: {
       flex: 0,
       width: 100,
@@ -393,6 +394,8 @@ const AboutUs = ({ navigation, route }) => {
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [selectedVideoGroup, setSelectedVideoGroup] = useState(null);
   const [instanceKey, setInstanceKey] = useState(0);
+  const [isLanguageButtonLoading, setIsLanguageButtonLoading] = useState(false);
+  const [languageButtonLoadingFor, setLanguageButtonLoadingFor] = useState(null);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -493,18 +496,19 @@ const AboutUs = ({ navigation, route }) => {
   }, [referEarnVideos]);
 
   const loadAndOpenModal = async () => {
-    const data = await fetchReferEarnVideos();
-    if (data) {
-      if (playableReferEarnVideos.length > 0) {
+    // Open modal immediately to avoid blocking UI while fetching videos.
+    setIsAboutModalVisible(true);
+    // Fetch videos in background and populate the modal when data arrives.
+    fetchReferEarnVideos().then((data) => {
+      if (data && playableReferEarnVideos.length > 0) {
         const hindiVideo = playableReferEarnVideos.find(v => v.language === 'hindi');
         const englishVideo = playableReferEarnVideos.find(v => v.language === 'english');
         const videoGroup = { hindiVideo: hindiVideo ? { id: hindiVideo.id, poster: hindiVideo.poster } : null, englishVideo: englishVideo ? { id: englishVideo.id, poster: englishVideo.poster } : null, stepNumber: 'refer-and-earn' };
         setSelectedVideoGroup(videoGroup);
-        setIsAboutModalVisible(true);
-      } else {
-        //  Alert.alert('Videos Not Available', 'Refer & Earn videos could not be loaded.');
       }
-    }
+    }).catch(() => {
+      // keep existing behavior: don't block or throw on fetch errors
+    });
   };
 
   const vdoCipher_api = async (videoId, tokenToUse) => {
@@ -912,34 +916,51 @@ const AboutUs = ({ navigation, route }) => {
             {isVideoLoading && <ActivityIndicator size="small" color="#0b4bd6" style={{ marginBottom: 10 }} />}
             <View style={styles.modalButtonsRow}>
               <TouchableOpacity
-                style={styles.modalButton}
+                style={[styles.modalButton, (isLanguageButtonLoading) && styles.modalButtonDisabled]}
                 onPress={async () => {
-                  setIsAboutModalVisible(false);
-                  const youtubeHindi = 'https://www.youtube.com/watch?v=2puDfTtzl00';
+                  if (isLanguageButtonLoading) return;
+                  setIsLanguageButtonLoading(true);
+                  setLanguageButtonLoadingFor('hindi');
                   try {
+                    const youtubeHindi = 'https://www.youtube.com/watch?v=2puDfTtzl00';
                     await Linking.openURL(youtubeHindi);
                   } catch (err) {
                     Alert.alert('Unable to open', 'Could not open YouTube link.');
+                  } finally {
+                    setIsLanguageButtonLoading(false);
+                    setLanguageButtonLoadingFor(null);
+                    setIsAboutModalVisible(false);
                   }
                 }}
               >
                 <Text style={styles.modalButtonText}>Hindi</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.modalButton}
+                style={[styles.modalButton, (isLanguageButtonLoading) && styles.modalButtonDisabled]}
                 onPress={async () => {
-                  setIsAboutModalVisible(false);
-                  const youtubeEnglish = 'https://www.youtube.com/watch?v=TLJ5kiQJTGU';
+                  if (isLanguageButtonLoading) return;
+                  setIsLanguageButtonLoading(true);
+                  setLanguageButtonLoadingFor('english');
                   try {
+                    const youtubeEnglish = 'https://www.youtube.com/watch?v=TLJ5kiQJTGU';
                     await Linking.openURL(youtubeEnglish);
                   } catch (err) {
                     Alert.alert('Unable to open', 'Could not open YouTube link.');
+                  } finally {
+                    setIsLanguageButtonLoading(false);
+                    setLanguageButtonLoadingFor(null);
+                    setIsAboutModalVisible(false);
                   }
                 }}
               >
                 <Text style={styles.modalButtonText}>English</Text>
               </TouchableOpacity>
             </View>
+            {isLanguageButtonLoading && (
+              <View style={styles.fullPageLoader} pointerEvents="auto">
+                <ActivityIndicator size="large" color="#0b4bd6" />
+              </View>
+            )}
           </View>
         </View>
       </Modal>

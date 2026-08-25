@@ -1,11 +1,12 @@
 import { PermissionsAndroid, Linking } from "react-native";
-import RNScreenshotPrevent from "react-native-screenshot-prevent";
 import SplashScreen from "react-native-splash-screen";
 import React, { useEffect, useState, memo, useCallback, useMemo } from 'react';
 import './src/utils/disableConsole';
 import { View, Image, StyleSheet, SafeAreaView, Text, useColorScheme, Alert, ActivityIndicator, BackHandler, TouchableOpacity, Dimensions, Platform, StatusBar, useWindowDimensions } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme, CommonActions, createNavigationContainerRef } from '@react-navigation/native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import NetworkProvider from './src/components/NetworkProvider';
+import SessionExpiredModal from './src/components/SessionExpiredModal';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -271,6 +272,8 @@ const App = () => {
   const [activeFooter, setActiveFooter] = useState('Home');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const isHandlingSessionInvalidation = React.useRef(false);
+  const [sessionModalVisible, setSessionModalVisible] = useState(false);
 
   const prevDrawerOpenRef = React.useRef(false);
 
@@ -468,6 +471,47 @@ const App = () => {
     }
   }, []);
 
+  const handleSessionInvalidation = useCallback(() => {
+    if (isHandlingSessionInvalidation.current) return;
+    isHandlingSessionInvalidation.current = true;
+    // show modal; modal's Logout button will call clearLocalSessionAndNavigate
+    setSessionModalVisible(true);
+  }, [clearLocalSessionAndNavigate]);
+
+  useEffect(() => {
+    // Monkey-patch global fetch to detect authenticated 401 responses.
+    const originalFetch = global.fetch;
+    global.fetch = async (input, init = {}) => {
+      try {
+        const response = await originalFetch(input, init);
+        try {
+          const status = response && response.status;
+          if (status === 401) {
+            // Determine if request had Authorization header or app currently has a token
+            const hasAuthHeader = init && init.headers && (
+              (init.headers['Authorization'] || init.headers['authorization'])
+            );
+            if (hasAuthHeader) {
+              handleSessionInvalidation();
+            } else {
+              // fallback: check current AsyncStorage token presence
+              try {
+                const t = await AsyncStorage.getItem('token');
+                if (t) handleSessionInvalidation();
+              } catch (e) { }
+            }
+          }
+        } catch (e) { }
+        return response;
+      } catch (err) {
+        // network errors: preserve original behavior
+        throw err;
+      }
+    };
+
+    return () => { global.fetch = originalFetch; };
+  }, [handleSessionInvalidation]);
+
   useEffect(() => {
     const onBackPress = () => {
       try {
@@ -628,7 +672,7 @@ const App = () => {
         />
         <Drawer.Screen name="Cashback for Feedback" component={ChasCashbackforFeedback} options={{}} />
         <Drawer.Screen name="Refer and Earn" component={ReferAndEarn} options={{}} />
-        <Drawer.Screen name="VideoPlayerScreen" component={VideoPlayerScreen} options={{}} />
+        <Drawer.Screen name="VideoPlayerScreen" component={VideoPlayerScreen} options={{ swipeEnabled: false, gestureEnabled: false }} />
         <Drawer.Screen name="Referral History" component={ReferralHistory} options={{}} />
         <Drawer.Screen name="My Orders" component={MyOrders} options={{}} />
         <Drawer.Screen name="My Earnings" component={MyEarnings} options={{}} />
@@ -714,126 +758,181 @@ const App = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#1434A4" />
-      <SafeAreaProvider>
-        <View style={{ flex: 1 }}>
-          <NavigationContainer
-            ref={navigationRef}
-            theme={navigationTheme}
-            onReady={onNavigationReady}
-            onStateChange={() => {
-              try {
-                if (!navigationRef.isReady()) return;
-                const rootState = typeof navigationRef.getRootState === 'function' ? navigationRef.getRootState() : null;
+    <NetworkProvider>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="light-content" backgroundColor="#1434A4" />
+        <SafeAreaProvider>
+          <View style={{ flex: 1 }}>
+            <NavigationContainer
+              ref={navigationRef}
+              theme={navigationTheme}
+              onReady={onNavigationReady}
+              onStateChange={() => {
+                try {
+                  if (!navigationRef.isReady()) return;
+                  const rootState = typeof navigationRef.getRootState === 'function' ? navigationRef.getRootState() : null;
 
-                if (rootState && rootState.routes && typeof rootState.index === 'number') {
-                  const top = rootState.routes[rootState.index];
-                  if (top && top.name) {
-                    setActiveFooter(top.name);
-                  }
-                } else {
-                  const r = navigationRef.getCurrentRoute();
-                  if (r && r.name) setActiveFooter(r.name);
-                }
-
-                const detectDrawerOpen = (state) => {
-                  if (!state) return false;
-                  try {
-                    if (Array.isArray(state.history) && state.history.length) {
-                      const drawerEntry = state.history.slice().reverse().find(h => h && h.type === 'drawer');
-                      if (drawerEntry) {
-                        if (drawerEntry.status === 'open') return true;
-                        if (typeof drawerEntry.status === 'undefined') return true;
-                      }
+                  if (rootState && rootState.routes && typeof rootState.index === 'number') {
+                    const top = rootState.routes[rootState.index];
+                    if (top && top.name) {
+                      setActiveFooter(top.name);
                     }
+                  } else {
+                    const r = navigationRef.getCurrentRoute();
+                    if (r && r.name) setActiveFooter(r.name);
+                  }
 
-                    if (state.isDrawerOpen) return true;
+                  const detectDrawerOpen = (state) => {
+                    if (!state) return false;
+                    try {
+                      if (Array.isArray(state.history) && state.history.length) {
+                        const drawerEntry = state.history.slice().reverse().find(h => h && h.type === 'drawer');
+                        if (drawerEntry) {
+                          if (drawerEntry.status === 'open') return true;
+                          if (typeof drawerEntry.status === 'undefined') return true;
+                        }
+                      }
+
+                      if (state.isDrawerOpen) return true;
+                      const idx = typeof state.index === 'number' ? state.index : 0;
+                      const route = state.routes && state.routes[idx];
+                      if (route && route.state) return detectDrawerOpen(route.state);
+                    } catch (e) {
+                    }
+                    return false;
+                  };
+
+                  const drawerOpen = detectDrawerOpen(rootState);
+                  if (prevDrawerOpenRef.current !== !!drawerOpen) {
+                    prevDrawerOpenRef.current = !!drawerOpen;
+                  }
+                  setIsDrawerOpen(!!drawerOpen);
+
+                } catch (e) {
+                }
+              }}
+            >
+              {initialRoute === 'Splash' ? (
+                <VideoSplashScreen onVideoEnd={handleVideoEnd} />
+              ) : (
+                renderDrawerNavigator(initialRoute)
+              )}
+            </NavigationContainer>
+          </View>
+          {(() => {
+            const guestFooterPages = ['Login', 'LoginPage', 'Splash', 'VideoPlayerScreen', 'TermsofServicewithoutLog', 'PrivacyPolicywithoutLog'];
+            try {
+              if (initialRoute === 'Splash') return null;
+              if (navigationRef && typeof navigationRef.isReady === 'function' && navigationRef.isReady()) {
+                const rootState = navigationRef.getRootState && navigationRef.getRootState();
+                if (rootState) {
+                  const activeNames = [];
+                  let state = rootState;
+                  let hideFooterParam = false;
+                  while (state) {
                     const idx = typeof state.index === 'number' ? state.index : 0;
                     const route = state.routes && state.routes[idx];
-                    if (route && route.state) return detectDrawerOpen(route.state);
-                  } catch (e) {
+                    if (!route) break;
+                    activeNames.push(route.name);
+                    if (route.params && route.params.hideFooter) hideFooterParam = true;
+                    state = route.state;
                   }
-                  return false;
-                };
-
-                const drawerOpen = detectDrawerOpen(rootState);
-                if (prevDrawerOpenRef.current !== !!drawerOpen) {
-                  prevDrawerOpenRef.current = !!drawerOpen;
+                  const isGuest = activeNames.some(n => guestFooterPages.includes(n));
+                  if (isGuest || hideFooterParam) return null;
+                  if (isDrawerOpen) return null;
                 }
-                setIsDrawerOpen(!!drawerOpen);
-
-              } catch (e) {
               }
-            }}
-          >
-            {initialRoute === 'Splash' ? (
-              <VideoSplashScreen onVideoEnd={handleVideoEnd} />
-            ) : (
-              renderDrawerNavigator(initialRoute)
-            )}
-          </NavigationContainer>
-        </View>
-        {(() => {
-          const guestFooterPages = ['Login', 'LoginPage', 'Splash', 'VideoPlayerScreen', 'TermsofServicewithoutLog', 'PrivacyPolicywithoutLog'];
-          try {
-            if (initialRoute === 'Splash') return null;
-            if (navigationRef && typeof navigationRef.isReady === 'function' && navigationRef.isReady()) {
-              const rootState = navigationRef.getRootState && navigationRef.getRootState();
-              if (rootState) {
-                const activeNames = [];
-                let state = rootState;
-                let hideFooterParam = false;
-                while (state) {
-                  const idx = typeof state.index === 'number' ? state.index : 0;
-                  const route = state.routes && state.routes[idx];
-                  if (!route) break;
-                  activeNames.push(route.name);
-                  if (route.params && route.params.hideFooter) hideFooterParam = true;
-                  state = route.state;
-                }
-                const isGuest = activeNames.some(n => guestFooterPages.includes(n));
-                if (isGuest || hideFooterParam) return null;
-                if (isDrawerOpen) return null;
-              }
+            } catch (e) {
             }
-          } catch (e) {
-          }
-          return !guestFooterPages.includes(activeFooter) ? <FooterBar /> : null;
-        })()}
-        {isLoggingOut && (
-          <View style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 9999
-          }}>
+            return !guestFooterPages.includes(activeFooter) ? <FooterBar /> : null;
+          })()}
+          {isLoggingOut && (
             <View style={{
-              backgroundColor: currentThemeColors.background,
-              padding: 30,
-              borderRadius: 10,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              justifyContent: 'center',
               alignItems: 'center',
-              minWidth: 150
+              zIndex: 9999
             }}>
-              <ActivityIndicator size="large" color={currentThemeColors.primary} />
-              <Text style={{
-                marginTop: 15,
-                fontSize: 16,
-                color: currentThemeColors.text,
-                fontWeight: '500'
+              <View style={{
+                backgroundColor: currentThemeColors.background,
+                padding: 30,
+                borderRadius: 10,
+                alignItems: 'center',
+                minWidth: 150
               }}>
-                Logging out...
-              </Text>
+                <ActivityIndicator size="large" color={currentThemeColors.primary} />
+                <Text style={{
+                  marginTop: 15,
+                  fontSize: 16,
+                  color: currentThemeColors.text,
+                  fontWeight: '500'
+                }}>
+                  Logging out...
+                </Text>
+              </View>
             </View>
-          </View>
-        )}
-      </SafeAreaProvider>
-    </SafeAreaView>
+          )}
+          <SessionExpiredModal visible={sessionModalVisible} onLogout={async () => {
+            // Prevent re-entrancy: keep the guard set until cleanup completes
+            if (isHandlingSessionInvalidation.current !== true) {
+              isHandlingSessionInvalidation.current = true;
+            }
+            try {
+              setSessionModalVisible(false);
+
+              // Reuse existing Logout API logic from Profile.js
+              try {
+                const token = await AsyncStorage.getItem('token');
+                const userId = await AsyncStorage.getItem('userId');
+                const deviceId = await AsyncStorage.getItem('deviceKey');
+                console.log('SessionExpiredModal: initiating logout API', { userId, deviceId, hasToken: !!token });
+
+                if (userId && deviceId) {
+                  const controller = new AbortController();
+                  const timeoutId = setTimeout(() => controller.abort(), 15000);
+                  try {
+                    const logoutUrl = `${url}Login/LogoutMobileUser?userid=${encodeURIComponent(userId)}&deviceKey=${encodeURIComponent(deviceId)}`;
+                    console.log('SessionExpiredModal: calling logout endpoint', logoutUrl);
+                    // Call server logout; ignore result (we will cleanup locally regardless)
+                    const resp = await fetch(logoutUrl, {
+                      headers: {
+                        'Accept': 'application/json'
+                      },
+                      signal: controller.signal
+                    });
+                    console.log('SessionExpiredModal: logout response status', resp && resp.status);
+                    // optionally read to consume
+                    if (!resp.ok) {
+                      try { const txt = await resp.text(); console.log('SessionExpiredModal: logout response text', txt); } catch (e) { console.log('SessionExpiredModal: failed reading logout response text', e); }
+                    }
+                  } catch (e) {
+                    console.log('SessionExpiredModal: logout fetch error', e);
+                    // ignore network/abort errors — proceed to local cleanup
+                  } finally {
+                    clearTimeout(timeoutId);
+                  }
+                } else {
+                  console.log('SessionExpiredModal: missing userId or deviceId; skipping server logout');
+                }
+              } catch (e) {
+                // ignore errors retrieving storage — proceed to local cleanup
+              }
+
+              // Always perform local cleanup and navigate to Login
+              await clearLocalSessionAndNavigate();
+            } finally {
+              // ensure guard reset so future sessions can show modal if needed
+              try { isHandlingSessionInvalidation.current = false; } catch (e) { }
+            }
+          }} />
+        </SafeAreaProvider>
+      </SafeAreaView>
+    </NetworkProvider>
   );
 };
 

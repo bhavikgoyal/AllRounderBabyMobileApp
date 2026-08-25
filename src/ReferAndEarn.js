@@ -1,5 +1,5 @@
 import { StatusBar } from 'react-native';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import {
   StyleSheet,
@@ -119,6 +119,8 @@ const ReferAndEarn = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [selectedVideoGroup, setSelectedVideoGroup] = useState(null);
+  const [isLanguageButtonLoading, setIsLanguageButtonLoading] = useState(false);
+  const [languageButtonLoadingFor, setLanguageButtonLoadingFor] = useState(null); // 'hindi'|'english'|null
   const [showDetails, setShowDetails] = useState(false);
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
@@ -273,7 +275,7 @@ const ReferAndEarn = ({ navigation }) => {
           errorData = { message: response.statusText };
         }
         const errMessage = typeof errorData?.message === 'string' ? errorData.message : String(response.statusText);
-        Alert.alert("API Error", `Failed to get video details: ${errMessage}`);
+        // Alert.alert("API Error", `Failed to get video details: ${errMessage}`);
         return null;
       }
       const videoDetails = await response.json();
@@ -281,7 +283,7 @@ const ReferAndEarn = ({ navigation }) => {
       return videoDetails;
     } catch (error) {
       const errMsg = typeof error?.message === 'string' ? error.message : 'Unknown error';
-      Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
+      // Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
       return null;
     } finally {
       setIsVideoLoading(false);
@@ -296,7 +298,7 @@ const ReferAndEarn = ({ navigation }) => {
     }
     setIsVideoLoading(true);
     if (!videoId) {
-      Alert.alert("Error", "Missing video ID to play the video.");
+      //  Alert.alert("Error", "Missing video ID to play the video.");
       return { error: true, message: "Missing videoId" };
     }
     const DETAILS_ENDPOINT = `${url}Vdocipher/GetVDOCipher_VideosDetails?videoId=${videoId}`;
@@ -362,7 +364,6 @@ const ReferAndEarn = ({ navigation }) => {
         console.error("handleRefrealcode: API Error Response:", errorData);
         const errMessage = typeof errorData?.message === 'string' ? errorData.message : String(response.statusText);
         const rawResp = typeof errorData?.rawResponse === 'string' ? errorData.rawResponse : 'N/A';
-        Alert.alert("API Error", `Failed to load user details: ${errMessage}. Raw response: ${rawResp}`);
         setCode("Error");
         return;
       }
@@ -375,13 +376,13 @@ const ReferAndEarn = ({ navigation }) => {
           setCode("N/A");
         }
       } else {
-        Alert.alert("Data Error", "User data not found or format is invalid.");
+        // Alert.alert("Data Error", "User data not found or format is invalid.");
         setCode("N/A");
       }
     } catch (error) {
       console.error("handleRefrealcode: Network or unexpected error:", error);
       const errMsg = typeof error?.message === 'string' ? error.message : 'Unknown error';
-      Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
+      //Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
       setCode("Error");
     } finally {
       setIsLoading(false);
@@ -395,7 +396,7 @@ const ReferAndEarn = ({ navigation }) => {
       return;
     }
     if (!userId) {
-      Alert.alert("Authentication Error", "User ID not available for watermark. Please log in again.");
+      // Alert.alert("Authentication Error", "User ID not available for watermark. Please log in again.");
       setIsVideoLoading(false);
       return;
     }
@@ -494,17 +495,17 @@ const ReferAndEarn = ({ navigation }) => {
           } else if (detailsData && detailsData.message) {
             errMsg = String(detailsData.message);
           }
-          Alert.alert("Error", errMsg);
+          // Alert.alert("Error", errMsg);
           setIsVideoLoading(false);
         }
       } else {
-        Alert.alert("Error", "Video not found.");
+        //  Alert.alert("Error", "Video not found.");
         setIsVideoLoading(false);
       }
     }
     catch (err) {
       const errMsg = typeof err?.message === 'string' ? err.message : 'Unknown error';
-      Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
+      // Alert.alert("Network Error", `An unexpected error occurred: ${errMsg}`);
       setIsVideoLoading(false);
     }
   };
@@ -543,12 +544,10 @@ const ReferAndEarn = ({ navigation }) => {
     return videos;
   }, [referEarnVideos]);
 
-  // responsive sizing for REFERnEARN image to avoid cropping across devices
   const referImageSource = require('../img/REFERnEARN.png');
   const resolved = Image.resolveAssetSource(referImageSource) || {};
   const imgAspect = (resolved.width && resolved.height) ? (resolved.width / resolved.height) : (16 / 9);
 
-  // Calculate dimensions based on device type and orientation
   const horizontalMargin = isTablet ? 40 : 20;
   const containerPadding = isTablet ? 20 : 10;
   const referMaxWidth = windowWidth - (horizontalMargin * 2) - (containerPadding * 2);
@@ -556,8 +555,7 @@ const ReferAndEarn = ({ navigation }) => {
   let referWidth = referMaxWidth;
   let referHeight = Math.round(referWidth / imgAspect);
 
-  // Adjust max height based on orientation and device type
-  let maxHeightPercentage = 0.3; // default for portrait mobile
+  let maxHeightPercentage = 0.3;
   if (isLandscape) {
     maxHeightPercentage = isTablet ? 0.5 : 0.4;
   } else {
@@ -840,28 +838,54 @@ const ReferAndEarn = ({ navigation }) => {
             <Text style={styles.modalText}>In which language would you like to watch this video?</Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={[styles.modalButton, !selectedVideoGroup.hindiVideo && styles.disabledButton]}
-                onPress={() => {
-                  setIsLanguageModalVisible(false);
-                  handleVideoPlayback(selectedVideoGroup.hindiVideo.id, 'hindi', 'Refer & Earn Video (Hindi)', null);
+                style={[styles.modalButton, (!selectedVideoGroup.hindiVideo || isLanguageButtonLoading) && styles.disabledButton]}
+                onPress={async () => {
+                  if (isLanguageButtonLoading) return;
+                  setIsLanguageButtonLoading(true);
+                  setLanguageButtonLoadingFor('hindi');
+                  try {
+                    await handleVideoPlayback(selectedVideoGroup.hindiVideo.id, 'hindi', 'Refer & Earn Video (Hindi)', null);
+                  } catch (e) {
+                    // preserve existing behavior
+                  } finally {
+                    setIsLanguageButtonLoading(false);
+                    setLanguageButtonLoadingFor(null);
+                    setIsLanguageModalVisible(false);
+                  }
                 }}
-                disabled={!selectedVideoGroup.hindiVideo}
+                disabled={!selectedVideoGroup.hindiVideo || isLanguageButtonLoading}
               >
                 <Text style={styles.modalButtonText}>Hindi</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, !selectedVideoGroup.englishVideo && styles.disabledButton]}
-                onPress={() => {
-                  setIsLanguageModalVisible(false);
-                  handleVideoPlayback(selectedVideoGroup.englishVideo.id, 'english', 'Refer & Earn Video (English)', null);
+                style={[styles.modalButton, (!selectedVideoGroup.englishVideo || isLanguageButtonLoading) && styles.disabledButton]}
+                onPress={async () => {
+                  if (isLanguageButtonLoading) return;
+                  setIsLanguageButtonLoading(true);
+                  setLanguageButtonLoadingFor('english');
+                  try {
+                    await handleVideoPlayback(selectedVideoGroup.englishVideo.id, 'english', 'Refer & Earn Video (English)', null);
+                  } catch (e) {
+                    // preserve existing behavior
+                  } finally {
+                    setIsLanguageButtonLoading(false);
+                    setLanguageButtonLoadingFor(null);
+                    setIsLanguageModalVisible(false);
+                  }
                 }}
-                disabled={!selectedVideoGroup.englishVideo}
+                disabled={!selectedVideoGroup.englishVideo || isLanguageButtonLoading}
               >
                 <Text style={styles.modalButtonText}>English</Text>
               </TouchableOpacity>
             </View>
           </View>
         </Pressable>
+      )}
+
+      {isLanguageButtonLoading && (
+        <View style={styles.fullPageLoader} pointerEvents="auto">
+          <ActivityIndicator size="large" color={theme.primaryAction || '#fff'} />
+        </View>
       )}
       {shareModalVisible && (
         <Pressable style={styles.modalOverlay} onPress={closeShareModal}>
@@ -1222,6 +1246,7 @@ const createReferAndEarnStyles = (theme, windowWidth = 360, windowHeight = 640) 
     playButtonContainer: { position: 'absolute', left: '50%', top: '50%', zIndex: 3, transform: [{ translateX: -30 }, { translateY: -30 }] },
     playButtonCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
     playButtonText: { color: '#1e90ff', fontSize: 26, marginLeft: 3, fontWeight: '600', marginBottom: 5, marginTop: isTablet ? 3 : 3 },
+    fullPageLoader: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 },
   });
 };
 export default ReferAndEarn;

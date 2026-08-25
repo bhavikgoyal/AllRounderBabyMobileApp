@@ -6,6 +6,28 @@ import { useRoute, useNavigation, useFocusEffect, } from "@react-navigation/nati
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "./config/api";
 
+const runOrientationChange = (changeOrientation, { delay = 0 } = {}) => {
+    try {
+        if (Platform.OS === 'ios') {
+            setTimeout(() => {
+                requestAnimationFrame(() => {
+                    try {
+                        changeOrientation();
+                    } catch (e) {
+                        const message = String(e?.message || e);
+                        if (!message.includes('UISceneErrorDomain') && !message.includes('current windowing mode')) {
+                        }
+                    }
+                });
+            }, delay);
+            return;
+        }
+        changeOrientation();
+    } catch (e) {
+    }
+};
+
+const getOrientationDelay = () => (Platform.OS === 'ios' ? 300 : 0);
 
 const VideoPlayerScreen = () => {
     const route = useRoute();
@@ -34,6 +56,12 @@ const VideoPlayerScreen = () => {
     }, [cameFrom]);
     const videoId = VideoId;
     const latestVideoIdRef = useRef(videoId);
+    useEffect(() => {
+        console.log('[VideoPlayerScreen] mounted', { videoId: latestVideoIdRef.current });
+        return () => {
+            console.log('[VideoPlayerScreen] unmounted', { videoId: latestVideoIdRef.current });
+        };
+    }, []);
     const latestRouteParamsRef = useRef({
         language,
         step,
@@ -61,9 +89,13 @@ const VideoPlayerScreen = () => {
     const [isLocked, setIsLocked] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+    const [renderPlayer, setRenderPlayer] = useState(true);
     const progressBarWidthRef = useRef(0);
     const firstProgressRef = useRef(false);
     const videoReadyTimerRef = useRef(null);
+    const credentialsRequestKeyRef = useRef(null);
+    const embedInfoRef = useRef(null);
+    const hasValidEmbedInfo = typeof credentials?.otp === 'string' && credentials.otp.length > 0 && typeof credentials?.playbackInfo === 'string' && credentials.playbackInfo.length > 0;
     const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
     const formatTime = useCallback((sec) => {
         const s = Number(sec) || 0;
@@ -95,21 +127,17 @@ const VideoPlayerScreen = () => {
         seekToMs(currentTimeRef.current + deltaSec);
     }, [seekToMs]);
     const toggleFullscreen = useCallback(() => {
-        try {
-            if (isLandscape) {
-                Orientation.lockToPortrait();
-            } else {
-                Orientation.lockToLandscape();
-            }
-            setTimeout(() => {
-                try { Orientation.unlockAllOrientations(); } catch (e) { }
-            }, 500);
-        } catch (e) {
-            console.log('toggleFullscreen error', e?.message);
+        if (isLandscape) {
+            runOrientationChange(() => Orientation.lockToPortrait(), { delay: getOrientationDelay() });
+        } else {
+            runOrientationChange(() => Orientation.lockToLandscape(), { delay: getOrientationDelay() });
         }
     }, [isLandscape]);
     const fetchVideoCredentials = useCallback(async () => {
         if (!videoId) return;
+        const requestKey = `${videoId}:${annotate || ''}`;
+        if (credentialsRequestKeyRef.current === requestKey) return;
+        credentialsRequestKeyRef.current = requestKey;
         try {
             setIsLoading(true);
             setIsVideoReady(false);
@@ -144,11 +172,12 @@ const VideoPlayerScreen = () => {
                 playbackInfo: typeof data.playbackInfo === "string" ? data.playbackInfo : JSON.stringify(data.playbackInfo),
             });
         } catch (err) {
+            credentialsRequestKeyRef.current = null;
             setError({ message: err.message });
         } finally {
             setIsLoading(false);
         }
-    }, [videoId]);
+    }, [annotate, videoId]);
 
     useEffect(() => {
         if (videoReadyTimerRef.current) {
@@ -177,109 +206,6 @@ const VideoPlayerScreen = () => {
         if (Number.isNaN(n)) return 0;
         return n < 0 ? 0 : Math.floor(n);
     }, []);
-    useEffect(() => {
-        latestVideoIdRef.current = videoId;
-        latestRouteParamsRef.current = {
-            language,
-            step,
-            stage_name,
-            displayStep,
-            total_time,
-        };
-        firstProgressRef.current = false;
-        if (videoId) {
-            progressSentRef.current = false;
-            finishedSentRef.current = false;
-            maxWatchedTimeRef.current = 0;
-            setCurrentTime(0);
-            currentTimeRef.current = 0;
-            setDuration(0);
-            setPlaybackSpeed(1);
-            setIsPlaying(true);
-            setVideoCompleted(false);
-            setIsLocked(false);
-            setShowControls(true);
-            setShowSpeedMenu(false);
-            setIsFullscreen(false);
-            fetchVideoCredentials();
-        }
-    }, [videoId, fetchVideoCredentials, language, step, stage_name, displayStep, total_time]);
-    useEffect(() => {
-        return () => {
-            try {
-                if (playerRef.current) {
-                    playerRef.current.stop?.();
-                    playerRef.current.release?.();
-                    playerRef.current = null;
-                }
-            } catch (e) {
-            }
-        };
-    }, []);
-    useEffect(() => {
-        try {
-            Orientation.unlockAllOrientations();
-        } catch (e) {
-        }
-        return () => {
-            try {
-                Orientation.lockToPortrait();
-            } catch (e) {
-            }
-        };
-    }, []);
-    useEffect(() => {
-        navigation.setOptions({
-            headerShown: !isLandscape,
-            headerLeft: () => (
-                <TouchableOpacity
-                    onPress={handleBack}
-                    style={{
-                        paddingLeft: 15,
-                        paddingRight: 10,
-                        paddingVertical: Platform.OS === 'android' ? 10 : 8,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                    activeOpacity={0.7}
-                >
-                    <Text style={{
-                        fontSize: Platform.OS === 'android' ? 32 : 28,
-                        fontWeight: Platform.OS === 'android' ? '700' : '600',
-                        color: '#fff',
-                        lineHeight: Platform.OS === 'android' ? 32 : 28,
-                        includeFontPadding: false,
-                    }}>←</Text>
-                </TouchableOpacity>
-            ),
-        });
-        StatusBar.setHidden(isLandscape || isFullscreen);
-    }, [isLandscape, isFullscreen, navigation, handleBack]);
-    useFocusEffect(
-        useCallback(() => {
-            try { Orientation.unlockAllOrientations(); } catch (e) { }
-            setIsFullscreen(false);
-            setError(null);
-            setCredentials({ otp: null, playbackInfo: null });
-            progressSentRef.current = false;
-            finishedSentRef.current = false;
-            if (videoId) {
-                fetchVideoCredentials();
-            }
-            const sub = BackHandler.addEventListener(
-                "hardwareBackPress",
-                handleBack
-            );
-            return () => {
-                sub.remove();
-                setIsFullscreen(false);
-                setError(null);
-                setCredentials({ otp: null, playbackInfo: null });
-                progressSentRef.current = false;
-                finishedSentRef.current = false;
-            };
-        }, [videoId, fetchVideoCredentials, handleBack])
-    );
     const updateProgress = useCallback(
         async (isFinished = false, overrideSeconds = null) => {
             const currentVideoId = latestVideoIdRef.current;
@@ -332,21 +258,37 @@ const VideoPlayerScreen = () => {
                 });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-                console.log("Progress update response:", data);
-
             } catch (error) {
             }
         },
         [toSeconds]
     );
-    const handleBack = useCallback(() => {
-        if (playerRef.current) {
-            playerRef.current.stop?.();
-            playerRef.current.release?.();
+    const cleanupPlayer = useCallback(() => {
+        console.log('[VideoPlayerScreen] set playWhenReady false', { videoId: latestVideoIdRef.current });
+        setIsPlaying(false);
+        console.log('[VideoPlayerScreen] unmounting player', { videoId: latestVideoIdRef.current });
+        setRenderPlayer(false);
+        try {
+            if (playerRef.current) {
+                console.log('[VideoPlayerScreen] pause', { videoId: latestVideoIdRef.current });
+                playerRef.current.pause?.();
+                console.log('[VideoPlayerScreen] stop', { videoId: latestVideoIdRef.current });
+                playerRef.current.stop?.();
+                console.log('[VideoPlayerScreen] release', { videoId: latestVideoIdRef.current });
+                playerRef.current.release?.();
+                playerRef.current = null;
+            }
+        } catch (e) {
         }
+        console.log('[VideoPlayerScreen] player removed', { videoId: latestVideoIdRef.current });
+    }, []);
+
+    const handleBack = useCallback(() => {
+        console.log('[VideoPlayerScreen] back button pressed', { videoId: latestVideoIdRef.current });
+        cleanupPlayer();
 
         updateProgress(false, 0).catch(() => { });
-        try { Orientation.lockToPortrait(); } catch (e) { }
+        runOrientationChange(() => Orientation.lockToPortrait(), { delay: getOrientationDelay() });
 
         const target = latestCameFromRef.current;
         if (target === "Dashboard") {
@@ -358,9 +300,135 @@ const VideoPlayerScreen = () => {
         }
 
         return true;
-    }, [navigation, updateProgress]);
+    }, [cleanupPlayer, navigation, updateProgress]);
 
-    if (isLoading || !credentials?.otp) {
+    useEffect(() => {
+        latestVideoIdRef.current = videoId;
+        latestRouteParamsRef.current = {
+            language,
+            step,
+            stage_name,
+            displayStep,
+            total_time,
+        };
+        firstProgressRef.current = false;
+        if (videoId) {
+            progressSentRef.current = false;
+            finishedSentRef.current = false;
+            maxWatchedTimeRef.current = 0;
+            setCurrentTime(0);
+            currentTimeRef.current = 0;
+            setDuration(0);
+            setPlaybackSpeed(1);
+            setIsPlaying(true);
+            setVideoCompleted(false);
+            setIsLocked(false);
+            setShowControls(true);
+            setShowSpeedMenu(false);
+            setIsFullscreen(false);
+            setRenderPlayer(true);
+            setCredentials({ otp: null, playbackInfo: null });
+            credentialsRequestKeyRef.current = null;
+            embedInfoRef.current = null;
+            fetchVideoCredentials();
+        }
+    }, [videoId, fetchVideoCredentials, language, step, stage_name, displayStep, total_time]);
+    useEffect(() => {
+        return () => {
+            console.log('[VideoPlayerScreen] unmount cleanup: video stop/release', { videoId: latestVideoIdRef.current });
+            cleanupPlayer();
+        };
+    }, [cleanupPlayer]);
+    useEffect(() => {
+        if (Platform.OS === 'android') {
+            Orientation.unlockAllOrientations();
+        }
+        return () => {
+            if (Platform.OS === 'android') {
+                Orientation.lockToPortrait();
+            }
+        };
+    }, []);
+    useEffect(() => {
+        navigation.setOptions({
+            headerShown: !isLandscape,
+            headerLeft: () => (
+                <TouchableOpacity
+                    onPress={handleBack}
+                    style={{
+                        paddingLeft: 15,
+                        paddingRight: 10,
+                        paddingVertical: Platform.OS === 'android' ? 10 : 8,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    activeOpacity={0.7}
+                >
+                    <Text style={{
+                        fontSize: Platform.OS === 'android' ? 32 : 28,
+                        fontWeight: Platform.OS === 'android' ? '700' : '600',
+                        color: '#fff',
+                        lineHeight: Platform.OS === 'android' ? 32 : 28,
+                        includeFontPadding: false,
+                    }}>←</Text>
+                </TouchableOpacity>
+            ),
+        });
+        StatusBar.setHidden(isLandscape || isFullscreen);
+    }, [isLandscape, isFullscreen, navigation, handleBack]);
+    useFocusEffect(
+        useCallback(() => {
+            console.log('[VideoPlayerScreen] focused', { videoId: latestVideoIdRef.current });
+            if (Platform.OS === 'android') {
+                Orientation.unlockAllOrientations();
+            }
+            setIsFullscreen(false);
+            setError(null);
+            if (Platform.OS === 'android') {
+                setCredentials({ otp: null, playbackInfo: null });
+            }
+            progressSentRef.current = false;
+            finishedSentRef.current = false;
+            const sub = BackHandler.addEventListener(
+                "hardwareBackPress",
+                handleBack
+            );
+            return () => {
+                console.log('[VideoPlayerScreen] blurred', { videoId: latestVideoIdRef.current });
+                cleanupPlayer();
+                sub.remove();
+                setIsFullscreen(false);
+                setError(null);
+                if (Platform.OS === 'android') {
+                    setCredentials({ otp: null, playbackInfo: null });
+                }
+                progressSentRef.current = false;
+                finishedSentRef.current = false;
+            };
+        }, [cleanupPlayer, handleBack])
+    );
+    if (hasValidEmbedInfo) {
+        if (Platform.OS === 'ios') {
+            if (!embedInfoRef.current) {
+                embedInfoRef.current = {
+                    otp: credentials.otp,
+                    playbackInfo: credentials.playbackInfo,
+                };
+            }
+        } else {
+            embedInfoRef.current = {
+                otp: credentials.otp,
+                playbackInfo: credentials.playbackInfo,
+            };
+        }
+    }
+    const embedInfo = embedInfoRef.current;
+
+    useEffect(() => {
+        if (!embedInfo) return;
+    }, [embedInfo, videoId]);
+
+    if (isLoading || !hasValidEmbedInfo) {
         return (
             <View style={styles.container}>
                 <View style={styles.loaderOverlay} pointerEvents="auto">
@@ -383,66 +451,69 @@ const VideoPlayerScreen = () => {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#000" hidden={isLandscape} />
             <View style={{ width: "100%", height: playerHeight, position: 'relative' }}>
-                <VdoPlayerView
-                    key={videoId}
-                    ref={playerRef}
-                    showNativeControls={false}
-                    playWhenReady={isPlaying}
+                {renderPlayer && (
+                    <VdoPlayerView
+                        key={videoId}
+                        ref={playerRef}
+                        showNativeControls={false}
+                        playWhenReady={isPlaying}
 
-                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#000" }}
-                    embedInfo={{
-                        otp: credentials.otp,
-                        playbackInfo: credentials.playbackInfo,
-                    }}
-                    playbackSpeed={playbackSpeed}
-                    onLoaded={(e) => {
-                        if (e?.mediaInfo?.duration > 0) {
-                            setDuration(Math.floor(e.mediaInfo.duration / 1000));
-                        }
-                        try {
-                            if (!isVideoReady) setIsVideoReady(true);
-                        } catch (err) { }
-                    }}
-                    onPlayerStateChanged={(e) => {
-                        if (e?.playerState === 'ended') {
-                            setIsPlaying(false);
-                        }
-                    }}
-                    onProgress={(p) => {
-                        if (p && typeof p.currentTime === "number") {
-                            const secs = Math.floor(p.currentTime / 1000);
-                            setCurrentTime(secs);
-                            currentTimeRef.current = secs;
-                            if (!firstProgressRef.current) {
-                                firstProgressRef.current = true;
+                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#000" }}
+                        embedInfo={embedInfo}
+                        playbackSpeed={playbackSpeed}
+                        onLoaded={(e) => {
+                            console.log('[VideoPlayerScreen] video play', { videoId });
+                            if (e?.mediaInfo?.duration > 0) {
+                                setDuration(Math.floor(e.mediaInfo.duration / 1000));
+                            }
+                            try {
                                 if (!isVideoReady) setIsVideoReady(true);
+                            } catch (err) { }
+                        }}
+                        onPlayerStateChanged={(e) => {
+                            console.log('[VideoPlayerScreen] player state changed', e);
+                            if (e?.playerState === 'ended') {
+                                console.log('[VideoPlayerScreen] video pause', { videoId });
+                                setIsPlaying(false);
                             }
-                        }
-                    }}
-                    onMediaEnded={async () => {
-                        setVideoCompleted(true);
-                        try { await updateProgress(true); } catch (e) { }
-                        try { Orientation.lockToPortrait(); } catch (e) { }
-                        try {
-                            playerRef.current?.stop?.();
-                            playerRef.current?.release?.();
-                        } catch (e) { }
-                        try {
-                            const target = latestCameFromRef.current;
-                            if (target === "Dashboard") {
-                                navigation.navigate("Home");
-                            } else if (target) {
-                                navigation.navigate(target);
-                            } else {
-                                navigation.navigate("PreviewHome");
+                        }}
+                        onProgress={(p) => {
+                            if (p && typeof p.currentTime === "number") {
+                                const secs = Math.floor(p.currentTime / 1000);
+                                setCurrentTime(secs);
+                                currentTimeRef.current = secs;
+                                if (!firstProgressRef.current) {
+                                    firstProgressRef.current = true;
+                                    if (!isVideoReady) setIsVideoReady(true);
+                                }
                             }
-                        } catch (e) { }
-                    }}
-                    onFullscreenChange={(isFull) => { setIsFullscreen(isFull); }}
-                    onInitializationFailure={(e) => {
-                        Alert.alert("Playback Error", e?.errorDescription || "Video failed to load");
-                    }}
-                />
+                        }}
+                        onMediaEnded={async () => {
+                            setVideoCompleted(true);
+                            try { await updateProgress(true); } catch (e) { }
+                            runOrientationChange(() => Orientation.lockToPortrait(), { delay: getOrientationDelay() });
+                            try {
+                                console.log('[VideoPlayerScreen] media ended: video stop/release', { videoId });
+                                playerRef.current?.stop?.();
+                                playerRef.current?.release?.();
+                            } catch (e) { }
+                            try {
+                                const target = latestCameFromRef.current;
+                                if (target === "Dashboard") {
+                                    navigation.navigate("Home");
+                                } else if (target) {
+                                    navigation.navigate(target);
+                                } else {
+                                    navigation.navigate("PreviewHome");
+                                }
+                            } catch (e) { }
+                        }}
+                        onFullscreenChange={(isFull) => { setIsFullscreen(isFull); }}
+                        onInitializationFailure={(e) => {
+                            Alert.alert("Playback Error", e?.errorDescription || "Video failed to load");
+                        }}
+                    />
+                )}
                 {!isVideoReady && (
                     <View style={styles.loaderOverlay} pointerEvents="auto">
                         <ActivityIndicator size="large" color="#fff" />

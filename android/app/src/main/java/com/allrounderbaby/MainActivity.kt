@@ -4,10 +4,10 @@ package com.allrounderbaby
 // import android.util.Rational
 // import android.content.res.Configuration
 
-import android.os.Build
-import android.widget.Toast 
 import android.os.Bundle
 import android.view.WindowManager
+import android.os.Build
+import android.widget.Toast 
 import androidx.annotation.RequiresApi 
 
 import com.facebook.react.ReactActivity
@@ -32,9 +32,8 @@ class MainActivity : ReactActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Apply FLAG_SECURE by default to protect screens from screenshots and recording
         try {
-            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         } catch (e: Exception) {
             // ignore
         }

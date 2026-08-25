@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import NetInfo from '@react-native-community/netinfo';
 import { StatusBar, useWindowDimensions } from 'react-native';
 import { StyleSheet, ScrollView, View, FlatList, Image, Animated, Text, TouchableOpacity, Alert, ActivityIndicator, Pressable, useColorScheme, Platform, ToastAndroid, BackHandler, findNodeHandle } from 'react-native';
 import { CommonActions, useIsFocused } from '@react-navigation/native';
@@ -80,7 +81,9 @@ const VideoStepList = ({ groups, completedSteps, onStepPress, isDarkMode, stepRe
                     <StepListItem
                         key={`step-group-${group.stepNumber}`}
                         ref={(el) => {
+                            // Keep imperative measurement refs current; stale native refs can warn on iOS.
                             if (el) stepRefs.current[group.stepNumber] = el;
+                            else delete stepRefs.current[group.stepNumber];
                         }}
                         group={group}
                         onPress={onStepPress}
@@ -194,10 +197,12 @@ const Dashboard = ({ navigation }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [dataLoaded, setDataLoaded] = useState(false);
     const [isVideoLoading, setIsVideoLoading] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     const [completedSteps, setCompletedSteps] = useState({});
     const [openCategory, setOpenCategory] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeLevel, setActiveLevel] = useState(null);
+    const [ignoreNextPress, setIgnoreNextPress] = useState(false);
     const [selectedStepGroup, setSelectedStepGroup] = useState(null);
     const [topicCompletionTimes, setTopicCompletionTimes] = useState({});
     const [unlockedStepsThreshold, setUnlockedStepsThreshold] = useState(0);
@@ -222,6 +227,11 @@ const Dashboard = ({ navigation }) => {
     const textColorModalPara = { color: isDarkMode ? Colors.white : '#2a3144' }
     const lastBackPressed = useRef(0);
     const levelModalScrollRef = useRef(null);
+    const categoryOffsets = useRef({});
+
+    const logInvalidMeasureRef = (label, details = {}) => {
+        console.warn(`Skipping ${label} measurement because refs are not ready`, details);
+    };
 
     useEffect(() => {
         const onBackPress = () => {
@@ -407,6 +417,8 @@ const Dashboard = ({ navigation }) => {
             return;
         }
 
+        console.log('LastViewed: processing request', lastViewedRequest);
+
         if (activeLevel && activeLevel !== lastViewedRequest.level) {
             handleCloseModal();
             return;
@@ -428,22 +440,112 @@ const Dashboard = ({ navigation }) => {
 
         const stepNumber = lastViewedRequest.step;
 
+        // Defensive: introduction steps should never trigger the category/scroll flow
+        if (stepNumber === 1001 || stepNumber === 1002) {
+            console.log('LastViewed: ignoring introduction step in scroll effect', stepNumber);
+            setLastViewedRequest(null);
+            return;
+        }
+
+        console.log('LastViewed Scroll Effect', {
+            request: lastViewedRequest,
+            openCategory,
+            hasScrollRef: !!levelModalScrollRef.current,
+            hasStepRef: !!stepRefs.current[lastViewedRequest?.step],
+        });
+
         const timer = setTimeout(() => {
             const stepRef = stepRefs.current[stepNumber];
             const scrollRef = levelModalScrollRef.current;
 
-            if (stepRef && scrollRef) {
+            if (!stepRef || !scrollRef || typeof scrollRef.scrollTo !== 'function') {
+                console.log('Step ref not ready', { stepNumber, hasStepRef: !!stepRef, hasScrollRef: !!scrollRef });
+                // Retry a few times to allow UI to finish rendering step refs
+                const attemptsKey = `lastViewed_retry_${stepNumber}`;
+                const cur = (global.__lastViewedRetries__ && global.__lastViewedRetries__[attemptsKey]) || 0;
+                if (!global.__lastViewedRetries__) global.__lastViewedRetries__ = {};
+                if (cur < 5) {
+                    global.__lastViewedRetries__[attemptsKey] = cur + 1;
+                    // schedule a retry slightly later
+                    setTimeout(() => {
+                        // trigger effect by nudging state: re-set same request
+                        setLastViewedRequest(prev => prev ? { ...prev } : prev);
+                    }, 300);
+                    return;
+                }
+                // Give up after retries
+                setLastViewedRequest(null);
+                return;
+            }
+
+            if (stepRef && scrollRef && typeof scrollRef.scrollTo === 'function') {
                 try {
                     // iOS: Use measure() directly - measureLayout causes warnings
                     // Android: Can use measureLayout but measure() works fine too
+                    if (stepRef.measureLayout && typeof stepRef.measureLayout === 'function') {
+                        try {
+                            const scrollNode = (typeof levelModalScrollRef.current?.getInnerViewNode === 'function')
+                                ? levelModalScrollRef.current.getInnerViewNode()
+                                : findNodeHandle(levelModalScrollRef.current);
+                            if (!scrollNode) {
+                                console.log('LastViewed: could not resolve scroll node for measureLayout, falling back to measure');
+                            } else {
+                                stepRef.measureLayout(
+                                    scrollNode,
+                                    (left, top) => {
+                                        try {
+                                            console.log('measureLayout relative position', { stepNumber, left, top });
+                                            if (scrollRef && typeof scrollRef.scrollTo === 'function') {
+                                                scrollRef.scrollTo({ y: Math.max(top - 20, 0), animated: true });
+                                                console.log('Scrolling to step', stepNumber);
+                                            }
+                                        } catch (e) {
+                                            console.warn('Failed to scroll to step (measureLayout):', e);
+                                        }
+                                        setLastViewedRequest(null);
+                                    },
+                                    (err) => {
+                                        console.warn('measureLayout failed', err);
+                                        setLastViewedRequest(null);
+                                    }
+                                );
+                                return;
+                            }
+                        } catch (e) {
+                            console.warn('measureLayout attempt error', e);
+                        }
+                    }
+
+                    // Fallback: use measure() and convert pageY to scroll position if possible
                     if (stepRef.measure && typeof stepRef.measure === 'function') {
                         stepRef.measure((x, y, width, height, pageX, pageY) => {
                             try {
+                                console.log('Measured step absolute position', { stepNumber, x, y, width, height, pageX, pageY });
                                 if (scrollRef && typeof scrollRef.scrollTo === 'function') {
-                                    scrollRef.scrollTo({ y: Math.max(pageY - 20, 0), animated: true });
+                                    // attempt to compute relative offset using scrollRef's node position
+                                    const scrollNode = findNodeHandle(levelModalScrollRef.current);
+                                    if (scrollNode && typeof scrollRef.measure === 'function') {
+                                        // try to measure scroll container to compute relative offset
+                                        try {
+                                            // measure scrollRef's position on screen
+                                            scrollRef.measure((sx, sy, sw, sh, sPageX, sPageY) => {
+                                                const relativeY = pageY - sPageY;
+                                                console.log('Computed relative Y from measure', { pageY, sPageY, relativeY });
+                                                scrollRef.scrollTo({ y: Math.max(relativeY - 20, 0), animated: true });
+                                                console.log('Scrolling to step (fallback)', stepNumber);
+                                            });
+                                        } catch (e) {
+                                            // if measure on scrollRef fails, fallback to pageY
+                                            scrollRef.scrollTo({ y: Math.max(pageY - 20, 0), animated: true });
+                                            console.log('Scrolling to step (fallback pageY)', stepNumber);
+                                        }
+                                    } else {
+                                        scrollRef.scrollTo({ y: Math.max(pageY - 20, 0), animated: true });
+                                        console.log('Scrolling to step (fallback pageY no scroll measure)', stepNumber);
+                                    }
                                 }
                             } catch (e) {
-                                console.warn('Failed to scroll to step:', e);
+                                console.warn('Failed to scroll to step (fallback):', e);
                             }
                             setLastViewedRequest(null);
                         });
@@ -457,6 +559,14 @@ const Dashboard = ({ navigation }) => {
                     }
                     setLastViewedRequest(null);
                 }
+            } else {
+                logInvalidMeasureRef('step scroll', {
+                    stepNumber,
+                    hasStepRef: !!stepRef,
+                    hasScrollRef: !!scrollRef,
+                    hasScrollTo: typeof scrollRef?.scrollTo === 'function',
+                });
+                setLastViewedRequest(null);
             }
         }, 600);
 
@@ -478,6 +588,7 @@ const Dashboard = ({ navigation }) => {
 
     const handleLastViewedPress = async () => {
         try {
+            // showToast('Opening last viewed...');
             if (unlockedStepsThreshold && Number.isFinite(unlockedStepsThreshold) && unlockedStepsThreshold > 0) {
                 const resolvedCategory = getCategoryFromStep(unlockedStepsThreshold);
                 if (resolvedCategory && masterConfig[resolvedCategory]) {
@@ -497,11 +608,11 @@ const Dashboard = ({ navigation }) => {
 
             const lastViewed = JSON.parse(lastViewedJson);
             let { category, step } = lastViewed || {};
-            console.log("Last viewed data:", lastViewed);
             const stepNum = typeof step === 'number' ? step : (step ? Number(step) : NaN);
 
             if (!Number.isNaN(stepNum) && (stepNum === 1001 || stepNum === 1002)) {
-                handleIntroductionPress(stepNum === 1001 ? 1 : 2);
+                console.log('LastViewed: ignored introduction step', stepNum);
+                // Do not open Introduction from Last Viewed — explicitly ignore
                 return;
             }
 
@@ -511,6 +622,7 @@ const Dashboard = ({ navigation }) => {
             }
 
             if (resolvedCategory && masterConfig[resolvedCategory]) {
+                console.log('LastViewed: resolved normal category step', { resolvedCategory, step: stepNum });
                 const level = getLevelForCategory(resolvedCategory);
                 if (level) {
                     setLastViewedRequest({ level, category: resolvedCategory, step: stepNum });
@@ -522,6 +634,7 @@ const Dashboard = ({ navigation }) => {
             }
         } catch (error) {
             console.error("Failed to handle last viewed press:", error);
+            // showToast('Failed to open last viewed. Please try again.');
         }
     };
 
@@ -542,9 +655,7 @@ const Dashboard = ({ navigation }) => {
                     setToken(storedToken);
                     setUserID(storedUserId);
                     const verify = await AsyncStorage.getItem('fcmToken');
-                    console.log('dfsssssssssssssssssssssse:', verify),
-
-                        await fetchUserProgress(storedUserId, storedToken);
+                    await fetchUserProgress(storedUserId, storedToken);
                 } else {
                     setDataLoaded(true);
                 }
@@ -678,7 +789,12 @@ const Dashboard = ({ navigation }) => {
                             category: mappedCategory,
                             timestamp: new Date().toISOString()
                         };
-                        await AsyncStorage.setItem('lastViewed', JSON.stringify(lastViewedObj));
+                        if (lastViewedObj.step === 1001 || lastViewedObj.step === 1002) {
+                            console.log('LastViewed: ignored introduction step when saving from server progress', lastViewedObj.step);
+                        } else {
+                            console.log('Saving last viewed info from server progress:', lastViewedObj);
+                            await AsyncStorage.setItem('lastViewed', JSON.stringify(lastViewedObj));
+                        }
                     } catch (err) {
                         console.error('Failed to save last viewed info from server progress:', err);
                     }
@@ -841,7 +957,7 @@ const Dashboard = ({ navigation }) => {
             return allVideos;
         } catch (error) {
             console.error('Error fetching videos in parallel:', error);
-            Alert.alert("API Error", `Could not load videos. Please check your connection and try again. Details: ${error.message}`);
+            //   Alert.alert("API Error", `Could not load videos. Please check your connection and try again. Details: ${error.message}`);
             return { rows: [] };
         }
 
@@ -914,6 +1030,7 @@ const Dashboard = ({ navigation }) => {
                 const allPrereqSteps = prereqConfig.finalGroupedData.map(g => `step${g.stepNumber}`);
                 const areAllPrereqsCompleted = allPrereqSteps.every(stepKey => completedSteps[stepKey]);
                 if (!areAllPrereqsCompleted) {
+                    console.log(`Prerequisite not met for ${categoryKey}. Required: ${config.prerequisiteCategory}`);
                     Alert.alert("Level Locked", `You must complete the "${prereqConfig.name}" stage before accessing this one.`);
                     return false;
                 }
@@ -955,7 +1072,12 @@ const Dashboard = ({ navigation }) => {
                     }
                 } catch (error) {
                     console.error("Error checking time lock:", error);
-                    Alert.alert("Network Error", "Could not verify topic lock status. Please try again.");
+                    const isOffline = error && error.message && /network request failed/i.test(error.message);
+                    if (isOffline) {
+                        Alert.alert('No Internet Connection', 'Please check your internet connection and try again.');
+                    } else {
+                        Alert.alert("Network Error", "Could not verify topic lock status. Please try again.");
+                    }
                     return false;
                 }
             }
@@ -964,6 +1086,7 @@ const Dashboard = ({ navigation }) => {
     };
 
     const handleCategoryPress = async (categoryKey) => {
+        if (ignoreNextPress) return;
         if (!dataLoaded) {
             showToast("Loading progress data...");
             return;
@@ -996,23 +1119,74 @@ const Dashboard = ({ navigation }) => {
             try {
                 const categoryRef = categoryRefs.current[categoryKey];
                 const scrollRef = levelModalScrollRef.current;
+                const categoryOffset = categoryOffsets.current[categoryKey];
+
+                if (!scrollRef || typeof scrollRef.scrollTo !== 'function') {
+                    logInvalidMeasureRef('category scroll', {
+                        categoryKey,
+                        hasScrollRef: !!scrollRef,
+                        hasScrollTo: typeof scrollRef?.scrollTo === 'function',
+                    });
+                    return;
+                }
+
+                // iOS prefers stored onLayout offsets to avoid measureLayout native-ref warnings.
+                if (Platform.OS === 'ios' && typeof categoryOffset === 'number' && !Number.isNaN(categoryOffset)) {
+                    scrollRef.scrollTo({ y: Math.max(categoryOffset - 10, 0), animated: true });
+                    return;
+                }
 
                 if (categoryRef && scrollRef) {
                     // Use measure() for all platforms - works reliably on both iOS and Android
-                    if (categoryRef.measure && typeof categoryRef.measure === 'function') {
-                        categoryRef.measure((x, y, width, height, pageX, pageY) => {
+                    const scrollNode = findNodeHandle(scrollRef);
+                    if (typeof categoryRef.measureLayout === 'function' && scrollNode) {
+                        // measureLayout gives coordinates relative to the scroll container
+                        categoryRef.measureLayout(scrollNode, (left, top) => {
                             try {
-                                scrollRef.scrollTo({ y: Math.max(pageY - 10, 0), animated: true });
+                                if (typeof top === 'number' && !Number.isNaN(top)) {
+                                    scrollRef.scrollTo({ y: Math.max(top - 10, 0), animated: true });
+                                }
                             } catch (e) {
-                                console.warn('Failed to scroll to category:', e);
+                                console.warn('Failed to scroll to category via measureLayout:', e);
+                            }
+                        }, (err) => {
+                            console.warn('Failed to measure category via measureLayout:', err);
+                            // fallback to measure when measureLayout fails
+                            try {
+                                if (categoryRef.measure && typeof categoryRef.measure === 'function') {
+                                    categoryRef.measure((x, y, width, height, pageX, pageY) => {
+                                        try {
+                                            scrollRef.scrollTo({ y: Math.max(pageY - 10, 0), animated: true });
+                                        } catch (e2) {
+                                            console.warn('Failed to scroll to category (fallback):', e2);
+                                        }
+                                    });
+                                }
+                            } catch (e2) {
+                                console.warn('Fallback scroll error:', e2);
                             }
                         });
+                    } else {
+                        logInvalidMeasureRef('category measureLayout', {
+                            categoryKey,
+                            hasCategoryRef: !!categoryRef,
+                            hasMeasureLayout: typeof categoryRef?.measureLayout === 'function',
+                            scrollNode,
+                        });
                     }
+                } else if (typeof categoryOffset === 'number' && !Number.isNaN(categoryOffset)) {
+                    scrollRef.scrollTo({ y: Math.max(categoryOffset - 10, 0), animated: true });
+                } else {
+                    logInvalidMeasureRef('category scroll', {
+                        categoryKey,
+                        hasCategoryRef: !!categoryRef,
+                        hasOffset: typeof categoryOffset === 'number',
+                    });
                 }
             } catch (e) {
                 console.warn('Auto-scroll error:', e);
             }
-        }, 300);
+        }, 500);
     };
 
 
@@ -1029,9 +1203,12 @@ const Dashboard = ({ navigation }) => {
     };
 
     const handleVideo = async (videoId, step, language) => {
+        if (isProcessing) return;
+        setIsProcessing(true);
         const deviceKey = await AsyncStorage.getItem('deviceKey');
 
         if (!selectedStepGroup) {
+            setIsProcessing(false);
             return;
         }
         if (step !== 1001 && step !== 1002) {
@@ -1057,6 +1234,7 @@ const Dashboard = ({ navigation }) => {
                     Alert.alert("Limit Reached",
                         `You’ve reached the maximum limit for now. If any new update comes, we’ll notify you instantly.`);
 
+                    setIsModalVisible(false);
                     return;
                 }
                 const specificVideoEndpoint = `${url}User/User_Watch_Data?id=${userId}&video_id=${videoId}&DeviceKey=${deviceKey}`;
@@ -1069,6 +1247,7 @@ const Dashboard = ({ navigation }) => {
                         const languageRecord = specificResult.data.find(d => d.language.toLowerCase() === language.toLowerCase());
                         if (languageRecord && Number(languageRecord.is_finished) >= 3) {
                             Alert.alert("Limit Reached", `You have already watched the ${language} video for this step 3 times.`);
+                            setIsModalVisible(false);
                             return;
                         }
                     } else if (!specificResult.isSuccess) {
@@ -1086,7 +1265,6 @@ const Dashboard = ({ navigation }) => {
             }
         }
 
-        setIsModalVisible(false);
         setIsVideoLoading(true);
         let total_time = 0;
         try {
@@ -1173,7 +1351,13 @@ const Dashboard = ({ navigation }) => {
                     category: openCategory || selectedStepGroup?.category || null,
                     timestamp: new Date().toISOString()
                 };
-                await AsyncStorage.setItem('lastViewed', JSON.stringify(lastViewedObj));
+                if (lastViewedObj.step === 1001 || lastViewedObj.step === 1002) {
+                    console.log('LastViewed: ignored introduction step when saving after video start', lastViewedObj.step);
+                } else if (!lastViewedObj.category) {
+                    console.log('LastViewed: not saving - category missing for step', lastViewedObj.step);
+                } else {
+                    await AsyncStorage.setItem('lastViewed', JSON.stringify(lastViewedObj));
+                }
             } catch (err) {
                 console.error('Failed to save last viewed info:', err);
             }
@@ -1211,6 +1395,7 @@ const Dashboard = ({ navigation }) => {
                     }
                 }
             }
+            setIsModalVisible(false);
             navigation.navigate('VideoPlayerScreen', {
                 VideoId: videoId,
                 annotate: JSON.stringify(annotationObject),
@@ -1222,9 +1407,24 @@ const Dashboard = ({ navigation }) => {
                 stage_name: masterConfig[openCategory]?.name ?? 'Unknown'
             });
         } catch (err) {
-            Alert.alert("Error", err.message);
+            Alert.alert("Error", err?.message || 'An unexpected error occurred');
         } finally {
             setIsVideoLoading(false);
+            setIsProcessing(false);
+        }
+    };
+
+    const startVideo = async (lang) => {
+        if (isProcessing) return;
+        const video = lang === 'hindi' ? selectedStepGroup?.hindiVideo : selectedStepGroup?.englishVideo;
+        if (!video || !video.id) return;
+        try {
+            setIsProcessing(true);
+            await handleVideo(video.id, selectedStepGroup?.stepNumber, lang);
+        } catch (e) {
+            console.warn('startVideo error', e);
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -1257,6 +1457,7 @@ const Dashboard = ({ navigation }) => {
     };
 
     const handleIntroductionPress = async (introType) => {
+        console.log('handleIntroductionPress called for introType', introType);
         if (introType === 2 && !completedSteps['step1001']) {
             Alert.alert("Locked", "Please complete Introduction I before starting Introduction II.");
             return;
@@ -1265,6 +1466,7 @@ const Dashboard = ({ navigation }) => {
         const folderId = "8a15a7910bcb41a897b50111ec4f95d9";
         setIsVideoLoading(true);
         const videoDetails = await fetchVideos([folderId]);
+        console.log('Introduction videos fetched, count:', videoDetails?.rows?.length);
         if (introType === 2) { }
         setIsVideoLoading(false);
         if (videoDetails?.rows?.length >= 4) {
@@ -1273,10 +1475,21 @@ const Dashboard = ({ navigation }) => {
                 ['introduction']: videoDetails
             }));
             const group = introType === 1 ? { stepNumber: 1001, hindiVideo: videoDetails.rows[2], englishVideo: videoDetails.rows[3] } : { stepNumber: 1002, hindiVideo: videoDetails.rows[0], englishVideo: videoDetails.rows[1] };
+            console.log('Introduction group ready, opening modal', group.stepNumber);
             setSelectedStepGroup(group);
             setIsModalVisible(true);
         } else {
-            Alert.alert("Video Data Error", `Not enough videos found for Introduction ${introType}.`);
+            console.warn('Introduction video data insufficient', videoDetails);
+            try {
+                const net = await NetInfo.fetch();
+                if (!net.isConnected) {
+                    Alert.alert('No Internet Connection', 'Please check your internet connection and try again.');
+                } else {
+                    //  Alert.alert("Video Data Error", `Not enough videos found for Introduction ${introType}.`);
+                }
+            } catch (e) {
+                //  Alert.alert("Video Data Error", `Not enough videos found for Introduction ${introType}.`);
+            }
         }
     };
 
@@ -1412,6 +1625,11 @@ const Dashboard = ({ navigation }) => {
     const handleCloseModal = () => {
         setActiveLevel(null);
         setOpenCategory(null);
+        // Prevent the tap that closed the modal from also activating underlying buttons
+        setIgnoreNextPress(true);
+        setTimeout(() => setIgnoreNextPress(false), 300);
+        // Clear any pending last-viewed request to avoid immediately reopening the same level
+        setLastViewedRequest(null);
     };
 
     const renderLevelModal = () => {
@@ -1443,7 +1661,18 @@ const Dashboard = ({ navigation }) => {
                 const modalWidthForItem = !isLandscape && index === 0 ? modalImageFullWidth : modalImageFullWidth;
 
                 return (
-                    <View key={key} ref={(el) => (categoryRefs.current[key] = el)} collapsable={false}>
+                    <View
+                        key={key}
+                        ref={(el) => {
+                            // Clear stale refs so delayed measurement never targets an unmounted native view.
+                            if (el) categoryRefs.current[key] = el;
+                            else delete categoryRefs.current[key];
+                        }}
+                        collapsable={false}
+                        onLayout={(event) => {
+                            // Store the category's ScrollView content offset for iOS-safe scrolling.
+                            categoryOffsets.current[key] = event.nativeEvent.layout.y;
+                        }}>
                         <CategoryButton image={config.image} title={config.name} onPress={() => handleCategoryPress(key)} isOpen={openCategory === key} isComplete={isComplete} imagenestedStyle={modalImagenestedStyle} modalMode={!isLandscape} modalWidth={modalWidthForItem} />
                         {openCategory === key && <VideoStepList
                             groups={config.finalGroupedData}
@@ -1569,13 +1798,25 @@ const Dashboard = ({ navigation }) => {
                         <View style={styles.borderLine} />
                         <Text style={[styles.modalText, textColorModalPara]}>In which language would you like to watch this video?</Text>
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity style={[styles.modalButton, !selectedStepGroup.hindiVideo && styles.disabledButton]} onPress={() => handleVideo(selectedStepGroup.hindiVideo.id, selectedStepGroup.stepNumber, 'hindi')} disabled={!selectedStepGroup.hindiVideo}><Text style={styles.modalButtonText}>Hindi</Text></TouchableOpacity>
-                            <TouchableOpacity style={[styles.modalButton, !selectedStepGroup.englishVideo && styles.disabledButton]} onPress={() => handleVideo(selectedStepGroup.englishVideo.id, selectedStepGroup.stepNumber, 'english')} disabled={!selectedStepGroup.englishVideo}><Text style={styles.modalButtonText}>English</Text></TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, (isProcessing || !selectedStepGroup?.hindiVideo) && styles.disabledButton]}
+                                onPress={() => startVideo('hindi')}
+                                disabled={isProcessing || !selectedStepGroup?.hindiVideo}
+                            >
+                                <Text style={styles.modalButtonText}>Hindi</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, (isProcessing || !selectedStepGroup?.englishVideo) && styles.disabledButton]}
+                                onPress={() => startVideo('english')}
+                                disabled={isProcessing || !selectedStepGroup?.englishVideo}
+                            >
+                                <Text style={styles.modalButtonText}>English</Text>
+                            </TouchableOpacity>
                         </View>
                     </Pressable>
                 </View>
             )}
-            {(isVideoLoading || isLoading) && (
+            {(isVideoLoading || isLoading || isProcessing) && (
                 <View style={styles.modalLikeContainer} pointerEvents="auto">
                     <ActivityIndicator size="large" color="#FFFFFF" />
                     <Text style={styles.loadingText}>Loading...</Text>
@@ -1631,7 +1872,7 @@ const styles = StyleSheet.create({
     disabledButton: { backgroundColor: '#a0a0a0' },
     modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold', textAlign: 'center', },
     tabimage: { width: 25, height: 22 },
-    modalContentClose: { color: '#000', fontSize: 16, fontWeight: 'bold', },
+    modalContentClose: { color: '#000', fontSize: 20, fontWeight: 'bold', },
     modalContentMainDiv: { flexDirection: "row", justifyContent: "space-between", width: '100%', },
     borderLine: { borderBottomWidth: 1, borderBottomColor: "#ccc", width: "100%", marginBottom: 15 },
     loadingText: { marginTop: 10, color: '#FFFFFF', fontSize: 16, },
@@ -1639,7 +1880,7 @@ const styles = StyleSheet.create({
     modalHeader: { width: '100%', paddingVertical: 10, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: 'rgba(20, 52, 164, 1)', backgroundColor: 'rgba(20, 52, 164, 1)', },
     modalHeaderText: { fontSize: 18, fontWeight: 'bold', color: '#fff', },
     closeButton: { padding: 5 },
-    closeButtonText: { fontSize: 18, fontWeight: 'bold', color: '#fff', },
+    closeButtonText: { fontSize: 20, fontWeight: 'bold', color: '#fff', },
     modalScrollView: { flex: 1, width: '100%', },
     modalScrollViewContent: { paddingHorizontal: 5, paddingVertical: 10, },
     modalLikeContainer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 1000, },

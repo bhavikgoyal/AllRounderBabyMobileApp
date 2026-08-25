@@ -327,7 +327,10 @@ const LoginPage = ({ navigation }) => {
                         {adminMessage ? (
                             <View style={styles.adminContactRowContainer}>
                                 <TouchableOpacity onPress={() => Linking.openURL(ADMIN_CONTACT_URL)} hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}>
-                                    <Text style={styles.adminContactLink}>Contact Admin</Text>
+                                    <Text>
+                                        <Text style={styles.adminContactLinkk}>Link :</Text>
+                                        <Text style={styles.adminContactLink}> Contact Admin</Text>
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         ) : null}
@@ -362,7 +365,7 @@ const LoginPage = ({ navigation }) => {
 
                             <Animated.View style={[styles.checkboxContainerSecond, { transform: [{ translateX: rememberMePosition }] }]}>
                                 <CheckBox isChecked={rememberMe} onClick={() => setRememberMe(!rememberMe)} checkBoxColor="#1434A4" />
-                                <Text style={[styles.checkboxLabel, { color: isDarkMode ? Colors.white : Colors.black }]}>Remember me</Text>
+                                <Text style={[styles.checkboxLabel, { color: isDarkMode ? Colors.white : Colors.black }]}>   Remember me</Text>
                             </Animated.View>
                         </View>
 
@@ -421,6 +424,7 @@ const styles = StyleSheet.create({
     errorText: { color: '#DC143C', fontWeight: 'bold', marginTop: 5, fontSize: 14, width: '90%', alignSelf: 'center' },
     adminContactRowContainer: { width: '90%', maxWidth: 500, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
     adminContactText: { fontSize: 14, flex: 1, marginRight: 8 },
+    adminContactLinkk: { color: '#DC143C', fontWeight: '700' },
     adminContactLink: { color: '#DC143C', textDecorationLine: 'underline', fontWeight: '700' },
 });
 
