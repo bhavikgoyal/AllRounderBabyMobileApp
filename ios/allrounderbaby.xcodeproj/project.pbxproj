@@ -14,9 +14,9 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		17C3C46FD387E599DC06C146 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		3A2890E92FD4209E0085784F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3A2890E82FD4209E0085784F /* GoogleService-Info.plist */; };
+		4DFA839D1EB8B68149D74556 /* libPods-allrounderbaby.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2874887DAFDCDFD5900F5F7A /* libPods-allrounderbaby.a */; };
 		77233ED4A9694392ADB3910D /* FliegeMonoVF.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D20BA9422BF64132B6E3DA5A /* FliegeMonoVF.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		823E1E26653A0D7A215F3CBC /* libPods-allrounderbaby.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BB84756F5BD7D32755BD0A7A /* libPods-allrounderbaby.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,17 +29,17 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = allrounderbaby/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = allrounderbaby/main.m; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = allrounderbaby/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		23F8D731F2F20172FEF60ACA /* Pods-allrounderbaby.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-allrounderbaby.debug.xcconfig"; path = "Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby.debug.xcconfig"; sourceTree = "<group>"; };
+		2874887DAFDCDFD5900F5F7A /* libPods-allrounderbaby.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-allrounderbaby.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A2890E82FD4209E0085784F /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		3A2890EE2FD425D20085784F /* allrounderbaby.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = allrounderbaby.entitlements; path = allrounderbaby/allrounderbaby.entitlements; sourceTree = "<group>"; };
 		3A80CCC42FCAA2440069454E /* allrounderbaby.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = allrounderbaby.xcodeproj; sourceTree = "<group>"; };
 		3BF60A36DDF14016AF303B37 /* VariableFont_wght.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = VariableFont_wght.ttf; path = ../assets/fonts/VariableFont_wght.ttf; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = allrounderbaby/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		BB84756F5BD7D32755BD0A7A /* libPods-allrounderbaby.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-allrounderbaby.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE897825CA4043A35D6C23F0 /* Pods-allrounderbaby.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-allrounderbaby.release.xcconfig"; path = "Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby.release.xcconfig"; sourceTree = "<group>"; };
 		D20BA9422BF64132B6E3DA5A /* FliegeMonoVF.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FliegeMonoVF.ttf; path = ../assets/fonts/FliegeMonoVF.ttf; sourceTree = "<group>"; };
 		E94AB79E092D4F598C53E331 /* Lexend-VariableFont_wght.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-VariableFont_wght.ttf"; path = "../assets/fonts/Lexend-VariableFont_wght.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		FE8503D1EE597DDD4E18AC32 /* Pods-allrounderbaby.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-allrounderbaby.release.xcconfig"; path = "Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby.release.xcconfig"; sourceTree = "<group>"; };
+		F2553E9C45A9DA8A7A21F671 /* Pods-allrounderbaby.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-allrounderbaby.debug.xcconfig"; path = "Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,7 +47,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				823E1E26653A0D7A215F3CBC /* libPods-allrounderbaby.a in Frameworks */,
+				4DFA839D1EB8B68149D74556 /* libPods-allrounderbaby.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -91,7 +91,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				BB84756F5BD7D32755BD0A7A /* libPods-allrounderbaby.a */,
+				2874887DAFDCDFD5900F5F7A /* libPods-allrounderbaby.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -148,8 +148,8 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				23F8D731F2F20172FEF60ACA /* Pods-allrounderbaby.debug.xcconfig */,
-				FE8503D1EE597DDD4E18AC32 /* Pods-allrounderbaby.release.xcconfig */,
+				F2553E9C45A9DA8A7A21F671 /* Pods-allrounderbaby.debug.xcconfig */,
+				AE897825CA4043A35D6C23F0 /* Pods-allrounderbaby.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -161,15 +161,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "allrounderbaby" */;
 			buildPhases = (
-				B2BFC7FB638FB1710E1DD73D /* [CP] Check Pods Manifest.lock */,
+				836306E392FDD56E35C66575 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				0188492ACA74FADE0075A6E6 /* [CP] Embed Pods Frameworks */,
 				7B4D2E6B2C1F4A8D9E0A1234 /* Copy Vendored Framework dSYMs */,
-				B8266FD365CCB48A4E10253D /* [CP] Copy Pods Resources */,
-				F1A32038E13E050671FF5499 /* [CP-User] [RNFB] Core Configuration */,
+				C4EE5E410650D3D26D4440A7 /* [CP] Embed Pods Frameworks */,
+				B0680ACCBDE5228138C50640 /* [CP] Copy Pods Resources */,
+				D03702556F092D5A74E44885 /* [CP-User] [RNFB] Core Configuration */,
 			);
 			buildRules = (
 			);
@@ -252,24 +252,17 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		0188492ACA74FADE0075A6E6 /* [CP] Embed Pods Frameworks */ = {
+		7B4D2E6B2C1F4A8D9E0A1234 /* Copy Vendored Framework dSYMs */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
+			name = "Copy Vendored Framework dSYMs";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "set -e\n\nif [ \"${CONFIGURATION}\" != \"Release\" ]; then\n  exit 0\nfi\n\nmkdir -p \"${DWARF_DSYM_FOLDER_PATH}\"\n\ncopy_first_dsym() {\n  local framework_name=\"$1\"\n  shift\n\n  for dsym_path in \"$@\"; do\n    if [ -d \"${dsym_path}\" ]; then\n      echo \"Copying ${framework_name} dSYM from ${dsym_path}\"\n      rsync -a --delete \"${dsym_path}\" \"${DWARF_DSYM_FOLDER_PATH}/\"\n      return 0\n    fi\n  done\n\n  echo \"warning: ${framework_name} dSYM was not found in expected build locations. Archive may fail App Store symbol validation.\"\n  return 0\n}\n\ncopy_first_dsym \"Hermes\" \\\n  \"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework.dSYM\" \\\n  \"${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework/ios-arm64/dSYMs/hermes.framework.dSYM\" \\\n  \"${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework/ios-arm64/hermes.framework.dSYM\" \\\n  \"${BUILT_PRODUCTS_DIR}/hermes.framework.dSYM\"\n\ncopy_first_dsym \"VdoFramework\" \\\n  \"${PODS_XCFRAMEWORKS_BUILD_DIR}/VdoFramework/VdoFramework.framework.dSYM\" \\\n  \"${PODS_ROOT}/VdoFramework/VdoFramework.xcframework/ios-arm64/dSYMs/VdoFramework.framework.dSYM\" \\\n  \"${PODS_ROOT}/VdoFramework/VdoFramework.xcframework/ios-arm64/VdoFramework.framework.dSYM\" \\\n  \"${BUILT_PRODUCTS_DIR}/VdoFramework.framework.dSYM\"\n";
 		};
-		B2BFC7FB638FB1710E1DD73D /* [CP] Check Pods Manifest.lock */ = {
+		836306E392FDD56E35C66575 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -291,17 +284,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		7B4D2E6B2C1F4A8D9E0A1234 /* Copy Vendored Framework dSYMs */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			name = "Copy Vendored Framework dSYMs";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -e\n\nif [ \"${CONFIGURATION}\" != \"Release\" ]; then\n  exit 0\nfi\n\nmkdir -p \"${DWARF_DSYM_FOLDER_PATH}\"\n\ncopy_first_dsym() {\n  local framework_name=\"$1\"\n  shift\n\n  for dsym_path in \"$@\"; do\n    if [ -d \"${dsym_path}\" ]; then\n      echo \"Copying ${framework_name} dSYM from ${dsym_path}\"\n      rsync -a --delete \"${dsym_path}\" \"${DWARF_DSYM_FOLDER_PATH}/\"\n      return 0\n    fi\n  done\n\n  echo \"warning: ${framework_name} dSYM was not found in expected build locations. Archive may fail App Store symbol validation.\"\n  return 0\n}\n\ncopy_first_dsym \"Hermes\" \\\n  \"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework.dSYM\" \\\n  \"${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework/ios-arm64/dSYMs/hermes.framework.dSYM\" \\\n  \"${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework/ios-arm64/hermes.framework.dSYM\" \\\n  \"${BUILT_PRODUCTS_DIR}/hermes.framework.dSYM\"\n\ncopy_first_dsym \"VdoFramework\" \\\n  \"${PODS_XCFRAMEWORKS_BUILD_DIR}/VdoFramework/VdoFramework.framework.dSYM\" \\\n  \"${PODS_ROOT}/VdoFramework/VdoFramework.xcframework/ios-arm64/dSYMs/VdoFramework.framework.dSYM\" \\\n  \"${PODS_ROOT}/VdoFramework/VdoFramework.xcframework/ios-arm64/VdoFramework.framework.dSYM\" \\\n  \"${BUILT_PRODUCTS_DIR}/VdoFramework.framework.dSYM\"\n";
-		};
-		B8266FD365CCB48A4E10253D /* [CP] Copy Pods Resources */ = {
+		B0680ACCBDE5228138C50640 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -318,7 +301,24 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		F1A32038E13E050671FF5499 /* [CP-User] [RNFB] Core Configuration */ = {
+		C4EE5E410650D3D26D4440A7 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-allrounderbaby/Pods-allrounderbaby-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		D03702556F092D5A74E44885 /* [CP-User] [RNFB] Core Configuration */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -348,7 +348,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 23F8D731F2F20172FEF60ACA /* Pods-allrounderbaby.debug.xcconfig */;
+			baseConfigurationReference = F2553E9C45A9DA8A7A21F671 /* Pods-allrounderbaby.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -378,7 +378,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FE8503D1EE597DDD4E18AC32 /* Pods-allrounderbaby.release.xcconfig */;
+			baseConfigurationReference = AE897825CA4043A35D6C23F0 /* Pods-allrounderbaby.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -525,8 +525,8 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
-				DEVELOPMENT_TEAM = J7N3XD6F83;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = J7N3XD6F83;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;

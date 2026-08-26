@@ -39,6 +39,12 @@ target 'allrounderbaby' do
           config.build_settings['DEFINES_MODULE'] = 'YES'
         end
       end
+      if target.name == 'RNScreens'
+        target.build_configurations.each do |config|
+          config.build_settings['RCT_NEW_ARCH_ENABLED'] = '1'
+          config.build_settings['RCT_FABRIC_ENABLED'] = '1'
+        end
+      end
     end
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(

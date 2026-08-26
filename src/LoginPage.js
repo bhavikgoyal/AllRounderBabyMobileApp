@@ -304,8 +304,9 @@ const LoginPage = ({ navigation }) => {
                                 autoCapitalize="none"
                             />
                         </Animated.View>
-                        {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
-
+                      <View style={styles.adminContactRowContainer}>
+                              {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
+                              </View>
                         <Animated.Text style={[{ marginTop: 9 }, styles.legend, dynamicStyles.legend, passwordError ? styles.errorLegend : null, { transform: [{ translateX: passwordPosition }], color: isDarkMode ? Colors.white : Colors.black }]}>
                             Password
                         </Animated.Text>
