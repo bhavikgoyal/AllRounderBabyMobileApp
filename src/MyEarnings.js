@@ -453,6 +453,15 @@ const MyEarnings = ({ navigation, route }) => {
         }
       });
 
+      const applyEmptyReferralEarnings = () => {
+        setEarningsError('');
+        setReferralCount(0);
+        setPendingReferralCount(0);
+        setTotalReferralsCount(0);
+        setEarningFromReferrals((0).toFixed(2));
+        if (code === 'Login Req.' || code === '') setCode('N/A');
+      };
+
       if (!response.ok) {
         const responseText = await response.text();
         let parsed;
@@ -460,6 +469,18 @@ const MyEarnings = ({ navigation, route }) => {
           parsed = responseText ? JSON.parse(responseText) : null;
         } catch (parseError) {
           parsed = null;
+        }
+
+        const parsedCode = parsed && (parsed.code ?? parsed.status);
+        const parsedMessage = ((parsed && (parsed.message || parsed.Message)) || responseText || '').toString().toLowerCase();
+        const isNoTransactions =
+          response.status === 404 ||
+          parsedCode === 404 ||
+          (/referral transaction/.test(parsedMessage) && /(not\s+found|no\s+.*found|does\s+not\s+exist|not\s+exist)/.test(parsedMessage));
+
+        if (isNoTransactions) {
+          applyEmptyReferralEarnings();
+          return;
         }
 
         const info = {
@@ -470,11 +491,12 @@ const MyEarnings = ({ navigation, route }) => {
           parsedBody: parsed,
           rawBody: responseText,
         };
-        console.error('handleEarningDetails: API Error Response:', info);
+        console.warn('handleEarningDetails: API Error Response:', info);
         setEarningsError('Could not load referral transactions right now.');
         setReferralCount(0);
-        setEarningsPerReferral(3000);
         setPendingReferralCount(0);
+        setTotalReferralsCount(0);
+        setEarningFromReferrals((0).toFixed(2));
         if (code === 'Login Req.' || code === '') setCode('N/A');
         return;
       }
@@ -482,54 +504,53 @@ const MyEarnings = ({ navigation, route }) => {
       setEarningsError('');
 
       const jsonResponse = await response.json();
+      const responseCode = jsonResponse && (jsonResponse.code ?? jsonResponse.status);
       const dataArray = jsonResponse && jsonResponse.data
         ? (Array.isArray(jsonResponse.data) ? jsonResponse.data : [jsonResponse.data])
         : [];
 
-      if (dataArray.length > 0) {
-        const allReferrals = dataArray.filter(Boolean);
-        const isPaid = (item) => {
-          if (!item) return false;
-          if (item.payoutdone !== undefined && item.payoutdone !== null) return !!item.payoutdone;
-          if (item.paymentStatus) return item.paymentStatus.toString().toLowerCase() === 'paid' || item.paymentStatus.toString().toLowerCase() === 'completed';
-          if (item.status) return item.status.toString().toLowerCase() === 'paid' || item.status.toString().toLowerCase() === 'completed' || item.status.toString().toLowerCase() === 'payment initiated';
-          return false;
-        };
+      if (responseCode === 404 || dataArray.length === 0) {
+        applyEmptyReferralEarnings();
+        return;
+      }
 
-        const paidReferrals = allReferrals.filter(isPaid);
-        const totalPaidCount = paidReferrals.length;
-        const totalPendingCount = Math.max(0, allReferrals.length - totalPaidCount);
+      const allReferrals = dataArray.filter(Boolean);
+      const isPaid = (item) => {
+        if (!item) return false;
+        if (item.payoutdone !== undefined && item.payoutdone !== null) return !!item.payoutdone;
+        if (item.paymentStatus) return item.paymentStatus.toString().toLowerCase() === 'paid' || item.paymentStatus.toString().toLowerCase() === 'completed';
+        if (item.status) return item.status.toString().toLowerCase() === 'paid' || item.status.toString().toLowerCase() === 'completed' || item.status.toString().toLowerCase() === 'payment initiated';
+        return false;
+      };
 
-        setReferralCount(totalPaidCount);
-        setPendingReferralCount(totalPendingCount);
-        setTotalReferralsCount(allReferrals.length);
+      const paidReferrals = allReferrals.filter(isPaid);
+      const totalPaidCount = paidReferrals.length;
+      const totalPendingCount = Math.max(0, allReferrals.length - totalPaidCount);
 
-        let referralSum = 0;
-        try {
-          paidReferrals.forEach(item => {
-            const keys = ['amount', 'cashbackAmount', 'value', 'amountValue', 'price'];
-            for (const k of keys) {
-              if (item[k] !== undefined && item[k] !== null) {
-                const n = parseFloat(item[k]);
-                if (!isNaN(n)) { referralSum += n; break; }
-              }
+      setReferralCount(totalPaidCount);
+      setPendingReferralCount(totalPendingCount);
+      setTotalReferralsCount(allReferrals.length);
+
+      let referralSum = 0;
+      try {
+        paidReferrals.forEach(item => {
+          const keys = ['amount', 'cashbackAmount', 'value', 'amountValue', 'price'];
+          for (const k of keys) {
+            if (item[k] !== undefined && item[k] !== null) {
+              const n = parseFloat(item[k]);
+              if (!isNaN(n)) { referralSum += n; break; }
             }
-          });
-        } catch (e) { referralSum = 0; }
-        if (!referralSum) {
-          referralSum = totalPaidCount * earningsPerReferral;
-        }
-        setEarningFromReferrals(referralSum.toFixed(2));
+          }
+        });
+      } catch (e) { referralSum = 0; }
+      if (!referralSum) {
+        referralSum = totalPaidCount * earningsPerReferral;
+      }
+      setEarningFromReferrals(referralSum.toFixed(2));
 
-        if (allReferrals.length > 0 && allReferrals[0].referralCodeName) {
-          setCode(allReferrals[0].referralCodeName);
-        } else {
-          if (code === 'Login Req.' || code === '') setCode('N/A');
-        }
+      if (allReferrals.length > 0 && allReferrals[0].referralCodeName) {
+        setCode(allReferrals[0].referralCodeName);
       } else {
-        setReferralCount(0);
-        setPendingReferralCount(0);
-        setEarningFromReferrals((0).toFixed(2));
         if (code === 'Login Req.' || code === '') setCode('N/A');
       }
 
@@ -538,8 +559,9 @@ const MyEarnings = ({ navigation, route }) => {
       Alert.alert("Error", "Could not load your referral earnings. Please check your connection and try again.");
       setEarningsError('Could not load referral transactions. Please try again.');
       setReferralCount(0);
-      setEarningsPerReferral(3000);
       setPendingReferralCount(0);
+      setTotalReferralsCount(0);
+      setEarningFromReferrals((0).toFixed(2));
       if (code === "Login Req." || code === "") setCode("Error");
     } finally {
     }
@@ -663,8 +685,8 @@ const MyEarnings = ({ navigation, route }) => {
 
               {isIndia === null ? (
                 <View style={{ paddingHorizontal: 20, paddingBottom: 18 }}>
-                  <Text style={[styles.subText, { marginLeft: 0 }]}>We are preparing your currency and earnings breakdown.</Text>
-                  <Text style={[styles.subText, { marginLeft: 0, marginTop: 2 }]}>Your linked account details are shown below while data loads.</Text>
+                  {/* <Text style={[styles.subText, { marginLeft: 0 }]}>We are preparing your currency and earnings breakdown.</Text>
+                  <Text style={[styles.subText, { marginLeft: 0, marginTop: 2 }]}>Your linked account details are shown below while data loads.</Text> */}
                 </View>
               ) : isIndia ? (
                 <>
@@ -747,24 +769,28 @@ const MyEarnings = ({ navigation, route }) => {
                   </View>
                 </>
               )}
-              <Text style={styles.noteText}>
-                <Text>
-                  <Text style={styles.noteLabel}>Note:</Text>
-                  &nbsp;
-                  <Text style={styles.noteSubText}>
-                    Please update your Profile and bank account details after logging in to our website.
+              {!bankDetails && (
+                <>
+                  <Text style={styles.noteText}>
+                    <Text>
+                      <Text style={styles.noteLabel}>Note:</Text>
+                      &nbsp;
+                      <Text style={styles.noteSubText}>
+                        Please update your Profile and bank account details after logging in to our website.
+                      </Text>
+                    </Text>
                   </Text>
-                </Text>
-              </Text>
-              <Text style={styles.noteparaText}>
-                So, we can transfer the following amounts to you:
-              </Text>
-              <Text style={styles.noteparaText}>
-                (a) Earnings from referrals
-              </Text>
-              <Text style={[styles.noteparaText, { marginBottom: 20 }]}>
-                (b) Cashback from feedback
-              </Text>
+                  <Text style={styles.noteparaText}>
+                    So, we can transfer the following amounts to you:
+                  </Text>
+                  <Text style={styles.noteparaText}>
+                    (a) Earnings from referrals
+                  </Text>
+                  <Text style={[styles.noteparaText, { marginBottom: 20 }]}>
+                    (b) Cashback from feedback
+                  </Text>
+                </>
+              )}
               {!hasAnyError && totalReferralsCount === 0 && feedbackPaidCount === 0 && (
                 <Text style={styles.emptyStateText}>{isFirstLoadDone ? 'No earnings data available yet. Start referrals and submit feedback to see values here.' : 'Fetching your latest earnings data...'}</Text>
               )}
@@ -887,7 +913,9 @@ const MyEarnings = ({ navigation, route }) => {
                   )}
                 </>
               ) : (
-                <Text style={{ textAlign: 'center', color: theme.textSecondary }}>No bank details linked. Please link your bank account.</Text>
+                <Text style={{ textAlign: 'center', color: theme.textSecondary }}>No bank details linked. No Payout details linked.
+                  Please update you Payout details after logging in to our website.
+                </Text>
               )}
             </View>
           </>
